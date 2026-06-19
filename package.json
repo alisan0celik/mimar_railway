@@ -1,0 +1,32 @@
+{
+  "name": "mimar-platform",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": "22.x"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:backend": "npm run start:dev -w apps/backend",
+    "dev:mobile": "npm run start -w apps/mobile",
+    "dev:mobile:clear": "npm run start:clear -w apps/mobile",
+    "build:backend": "npm run build -w apps/backend",
+    "build:shared": "npm run build -w packages/shared",
+    "railway:build": "npm run prisma:generate -w apps/backend && npm run build:backend",
+    "railway:migrate": "node apps/backend/scripts/railway-migrate.js",
+    "railway:start": "npm run start:prod -w apps/backend",
+    "docker:up": "docker compose up --build -d",
+    "docker:down": "docker compose down",
+    "docker:clean": "docker rm -f mimar-redis mimar-postgres mimar-backend mimar-pgadmin 2>nul || exit 0",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "clean": "turbo run clean"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.0",
+    "typescript": "~5.9.2"
+  }
+}

@@ -1,0 +1,418 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AuthProvider {
+  EMAIL
+  GOOGLE
+  APPLE
+}
+
+enum ApprovalStatus {
+  pending
+  approved
+  rejected
+  suspended
+}
+
+enum CompanyStatus {
+  active
+  inactive
+  pending
+}
+
+enum NotificationType {
+  info
+  success
+  warning
+  danger
+}
+
+model User {
+  id                      String           @id @default(cuid())
+  email                   String           @unique
+  passwordHash            String?
+  fullName                String
+  phone                   String?
+  avatarUrl               String?
+  refreshToken            String?
+  fcmToken                String?
+  authProvider            AuthProvider     @default(EMAIL)
+  socialId                String?
+  approvalStatus          ApprovalStatus   @default(pending)
+  title                   String?
+  notificationPreferences Json?
+  companyId               String?
+  company                 Company?         @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  roles                   UserRole[]
+  permissions             UserPermission[]
+  ownedCompanies          Company[]        @relation("CompanyOwner")
+  createdProjects         Project[]        @relation("ProjectCreator")
+  notifications           Notification[]
+  deviceTokens            DeviceToken[]
+  createdTasks            Task[]           @relation("TaskCreator")
+  assignedTasks           Task[]           @relation("TaskAssignee")
+  projectNotes            ProjectNote[]    @relation("NoteAuthor")
+  projectMessages         ProjectMessage[] @relation("MessageAuthor")
+  uploadedFiles           ProjectFile[]    @relation("FileUploader")
+  projectTeam             ProjectTeam[]
+  financeRecords          FinanceRecord[]
+  calendarEvents          CalendarEvent[]
+  createdAt               DateTime         @default(now())
+  updatedAt               DateTime         @updatedAt
+  supportTickets          SupportTicket[]
+  supportTicketMessages   SupportTicketMessage[]
+  passwordResetTokens     PasswordResetToken[]
+
+  @@unique([authProvider, socialId])
+  @@index([companyId])
+  @@index([email])
+}
+
+model Company {
+  id             String          @id @default(cuid())
+  name           String
+  description    String?
+  city           String?
+  address        String?
+  phone          String?
+  logoUrl        String?
+  logoInitials   String?
+  status         CompanyStatus   @default(active)
+  subscriptionStatus String       @default("active")
+  subscriptionStartedAt DateTime  @default(now())
+  subscriptionEndsAt DateTime?
+  blockedReason String?
+  lastActivityAt DateTime?
+  ownerId        String
+  owner          User            @relation("CompanyOwner", fields: [ownerId], references: [id])
+  members        User[]
+  roles          Role[]
+  projects       Project[]
+  financeRecords FinanceRecord[]
+  calendarEvents CalendarEvent[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  supportTickets SupportTicket[]
+
+  @@index([ownerId])
+}
+
+model Role {
+  id          String           @id @default(cuid())
+  name        String
+  code        String
+  description String?
+  icon        String?
+  color       String?
+  companyId   String
+  company     Company?         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  users       UserRole[]
+  permissions RolePermission[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@unique([companyId, code])
+  @@index([companyId])
+}
+
+model UserRole {
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roleId String
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+}
+
+model UserPermission {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permission String
+  granted    Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, permission])
+  @@index([userId])
+}
+
+model RolePermission {
+  id         String   @id @default(cuid())
+  roleId     String
+  role       Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission String
+  createdAt  DateTime @default(now())
+
+  @@unique([roleId, permission])
+  @@index([roleId])
+}
+
+model Project {
+  id              String          @id @default(cuid())
+  name            String
+  customerName    String?
+  projectType     String?
+  location        String?
+  description     String?
+  hasInspection   Boolean         @default(false)
+  inspectionCompany String?
+  status          String          @default("active") // "planning", "active", "waiting", "completed"
+  priority        String          @default("medium") // "low", "medium", "high", "urgent"
+  imageUrl        String?
+  sectionProgress Float           @default(0)
+  startDate      DateTime?
+  endDate        DateTime?
+  budget         Float?
+  companyId      String
+  company        Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdById    String
+  createdBy      User            @relation("ProjectCreator", fields: [createdById], references: [id])
+  team           ProjectTeam[]
+  tasks          Task[]
+  sections       Section[]
+  notes          ProjectNote[]
+  messages       ProjectMessage[]
+  files          ProjectFile[]
+  financeRecords FinanceRecord[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@index([companyId])
+  @@index([status])
+}
+
+model ProjectTeam {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  role      String?
+  joinedAt  DateTime @default(now())
+
+  @@unique([projectId, userId])
+  @@index([projectId])
+}
+
+model Task {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  status      String    @default("todo")
+  priority    String    @default("medium")
+  dueDate     DateTime?
+  sectionId   String?
+  section     Section?  @relation(fields: [sectionId], references: [id], onDelete: SetNull)
+  projectId   String
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assigneeId  String?
+  assignee    User?     @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  createdById String
+  createdBy   User      @relation("TaskCreator", fields: [createdById], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  @@index([projectId])
+  @@index([assigneeId])
+  @@index([sectionId])
+}
+
+model Section {
+  id        String   @id @default(cuid())
+  name      String
+  order     Int      @default(0)
+  status    String   @default("not-started") // "not-started", "in-progress", "review", "approved"
+  content   String?
+  updatedBy String?
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks     Task[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+model FinanceRecord {
+  id          String   @id @default(cuid())
+  type        String
+  amount      Float
+  description String?
+  category    String?
+  paidBy      String?
+  date        DateTime @default(now())
+  projectId   String?
+  project     Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([companyId])
+  @@index([projectId])
+}
+
+model Notification {
+  id         String           @id @default(cuid())
+  userId     String
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title      String
+  message    String
+  type       NotificationType @default(info)
+  targetType String
+  targetId   String?
+  isRead     Boolean          @default(false)
+  createdAt  DateTime         @default(now())
+
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
+}
+
+model DeviceToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  platform  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model CalendarEvent {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  title       String
+  projectName String
+  time        String
+  type        String   @default("meeting") // "deadline", "meeting", "other"
+  date        DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([companyId])
+}
+
+model SupportTicket {
+  id            String                 @id @default(cuid())
+  userId        String
+  user          User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyId     String
+  company       Company                @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  subject       String
+  category      String                 @default("other")
+  priority      String                 @default("normal")
+  status        String                 @default("open")
+  lastMessageAt DateTime               @default(now())
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+  messages      SupportTicketMessage[]
+
+  @@index([userId])
+  @@index([companyId])
+  @@index([status])
+  @@index([lastMessageAt])
+}
+
+model SupportTicketMessage {
+  id           String        @id @default(cuid())
+  ticketId     String
+  ticket       SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  authorId     String
+  author       User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  body         String
+  isStaffReply Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+
+  @@index([ticketId])
+  @@index([createdAt])
+}
+
+model ProjectNote {
+  id        String   @id @default(cuid())
+  content   String
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation("NoteAuthor", fields: [authorId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  @@index([projectId])
+  @@index([authorId])
+}
+
+model ProjectMessage {
+  id        String   @id @default(cuid())
+  content   String
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation("MessageAuthor", fields: [authorId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  @@index([projectId])
+  @@index([authorId])
+}
+
+model ProjectFile {
+  id        String   @id @default(cuid())
+  name      String
+  url       String
+  size      Int
+  type      String
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation("FileUploader", fields: [authorId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  @@index([projectId])
+  @@index([authorId])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model SyncMutation {
+  id          String   @id @default(cuid())
+  mutationId  String   @unique
+  userId      String
+  companyId   String
+  entity      String
+  action      String
+  serverRefId String?
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([companyId])
+}

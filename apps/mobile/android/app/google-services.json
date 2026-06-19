@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "498948228883",
+    "project_id": "mimar-platform",
+    "storage_bucket": "mimar-platform.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:498948228883:android:558c9a6d8e5af326e4bce6",
+        "android_client_info": {
+          "package_name": "com.mimar.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "498948228883-4v2j7hke9n9jj6enpleapq0hpvhublm9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDpSh29xrzqNSmOU_E1tpfMwN0ZzxPraiQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "498948228883-4v2j7hke9n9jj6enpleapq0hpvhublm9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

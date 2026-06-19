@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.turbo/
+.tools/
+.env
+.env.*
+!.env.example
+!.env.railway.example
+.env.local
+*.log
+*.zip
+*.tar
+*.tar.gz
+.DS_Store
+.expo/
+uploads/
+*.tsbuildinfo
