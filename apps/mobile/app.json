@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "Mimarlık Proje Yönetimi",
+    "slug": "mimar-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "scheme": "mimar",
+    "android": {
+      "package": "com.mimar.app",
+      "googleServicesFile": "./google-services.json"
+    },
+    "ios": {
+      "bundleIdentifier": "com.mimar.app",
+      "googleServicesFile": "./GoogleService-Info.plist"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "color": "#1a1a2e"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Proje notlarına görsel eklemek için galeri erişimi gereklidir.",
+          "cameraPermission": "Proje notlarına fotoğraf çekmek için kamera erişimi gereklidir."
+        }
+      ],
+      "@react-native-google-signin/google-signin"
+    ]
+  }
+}
