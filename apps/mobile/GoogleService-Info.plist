@@ -2,22 +2,18 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>CLIENT_ID</key>
-	<string>498948228883-5ac5eg9hjn8n8figg1acc5c62lhh8reu.apps.googleusercontent.com</string>
-	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.498948228883-5ac5eg9hjn8n8figg1acc5c62lhh8reu</string>
 	<key>API_KEY</key>
-	<string>AIzaSyAj_eV1ZAFDHuhthJUtTyv8711n-GmMGqo</string>
+	<string>AIzaSyCKmTbqvhVDLz1x6G1y6VsIOuNeGc8xJ6U</string>
 	<key>GCM_SENDER_ID</key>
-	<string>498948228883</string>
+	<string>863980504433</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
 	<string>com.mimar.app</string>
 	<key>PROJECT_ID</key>
-	<string>mimar-platform</string>
+	<string>mimar-app-2e7ab</string>
 	<key>STORAGE_BUCKET</key>
-	<string>mimar-platform.firebasestorage.app</string>
+	<string>mimar-app-2e7ab.firebasestorage.app</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -29,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:498948228883:ios:0031806ad906bdf4e4bce6</string>
+	<string>1:863980504433:ios:6f69307e780323935362d0</string>
 </dict>
 </plist>
