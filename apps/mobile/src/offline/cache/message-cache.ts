@@ -43,7 +43,6 @@ export async function upsertPendingMessage(message: ProjectMessageDTO): Promise<
     message.projectId,
     JSON.stringify(message),
     message.updatedAt,
-    1,
   );
 }
 

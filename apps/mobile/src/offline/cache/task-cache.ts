@@ -43,7 +43,6 @@ export async function upsertPendingTask(task: ProjectTaskDTO): Promise<void> {
     task.projectId,
     JSON.stringify(task),
     task.updatedAt,
-    1,
   );
 }
 

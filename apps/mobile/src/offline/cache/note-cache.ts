@@ -43,7 +43,6 @@ export async function upsertPendingNote(note: ProjectNoteDTO): Promise<void> {
     note.projectId,
     JSON.stringify(note),
     note.updatedAt,
-    1,
   );
 }
 
