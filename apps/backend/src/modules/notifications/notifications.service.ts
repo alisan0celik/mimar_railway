@@ -1,9 +1,11 @@
 import { Injectable } from "@nestjs/common";
-import { NotificationType } from "@prisma/client";
 import { PrismaService } from "../../common/prisma.service";
 import { NotificationsGateway } from "./notifications.gateway";
 import { FcmService } from "./fcm.service";
 import { FCM_CHANNEL_MEMBERSHIP, FCM_CHANNEL_PROJECT, FCM_CHANNEL_SUPPORT } from "./notification-events.constants";
+
+type NotificationType = "info" | "success" | "warning" | "danger";
+type DeviceTokenRow = { token: string };
 
 @Injectable()
 export class NotificationsService {
@@ -79,7 +81,7 @@ export class NotificationsService {
               : undefined;
 
       const { invalidTokens } = await this.fcmService.sendToMultipleDevices(
-        deviceTokens.map((d) => d.token),
+        deviceTokens.map((d: DeviceTokenRow) => d.token),
         {
           title: input.title,
           body: input.message,

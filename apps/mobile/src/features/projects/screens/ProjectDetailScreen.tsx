@@ -38,6 +38,16 @@ function formatDate(value: string, locale: string): string {
   }).format(parsed);
 }
 
+function logMutationError(scope: "note" | "task", error: unknown) {
+  const response = (error as { response?: { status?: number; data?: unknown } } | null)?.response;
+  const message = error instanceof Error ? error.message : String(error);
+  console.error(`[ProjectDetail] ${scope} add failed`, {
+    message,
+    status: response?.status,
+    data: response?.data,
+  });
+}
+
 export function ProjectDetailScreen() {
   const styles = useThemedStyles(createStyles);
   const colors = useThemeColors();
@@ -183,7 +193,8 @@ export function ProjectDetailScreen() {
     try {
       const created = await createNoteOffline(projectId, body || t("projects.detail.attachedNote"), { id: user.id, fullName: user.fullName });
       setNotes((items) => [created, ...items.filter((item) => item.id !== created.id)]);
-    } catch {
+    } catch (error) {
+      logMutationError("note", error);
       Alert.alert(t("common.error"), t("projects.notes.addError"));
     }
   };
@@ -196,7 +207,8 @@ export function ProjectDetailScreen() {
       const created = await createTaskOffline(projectId, { title: text, status: "todo", priority: "medium" }, { id: user.id, fullName: user.fullName });
       setNewTodoText("");
       setTodos((items) => [created, ...items.filter((item) => item.id !== created.id)]);
-    } catch {
+    } catch (error) {
+      logMutationError("task", error);
       Alert.alert(t("common.error"), t("projects.todos.addError"));
     }
   };

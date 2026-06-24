@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import {
@@ -25,6 +25,20 @@ const DEFAULT_SECTIONS = [
   { type: "geology", label: "Jeoloji", order: 6 },
 ];
 
+type NotificationRecipient = {
+  id: string;
+  notificationPreferences: unknown;
+};
+
+type CompanyProjectMember = {
+  id: string;
+  fullName: string;
+  email: string;
+  title: string | null;
+  avatarUrl: string | null;
+  createdAt: Date;
+};
+
 function previewText(value: string, maxLength = 80) {
   const normalized = value.replace(/\s+/g, ' ').trim();
   if (normalized.length <= maxLength) return normalized;
@@ -33,6 +47,8 @@ function previewText(value: string, maxLength = 80) {
 
 @Injectable()
 export class ProjectsService {
+  private readonly logger = new Logger(ProjectsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
@@ -140,7 +156,7 @@ export class ProjectsService {
         ...data,
         updatedBy: user?.fullName || 'Sistem',
       },
-    }).then(async (result) => {
+    }).then(async (result: { count: number }) => {
       if (result.count === 0) throw new NotFoundException('Bölüm bulunamadı');
       return this.prisma.section.findFirst({ where: { id: sectionId, projectId } });
     });
@@ -170,7 +186,7 @@ export class ProjectsService {
       include: { author: { select: { id: true, fullName: true, avatarUrl: true } } },
     });
 
-    await this.notifyTeamOnNoteCreated(projectId, note.id, content, userId);
+    await this.tryNotifyTeamOnNoteCreated(projectId, note.id, content, userId);
 
     return note;
   }
@@ -240,9 +256,37 @@ export class ProjectsService {
       },
     });
 
-    await this.notifyTeamOnTaskCreated(projectId, task.id, task.title, userId);
+    await this.tryNotifyTeamOnTaskCreated(projectId, task.id, task.title, userId);
 
     return task;
+  }
+
+  private async tryNotifyTeamOnNoteCreated(
+    projectId: string,
+    noteId: string,
+    content: string,
+    creatorId: string,
+  ) {
+    try {
+      await this.notifyTeamOnNoteCreated(projectId, noteId, content, creatorId);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.warn(`Project note notification skipped: ${message}`);
+    }
+  }
+
+  private async tryNotifyTeamOnTaskCreated(
+    projectId: string,
+    taskId: string,
+    taskTitle: string,
+    creatorId: string,
+  ) {
+    try {
+      await this.notifyTeamOnTaskCreated(projectId, taskId, taskTitle, creatorId);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.warn(`Project task notification skipped: ${message}`);
+    }
   }
 
   private async notifyTeamOnNoteCreated(
@@ -283,7 +327,7 @@ export class ProjectsService {
     if (users.length === 0) return;
 
     await Promise.all(
-      users.map((user) => {
+      users.map((user: NotificationRecipient) => {
         const prefs = user.notificationPreferences as Record<string, boolean> | null;
         if (prefs?.projects === false) return Promise.resolve();
 
@@ -343,7 +387,7 @@ export class ProjectsService {
     if (users.length === 0) return;
 
     await Promise.all(
-      users.map((user) => {
+      users.map((user: NotificationRecipient) => {
         const prefs = user.notificationPreferences as Record<string, boolean> | null;
         if (prefs?.projects === false) return Promise.resolve();
 
@@ -455,7 +499,7 @@ export class ProjectsService {
       orderBy: { fullName: 'asc' },
     });
 
-    return users.map((user) => ({
+    return users.map((user: CompanyProjectMember) => ({
       id: `company-member-${user.id}`,
       projectId,
       userId: user.id,
@@ -514,7 +558,7 @@ export class ProjectsService {
       throw new BadRequestException('Eklenecek geçerli kullanıcı bulunamadı');
     }
 
-    return approvedMembers.map((user) => ({
+    return approvedMembers.map((user: CompanyProjectMember) => ({
       id: `company-member-${user.id}`,
       projectId,
       userId: user.id,

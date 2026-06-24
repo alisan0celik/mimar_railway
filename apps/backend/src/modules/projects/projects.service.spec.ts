@@ -130,6 +130,17 @@ describe("ProjectsService tasks", () => {
 
       expect(notificationsService.createForUser).not.toHaveBeenCalled();
     });
+
+    it("still returns the created task when notification delivery fails", async () => {
+      setupAddTask();
+      notificationsService.createForUser.mockRejectedValueOnce(new Error("push failed"));
+
+      const result = await service.addTask("company-1", "proj-1", "creator-1", {
+        title: "Inspect site",
+      });
+
+      expect(result).toMatchObject({ id: "task-1", title: "Inspect site" });
+    });
   });
 
   describe("addNote notifications", () => {
@@ -201,6 +212,20 @@ describe("ProjectsService tasks", () => {
       await service.addNote("company-1", "proj-1", "creator-1", "Please review this");
 
       expect(notificationsService.createForUser).not.toHaveBeenCalled();
+    });
+
+    it("still returns the created note when notification delivery fails", async () => {
+      setupAddNote();
+      notificationsService.createForUser.mockRejectedValueOnce(new Error("push failed"));
+
+      const result = await service.addNote(
+        "company-1",
+        "proj-1",
+        "creator-1",
+        "Please review this",
+      );
+
+      expect(result).toMatchObject({ id: "note-1", content: "Please review the updated plan" });
     });
   });
 
