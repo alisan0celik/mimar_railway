@@ -130,6 +130,7 @@ export const tr = {
     },
     notes: {
       empty: "Henüz not eklenmemiş",
+      addError: "Not eklenemedi. Lütfen tekrar deneyin.",
       kind: "Not",
       composer: {
         placeholder: "Not yaz...",
@@ -146,6 +147,7 @@ export const tr = {
     todos: {
       kind: "Yapılacak",
       addPlaceholder: "Yeni yapılacak ekle...",
+      addError: "Yapılacak eklenemedi. Lütfen tekrar deneyin.",
       empty: "Henüz yapılacak eklenmemiş",
       statusCompleted: "Tamamlandı",
       statusWaiting: "Bekliyor",

@@ -89,7 +89,7 @@ export class ProjectsController {
   }
 
   @Post(":id/notes")
-  @Permissions("project.update")
+  @PermissionsAny("project.update", "project.view")
   @ApiOperation({ summary: "Projeye not ekle" })
   addNote(@CurrentUser() user: JwtPayload, @Param("id") id: string, @Body() body: ContentDto) {
     return this.projectsService.addNote(this.companyId(user), id, user.sub, body.content);
@@ -131,7 +131,7 @@ export class ProjectsController {
   }
 
   @Post(":id/tasks")
-  @Permissions("project.task.manage")
+  @PermissionsAny("project.task.manage", "project.update", "project.view")
   @ApiOperation({
     summary: "Projeye görev ekle",
     description:

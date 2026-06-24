@@ -130,6 +130,7 @@ export const en = {
     },
     notes: {
       empty: "No notes yet",
+      addError: "Note could not be added. Please try again.",
       kind: "Note",
       composer: {
         placeholder: "Write a note...",
@@ -146,6 +147,7 @@ export const en = {
     todos: {
       kind: "To-do",
       addPlaceholder: "Add a new to-do...",
+      addError: "To-do could not be added. Please try again.",
       empty: "No to-dos yet",
       statusCompleted: "Completed",
       statusWaiting: "Waiting",

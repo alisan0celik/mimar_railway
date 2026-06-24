@@ -22,9 +22,11 @@ function getMethodPermissionsAny(
 describe("ProjectsController task permissions", () => {
   const controller = ProjectsController.prototype;
 
-  it("requires project.task.manage for task create/update/delete", () => {
-    expect(getMethodPermissions(controller, "addTask")).toEqual([
+  it("allows project viewers to create tasks while keeping update/delete managed", () => {
+    expect(getMethodPermissionsAny(controller, "addTask")).toEqual([
       "project.task.manage",
+      "project.update",
+      "project.view",
     ]);
     expect(getMethodPermissions(controller, "updateTask")).toEqual([
       "project.task.manage",
@@ -34,9 +36,10 @@ describe("ProjectsController task permissions", () => {
     ]);
   });
 
-  it("keeps project.update for notes and team mutations", () => {
-    expect(getMethodPermissions(controller, "addNote")).toEqual([
+  it("allows project viewers to add notes and keeps project.update for team mutations", () => {
+    expect(getMethodPermissionsAny(controller, "addNote")).toEqual([
       "project.update",
+      "project.view",
     ]);
     expect(getMethodPermissions(controller, "addTeamMember")).toEqual([
       "project.update",

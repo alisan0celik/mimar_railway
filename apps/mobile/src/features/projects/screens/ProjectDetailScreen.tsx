@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { NoteComposer, type NoteComposerPayload } from "../components/NoteComposer";
@@ -181,9 +181,11 @@ export function ProjectDetailScreen() {
     if (!body && attachments.length === 0) return;
     if (!user) return;
     try {
-      await createNoteOffline(projectId, body || t("projects.detail.attachedNote"), { id: user.id, fullName: user.fullName });
-      await fetchNotes();
-    } catch {}
+      const created = await createNoteOffline(projectId, body || t("projects.detail.attachedNote"), { id: user.id, fullName: user.fullName });
+      setNotes((items) => [created, ...items.filter((item) => item.id !== created.id)]);
+    } catch {
+      Alert.alert(t("common.error"), t("projects.notes.addError"));
+    }
   };
 
   const handleAddTodo = async () => {
@@ -191,10 +193,12 @@ export function ProjectDetailScreen() {
     if (!text) return;
     if (!user) return;
     try {
-      await createTaskOffline(projectId, { title: text, status: "todo", priority: "medium" }, { id: user.id, fullName: user.fullName });
+      const created = await createTaskOffline(projectId, { title: text, status: "todo", priority: "medium" }, { id: user.id, fullName: user.fullName });
       setNewTodoText("");
-      await fetchTodos();
-    } catch {}
+      setTodos((items) => [created, ...items.filter((item) => item.id !== created.id)]);
+    } catch {
+      Alert.alert(t("common.error"), t("projects.todos.addError"));
+    }
   };
 
   const handleToggleTodo = async (todo: ProjectTaskDTO) => {
