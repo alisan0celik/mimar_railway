@@ -7,12 +7,13 @@ const workspaceRoot = path.resolve(projectRoot, "../..");
 /** @type {import('expo/metro-config').MetroConfig} */
 const config = getDefaultConfig(projectRoot);
 
-config.watchFolders = [workspaceRoot];
+const defaultWatchFolders = Array.isArray(config.watchFolders) ? config.watchFolders : [];
+
+config.watchFolders = Array.from(new Set([...defaultWatchFolders, workspaceRoot]));
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, "node_modules"),
   path.resolve(workspaceRoot, "node_modules"),
 ];
-config.resolver.disableHierarchicalLookup = true;
 config.resolver.assetExts = Array.from(new Set([...config.resolver.assetExts, "wasm"]));
 
 const blockList = [
