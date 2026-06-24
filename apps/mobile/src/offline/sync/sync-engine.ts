@@ -39,6 +39,11 @@ import { v4 as uuidv4 } from "uuid";
 
 let initialized = false;
 
+function shouldQueueOffline(error: unknown): boolean {
+  const response = (error as { response?: { status?: number } } | null)?.response;
+  return !response?.status;
+}
+
 async function applyPullToCache(companyId: string, data: Awaited<ReturnType<typeof syncApi.pull>>["data"]) {
   if (data.projects.length > 0) {
     await saveProjects(data.projects, companyId);
@@ -225,14 +230,12 @@ export async function createNoteOffline(projectId: string, content: string, user
     author: { id: user.id, fullName: user.fullName, avatarUrl: null },
   };
 
-  if (isOnline()) {
-    try {
-      const created = await projectApi.addNote(projectId, content);
-      await saveNotes(projectId, [created, ...(await getCachedNotes(projectId))]);
-      return created;
-    } catch {
-      // fall through to offline queue
-    }
+  try {
+    const created = await projectApi.addNote(projectId, content);
+    await saveNotes(projectId, [created, ...(await getCachedNotes(projectId))]);
+    return created;
+  } catch (error) {
+    if (!shouldQueueOffline(error)) throw error;
   }
 
   await upsertPendingNote(note);
@@ -282,14 +285,12 @@ export async function createMessageOffline(
     author: { id: user.id, fullName: user.fullName, avatarUrl: null },
   };
 
-  if (isOnline()) {
-    try {
-      const created = await projectApi.addMessage(projectId, content);
-      await saveMessages(projectId, [created, ...(await getCachedMessages(projectId))]);
-      return created;
-    } catch {
-      // fall through
-    }
+  try {
+    const created = await projectApi.addMessage(projectId, content);
+    await saveMessages(projectId, [created, ...(await getCachedMessages(projectId))]);
+    return created;
+  } catch (error) {
+    if (!shouldQueueOffline(error)) throw error;
   }
 
   await upsertPendingMessage(message);
@@ -346,14 +347,12 @@ export async function createTaskOffline(
     createdBy: { id: user.id, fullName: user.fullName },
   };
 
-  if (isOnline()) {
-    try {
-      const created = await projectApi.addTask(projectId, payload);
-      await saveTasks(projectId, [created, ...(await getCachedTasks(projectId))]);
-      return created;
-    } catch {
-      // fall through
-    }
+  try {
+    const created = await projectApi.addTask(projectId, payload);
+    await saveTasks(projectId, [created, ...(await getCachedTasks(projectId))]);
+    return created;
+  } catch (error) {
+    if (!shouldQueueOffline(error)) throw error;
   }
 
   await upsertPendingTask(task);

@@ -19,13 +19,17 @@ function gettypeConfig(colors: AppColors): Record<string, { icon: string; color:
 type FilterKey = "all" | "unread" | "read";
 
 function timeAgo(dateStr: string, locale: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
+  const timestamp = new Date(dateStr).getTime();
+  if (Number.isNaN(timestamp)) return "";
+  const diff = Math.max(0, Date.now() - timestamp);
   const minutes = Math.floor(diff / 60000);
-  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: "always" });
-  if (minutes < 60) return rtf.format(-minutes, "minute");
+  const isTurkish = locale.toLowerCase().startsWith("tr");
+  if (minutes < 1) return isTurkish ? "şimdi" : "now";
+  if (minutes < 60) return isTurkish ? `${minutes} dk önce` : `${minutes} min ago`;
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return rtf.format(-hours, "hour");
-  return rtf.format(-Math.floor(hours / 24), "day");
+  if (hours < 24) return isTurkish ? `${hours} sa önce` : `${hours} h ago`;
+  const days = Math.floor(hours / 24);
+  return isTurkish ? `${days} gün önce` : `${days} d ago`;
 }
 
 export function NotificationsScreen() {
@@ -73,7 +77,8 @@ export function NotificationsScreen() {
     }
   };
 
-  const handlePress = async (id: string, isRead: boolean) => {
+  const handlePress = async (id: string | undefined, isRead: boolean) => {
+    if (!id) return;
     if (!isRead) {
       try {
         await notificationsApi.markAsRead(id);
@@ -114,11 +119,11 @@ export function NotificationsScreen() {
         </View>
       ) : (
       <View style={styles.list}>
-        {filtered.map((notif) => {
+        {filtered.map((notif, index) => {
           const config = gettypeConfig(colors)[notif.type] ?? gettypeConfig(colors).info;
           return (
             <Pressable
-              key={notif.id}
+              key={notif.id ?? `${notif.createdAt ?? "notification"}-${index}`}
               onPress={() => handlePress(notif.id, notif.isRead)}
               style={[styles.notifCard, !notif.isRead && styles.notifCardUnread]}
             >
@@ -127,11 +132,11 @@ export function NotificationsScreen() {
               </View>
               <View style={styles.notifInfo}>
                 <View style={styles.titleRow}>
-                  <Text style={styles.notifTitle}>{notif.title}</Text>
+                  <Text style={styles.notifTitle}>{notif.title ?? t("notifications.title")}</Text>
                   {!notif.isRead ? <View style={styles.unreadDot} /> : null}
                 </View>
-                <Text style={styles.notifMessage}>{notif.message}</Text>
-                <Text style={styles.notifTime}>{timeAgo(notif.createdAt, locale)}</Text>
+                <Text style={styles.notifMessage}>{notif.message ?? ""}</Text>
+                <Text style={styles.notifTime}>{timeAgo(notif.createdAt ?? "", locale)}</Text>
               </View>
             </Pressable>
           );
