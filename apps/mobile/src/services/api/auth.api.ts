@@ -11,7 +11,7 @@ export const authApi = {
   login: (data: { email: string; password: string }) =>
     apiClient.post<AuthResponse>("/auth/login", data),
 
-  socialLogin: (data: { provider: "GOOGLE" | "APPLE"; idToken: string }) =>
+  socialLogin: (data: { provider: "GOOGLE" | "APPLE" | "MICROSOFT"; idToken: string }) =>
     apiClient.post<AuthResponse>("/auth/social", data),
 
   refreshToken: (refreshToken: string) =>

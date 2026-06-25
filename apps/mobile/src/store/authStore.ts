@@ -24,7 +24,7 @@ type AuthState = {
 
   login: (email: string, password: string) => Promise<void>;
   register: (data: { email: string; password: string; fullName: string }) => Promise<UserDTO | undefined>;
-  socialLogin: (provider: "GOOGLE" | "APPLE", idToken: string) => Promise<void>;
+  socialLogin: (provider: "GOOGLE" | "APPLE" | "MICROSOFT", idToken: string) => Promise<void>;
   logout: () => Promise<void>;
   hydrate: () => Promise<void>;
   setUser: (user: UserDTO) => void;

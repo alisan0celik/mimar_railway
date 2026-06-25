@@ -34,7 +34,6 @@ const OFFICE_EMPLOYEE_PERMISSIONS = PERMISSIONS.filter(
       "role.view",
       "role.create",
       "role.update",
-      "project.task.manage",
       "company.update",
     ].includes(p),
 );

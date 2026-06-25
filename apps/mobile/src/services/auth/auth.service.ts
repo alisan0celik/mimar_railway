@@ -16,7 +16,7 @@ export class AuthService {
     return user;
   }
 
-  static async socialLogin(provider: "GOOGLE" | "APPLE", idToken: string) {
+  static async socialLogin(provider: "GOOGLE" | "APPLE" | "MICROSOFT", idToken: string) {
     const response = await authApi.socialLogin({ provider, idToken });
     const { accessToken, refreshToken, user } = response.data;
     await setTokens(accessToken, refreshToken);

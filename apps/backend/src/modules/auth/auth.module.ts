@@ -12,13 +12,14 @@ import { GoogleStrategy } from "./strategies/google.strategy";
 import { AppleStrategy } from "./strategies/apple.strategy";
 import { GoogleAuthService } from "./social/google-auth.service";
 import { AppleAuthService } from "./social/apple-auth.service";
+import { MicrosoftAuthService } from "./social/microsoft-auth.service";
 import { PrismaService } from "../../common/prisma.service";
 import { FirebaseConfig } from "../../config/firebase.config";
 import { getJwtAccessSecret } from "../../config/jwt.config";
 import { AuthRateLimitGuard } from "../../common/guards/auth-rate-limit.guard";
 
 function getOptionalSocialStrategyProviders(): Provider[] {
-  const providers: Provider[] = [GoogleAuthService, AppleAuthService];
+  const providers: Provider[] = [GoogleAuthService, AppleAuthService, MicrosoftAuthService];
 
   if (process.env.GOOGLE_CLIENT_ID?.trim() && process.env.GOOGLE_CLIENT_SECRET?.trim()) {
     providers.push(GoogleStrategy);

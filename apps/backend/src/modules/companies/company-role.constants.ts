@@ -36,7 +36,6 @@ export const OFFICE_EMPLOYEE_RESTRICTED = [
   "role.view",
   "role.create",
   "role.update",
-  "project.task.manage",
   "company.update",
   "support.manage",
 ] as const;

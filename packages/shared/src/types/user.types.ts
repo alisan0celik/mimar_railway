@@ -43,6 +43,6 @@ export interface LoginInput {
 }
 
 export interface SocialLoginInput {
-  provider: AuthProvider.GOOGLE | AuthProvider.APPLE;
+  provider: AuthProvider.GOOGLE | AuthProvider.APPLE | AuthProvider.MICROSOFT;
   idToken: string;
 }

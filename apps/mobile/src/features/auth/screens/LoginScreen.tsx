@@ -3,6 +3,8 @@ import { useRouter } from "expo-router";
 import { useState, useEffect } from "react";
 import { Pressable, StyleSheet, Text, View, Platform, Alert } from "react-native";
 import * as AppleAuthentication from "expo-apple-authentication";
+import * as AuthSession from "expo-auth-session";
+import * as WebBrowser from "expo-web-browser";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 
 import { useAuthStore } from "../../../store";
@@ -11,6 +13,7 @@ import { useThemedStyles, type AppColors } from "../../../shared/theme";
 import { useThemeColors } from "../../../shared/theme/ThemeProvider";
 import { getPostAuthRoute } from "../utils/post-auth-route";
 import { useTranslation } from "../../../shared/i18n";
+import { createClientId } from "../../../shared/utils/id";
 import {
   AppButton,
   AppInput,
@@ -19,11 +22,17 @@ import {
   AuthScreenShell,
 } from "../../../shared/ui";
 
+WebBrowser.maybeCompleteAuthSession();
+
 const SUBSCRIPTION_BLOCK_CODES = new Set([
   "COMPANY_SUBSCRIPTION_EXPIRED",
   "COMPANY_SUBSCRIPTION_BLOCKED",
   "COMPANY_INACTIVE",
 ]);
+
+const MICROSOFT_DISCOVERY = {
+  authorizationEndpoint: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
+};
 
 function getLoginErrorMessage(
   error: any,
@@ -71,6 +80,11 @@ export function LoginScreen() {
     }
     try {
       setLoading(true);
+      const isAvailable = await AppleAuthentication.isAvailableAsync();
+      if (!isAvailable) {
+        Alert.alert(t("common.info"), t("auth.social.appleMobileOnly"));
+        return;
+      }
       const credential = await AppleAuthentication.signInAsync({
         requestedScopes: [
           AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
@@ -112,6 +126,50 @@ export function LoginScreen() {
       }
     } catch (e: any) {
       console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleMicrosoftLogin = async () => {
+    const clientId = process.env.EXPO_PUBLIC_MICROSOFT_CLIENT_ID || "";
+    if (!clientId) {
+      Alert.alert(t("common.info"), t("auth.social.microsoftNotConfigured"));
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const redirectUri = AuthSession.makeRedirectUri({
+        scheme: "mimar",
+        path: "auth/microsoft",
+      });
+      const request = await AuthSession.loadAsync(
+        {
+          clientId,
+          extraParams: {
+            nonce: createClientId("ms_nonce"),
+            response_mode: "fragment",
+          },
+          prompt: AuthSession.Prompt.SelectAccount,
+          redirectUri,
+          responseType: AuthSession.ResponseType.IdToken,
+          scopes: ["openid", "profile", "email"],
+          usePKCE: false,
+        },
+        MICROSOFT_DISCOVERY,
+      );
+      const result = await request.promptAsync(MICROSOFT_DISCOVERY);
+      if (result.type === "success" && result.params.id_token) {
+        await useAuthStore.getState().socialLogin("MICROSOFT", result.params.id_token);
+        const user = useAuthStore.getState().user;
+        router.replace(getPostAuthRoute(user));
+      } else if (result.type === "error") {
+        Alert.alert(t("common.error"), result.error?.message || t("auth.errors.socialLoginFailed"));
+      }
+    } catch (e: any) {
+      console.error(e);
+      Alert.alert(t("common.error"), e?.message || t("auth.errors.socialLoginFailed"));
     } finally {
       setLoading(false);
     }
@@ -226,7 +284,7 @@ export function LoginScreen() {
         <Pressable style={styles.socialBtn} onPress={handleAppleLogin}>
           <MaterialCommunityIcons color="#FFFFFF" name="apple" size={22} />
         </Pressable>
-        <Pressable style={styles.socialBtn}>
+        <Pressable style={styles.socialBtn} onPress={handleMicrosoftLogin}>
           <MaterialCommunityIcons color="#FFFFFF" name="microsoft" size={22} />
         </Pressable>
       </View>

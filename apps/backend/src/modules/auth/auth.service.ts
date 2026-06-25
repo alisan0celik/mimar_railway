@@ -21,6 +21,7 @@ import { ResetPasswordDto } from "./dto/reset-password.dto";
 import { PasswordResetEmailService } from "./password-reset-email.service";
 import { GoogleAuthService } from "./social/google-auth.service";
 import { AppleAuthService } from "./social/apple-auth.service";
+import { MicrosoftAuthService } from "./social/microsoft-auth.service";
 import {
   isPlatformAdminEmail,
   throwIfCompanySubscriptionBlocked,
@@ -40,6 +41,7 @@ export class AuthService {
     private readonly firebaseConfig: FirebaseConfig,
     private readonly googleAuthService: GoogleAuthService,
     private readonly appleAuthService: AppleAuthService,
+    private readonly microsoftAuthService: MicrosoftAuthService,
     private readonly passwordResetEmailService: PasswordResetEmailService,
   ) { }
 
@@ -138,6 +140,8 @@ export class AuthService {
       socialUser = await this.googleAuthService.verifyToken(dto.idToken);
     } else if (dto.provider === "APPLE") {
       socialUser = await this.appleAuthService.verifyToken(dto.idToken);
+    } else if (dto.provider === "MICROSOFT") {
+      socialUser = await this.microsoftAuthService.verifyToken(dto.idToken);
     } else {
       throw new BadRequestException("Geçersiz sosyal giriş sağlayıcısı");
     }

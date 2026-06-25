@@ -2,6 +2,7 @@ export enum AuthProvider {
   EMAIL = "EMAIL",
   GOOGLE = "GOOGLE",
   APPLE = "APPLE",
+  MICROSOFT = "MICROSOFT",
 }
 
 export enum ApprovalStatus {

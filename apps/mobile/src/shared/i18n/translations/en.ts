@@ -551,6 +551,7 @@ export const en = {
     social: {
       appleMobileOnly: "Sign in with Apple is only supported on mobile devices.",
       googleMobileOnly: "Sign in with Google is only supported on mobile devices.",
+      microsoftNotConfigured: "Microsoft sign-in requires an application client ID.",
     },
     forgotPasswordForm: {
       title: "Forgot password",

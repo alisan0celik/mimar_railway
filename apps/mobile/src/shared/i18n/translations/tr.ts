@@ -551,6 +551,7 @@ export const tr = {
     social: {
       appleMobileOnly: "Apple ile giriş sadece mobil cihazlarda desteklenmektedir.",
       googleMobileOnly: "Google ile giriş sadece mobil cihazlarda desteklenmektedir.",
+      microsoftNotConfigured: "Microsoft ile giriş için uygulama kimliği tanımlanmalı.",
     },
     forgotPasswordForm: {
       title: "Şifremi unuttum",

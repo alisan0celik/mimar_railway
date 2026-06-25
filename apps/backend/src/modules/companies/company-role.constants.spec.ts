@@ -12,12 +12,13 @@ describe("company-role.constants", () => {
     expect(ALL_PERMISSIONS).toContain("support.manage");
   });
 
-  it("defines 9 permissions for office employee", () => {
-    expect(OFFICE_EMPLOYEE_PERMISSIONS).toHaveLength(9);
+  it("defines 10 permissions for office employee", () => {
+    expect(OFFICE_EMPLOYEE_PERMISSIONS).toHaveLength(10);
     expect(OFFICE_EMPLOYEE_PERMISSIONS).toEqual([
       "project.view",
       "project.create",
       "project.update",
+      "project.task.manage",
       "project.complete",
       "project.restore",
       "notification.view",
@@ -31,7 +32,7 @@ describe("company-role.constants", () => {
     for (const restricted of OFFICE_EMPLOYEE_RESTRICTED) {
       expect(OFFICE_EMPLOYEE_PERMISSIONS).not.toContain(restricted);
     }
-    expect(OFFICE_EMPLOYEE_PERMISSIONS).not.toContain("project.task.manage");
+    expect(OFFICE_EMPLOYEE_PERMISSIONS).toContain("project.task.manage");
     expect(OFFICE_EMPLOYEE_PERMISSIONS).not.toContain("user.view");
     expect(OFFICE_EMPLOYEE_PERMISSIONS).not.toContain("role.view");
   });

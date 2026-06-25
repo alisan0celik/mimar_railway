@@ -35,7 +35,8 @@
           "cameraPermission": "Proje notlarına fotoğraf çekmek için kamera erişimi gereklidir."
         }
       ],
-      "@react-native-google-signin/google-signin"
+      "@react-native-google-signin/google-signin",
+      "expo-web-browser"
     ]
   }
 }
