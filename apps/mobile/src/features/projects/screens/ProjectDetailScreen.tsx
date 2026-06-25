@@ -50,7 +50,10 @@ function logMutationError(scope: "note" | "task", error: unknown) {
 
 function mutationErrorDetail(error: unknown) {
   const response = (error as { response?: { status?: number; data?: unknown } } | null)?.response;
-  if (!response?.status) return "";
+  if (!response?.status) {
+    const message = error instanceof Error ? error.message : String(error);
+    return message ? `\n\nTeknik detay: ${message}` : "";
+  }
 
   const data = response.data as { message?: string; error?: string; code?: string } | string | undefined;
   const detail =

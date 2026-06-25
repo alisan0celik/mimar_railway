@@ -35,7 +35,7 @@ import {
 import { isOnline, subscribeNetwork } from "../network/network-monitor";
 import { getLastPullAt, setLastPullAt, setSyncCompanyId } from "./sync-metadata";
 import type { PushMutationResult } from "../outbox/outbox.types";
-import { v4 as uuidv4 } from "uuid";
+import { createClientId } from "../../shared/utils/id";
 
 let initialized = false;
 
@@ -218,7 +218,7 @@ export async function fetchMessagesWithCache(projectId: string): Promise<Project
 }
 
 export async function createNoteOffline(projectId: string, content: string, user: { id: string; fullName: string }) {
-  const tempId = `temp_note_${uuidv4()}`;
+  const tempId = createClientId("temp_note");
   const now = new Date().toISOString();
   const note: ProjectNoteDTO = {
     id: tempId,
@@ -273,7 +273,7 @@ export async function createMessageOffline(
   content: string,
   user: { id: string; fullName: string },
 ) {
-  const tempId = `temp_message_${uuidv4()}`;
+  const tempId = createClientId("temp_message");
   const now = new Date().toISOString();
   const message: ProjectMessageDTO = {
     id: tempId,
@@ -328,7 +328,7 @@ export async function createTaskOffline(
   payload: Record<string, unknown>,
   user: { id: string; fullName: string },
 ) {
-  const tempId = `temp_task_${uuidv4()}`;
+  const tempId = createClientId("temp_task");
   const now = new Date().toISOString();
   const task: ProjectTaskDTO = {
     id: tempId,

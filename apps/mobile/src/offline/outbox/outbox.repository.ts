@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from "uuid";
+import { createClientId } from "../../shared/utils/id";
 import { getDatabase } from "../db/database";
 import type { OutboxAction, OutboxEntity, OutboxMutation, PushMutationInput } from "./outbox.types";
 
@@ -11,7 +11,7 @@ export async function enqueueMutation(input: {
 }): Promise<OutboxMutation> {
   const db = await getDatabase();
   const mutation: OutboxMutation = {
-    mutationId: uuidv4(),
+    mutationId: createClientId("mutation"),
     entity: input.entity,
     action: input.action,
     projectId: input.projectId,
