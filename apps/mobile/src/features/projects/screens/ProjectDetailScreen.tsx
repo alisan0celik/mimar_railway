@@ -48,6 +48,19 @@ function logMutationError(scope: "note" | "task", error: unknown) {
   });
 }
 
+function mutationErrorDetail(error: unknown) {
+  const response = (error as { response?: { status?: number; data?: unknown } } | null)?.response;
+  if (!response?.status) return "";
+
+  const data = response.data as { message?: string; error?: string; code?: string } | string | undefined;
+  const detail =
+    typeof data === "string"
+      ? data
+      : data?.message || data?.error || data?.code || "Sunucu hatasi";
+
+  return `\n\nTeknik detay: ${response.status} - ${detail}`;
+}
+
 export function ProjectDetailScreen() {
   const styles = useThemedStyles(createStyles);
   const colors = useThemeColors();
@@ -195,7 +208,7 @@ export function ProjectDetailScreen() {
       setNotes((items) => [created, ...items.filter((item) => item.id !== created.id)]);
     } catch (error) {
       logMutationError("note", error);
-      Alert.alert(t("common.error"), t("projects.notes.addError"));
+      Alert.alert(t("common.error"), `${t("projects.notes.addError")}${mutationErrorDetail(error)}`);
     }
   };
 
@@ -209,7 +222,7 @@ export function ProjectDetailScreen() {
       setTodos((items) => [created, ...items.filter((item) => item.id !== created.id)]);
     } catch (error) {
       logMutationError("task", error);
-      Alert.alert(t("common.error"), t("projects.todos.addError"));
+      Alert.alert(t("common.error"), `${t("projects.todos.addError")}${mutationErrorDetail(error)}`);
     }
   };
 
