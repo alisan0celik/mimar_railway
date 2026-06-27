@@ -11,7 +11,7 @@ export function BrandHeader({ compact = false }: BrandHeaderProps) {
   return (
     <View style={styles.container}>
       <Image
-        source={require("../../../assets/brand/mimarlik-logo.png")}
+        source={require("../../../assets/icon.png")}
         style={[styles.logo, compact && styles.logoCompact]}
         resizeMode="contain"
       />

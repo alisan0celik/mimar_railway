@@ -108,6 +108,12 @@ export function LoginScreen() {
     try {
       setLoading(true);
       await GoogleSignin.hasPlayServices();
+      // Önceki Google oturumunu temizle ki her girişte hesap seçtirsin
+      try {
+        await GoogleSignin.signOut();
+      } catch {
+        // oturum yoksa sorun değil
+      }
       const userInfo: any = await GoogleSignin.signIn();
       const idToken = userInfo?.data?.idToken || userInfo?.idToken;
       if (idToken) {

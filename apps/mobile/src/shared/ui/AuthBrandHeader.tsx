@@ -15,7 +15,7 @@ export function AuthBrandHeader({ variant = "compact" }: AuthBrandHeaderProps) {
   return (
     <View style={[styles.container, isHero && styles.containerHero]}>
       <Image
-        source={require("../../../assets/brand/mimarlik-logo.png")}
+        source={require("../../../assets/icon.png")}
         style={[styles.logo, isHero ? styles.logoHero : styles.logoCompact]}
         resizeMode="contain"
       />
