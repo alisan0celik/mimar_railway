@@ -12,6 +12,11 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://mimar-backend-863980504433.europe-west1.run.app/api",
+        "EXPO_PUBLIC_WS_URL": "wss://mimar-backend-863980504433.europe-west1.run.app",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "863980504433-ui54bn3hnab3spo3san3l5afmo2f6uto.apps.googleusercontent.com"
       }
     },
     "production": {
