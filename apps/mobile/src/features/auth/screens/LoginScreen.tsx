@@ -123,9 +123,22 @@ export function LoginScreen() {
         await useAuthStore.getState().socialLogin("GOOGLE", idToken);
         const user = useAuthStore.getState().user;
         router.replace(getPostAuthRoute(user));
+      } else {
+        // idToken yok: genelde EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID boş/yanlış demektir
+        Alert.alert(
+          t("common.error"),
+          `Google idToken alınamadı. Web Client ID eksik olabilir.\nwebClientId: "${process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || "(boş)"}"`,
+        );
       }
     } catch (e: any) {
-      console.error(e);
+      // SIGN_IN_CANCELLED kodunu yutuyoruz; diğer her hatayı görünür kılıyoruz
+      if (e?.code !== "SIGN_IN_CANCELLED" && e?.code !== "-5") {
+        console.error(e);
+        Alert.alert(
+          t("common.error"),
+          `Google giriş hatası\ncode: ${e?.code ?? "?"}\nmessage: ${e?.message ?? String(e)}`,
+        );
+      }
     } finally {
       setLoading(false);
     }
