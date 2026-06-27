@@ -1,4 +1,6 @@
 import { create } from "zustand";
+import { Platform } from "react-native";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { AuthService } from "../services/auth/auth.service";
 import { NotificationService } from "../services/notification/notification.service";
 import { getTokens, clearTokens, setTokens } from "../services/auth/token-storage";
@@ -83,6 +85,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await NotificationService.unregisterPushToken();
       await AuthService.logout();
     } finally {
+      // Google oturumunu da kapat ki SADECE çıkıştan sonra tekrar giriş yaparken hesap seçtirsin
+      if (Platform.OS !== "web") {
+        try {
+          GoogleSignin.configure({ webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || "" });
+          await GoogleSignin.signOut();
+        } catch {
+          // Google oturumu yoksa / yapılandırılmadıysa sorun değil
+        }
+      }
       await clearUserProfile();
       await clearSyncMetadata();
       await clearOfflineDatabase();
