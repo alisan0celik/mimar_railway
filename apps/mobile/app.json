@@ -1,14 +1,19 @@
 {
   "expo": {
-    "name": "Mimarlık Proje Yönetimi",
+    "name": "Planova",
     "slug": "mimar-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "scheme": "mimar",
+    "icon": "./assets/icon.png",
     "android": {
       "package": "com.mimar.app",
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./google-services.json",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0B1B2E"
+      }
     },
     "ios": {
       "bundleIdentifier": "com.mimar.app",
