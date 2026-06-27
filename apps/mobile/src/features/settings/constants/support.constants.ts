@@ -1,4 +1,4 @@
-export const SUPPORT_CONTACT_EMAIL = "destek@mimarlik.app";
+export const SUPPORT_CONTACT_EMAIL = "celiklerhelp@gmail.com";
 
 export const SUPPORT_CATEGORIES = [
   "technical",
