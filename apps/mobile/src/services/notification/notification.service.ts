@@ -10,7 +10,10 @@ import {
   type NotificationDataPayload,
 } from "./notification-router";
 
+export const FCM_CHANNEL_DEFAULT = "default";
 export const FCM_CHANNEL_MEMBERSHIP = "membership";
+export const FCM_CHANNEL_PROJECT = "projects";
+export const FCM_CHANNEL_SUPPORT = "support";
 
 let lastRegisteredToken: string | null = null;
 let routerInitialized = false;
@@ -28,12 +31,22 @@ Notifications.setNotificationHandler({
 async function ensureAndroidChannels(language: "tr" | "en") {
   if (Platform.OS !== "android") return;
 
-  await Notifications.setNotificationChannelAsync(FCM_CHANNEL_MEMBERSHIP, {
-    name: language === "en" ? "Membership notifications" : "Üyelik Bildirimleri",
-    importance: Notifications.AndroidImportance.HIGH,
-    vibrationPattern: [0, 250, 250, 250],
-    lightColor: "#7C3AED",
-  });
+  const isEn = language === "en";
+  const channels: Array<{ id: string; name: string }> = [
+    { id: FCM_CHANNEL_DEFAULT, name: isEn ? "General notifications" : "Genel Bildirimler" },
+    { id: FCM_CHANNEL_MEMBERSHIP, name: isEn ? "Membership notifications" : "Üyelik Bildirimleri" },
+    { id: FCM_CHANNEL_PROJECT, name: isEn ? "Project notifications" : "Proje Bildirimleri" },
+    { id: FCM_CHANNEL_SUPPORT, name: isEn ? "Support notifications" : "Destek Bildirimleri" },
+  ];
+
+  for (const channel of channels) {
+    await Notifications.setNotificationChannelAsync(channel.id, {
+      name: channel.name,
+      importance: Notifications.AndroidImportance.HIGH,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: "#7C3AED",
+    });
+  }
 }
 
 export class NotificationService {

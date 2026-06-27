@@ -50,6 +50,7 @@ export function supportTicketRoute(ticketId: string): string {
   return `/(main)/settings/support-tickets/${ticketId}`;
 }
 
+export const FCM_CHANNEL_DEFAULT = "default";
 export const FCM_CHANNEL_MEMBERSHIP = "membership";
 export const FCM_CHANNEL_PROJECT = "projects";
 export const FCM_CHANNEL_SUPPORT = "support";

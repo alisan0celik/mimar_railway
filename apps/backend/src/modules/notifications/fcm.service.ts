@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { FirebaseConfig } from "../../config/firebase.config";
-import { FCM_CHANNEL_MEMBERSHIP } from "./notification-events.constants";
+import { FCM_CHANNEL_DEFAULT, FCM_CHANNEL_MEMBERSHIP } from "./notification-events.constants";
 
 export interface PushNotificationPayload {
   title: string;
@@ -22,7 +22,7 @@ export class FcmService {
   private buildMessage(token: string, payload: PushNotificationPayload) {
     const channelId =
       payload.channelId ??
-      (payload.data?.targetType === "membership" ? FCM_CHANNEL_MEMBERSHIP : undefined);
+      (payload.data?.targetType === "membership" ? FCM_CHANNEL_MEMBERSHIP : FCM_CHANNEL_DEFAULT);
 
     return {
       token,
@@ -31,12 +31,10 @@ export class FcmService {
         body: payload.body,
       },
       data: payload.data ?? {},
-      android: channelId
-        ? {
-            priority: "high" as const,
-            notification: { channelId },
-          }
-        : { priority: "high" as const },
+      android: {
+        priority: "high" as const,
+        notification: { channelId },
+      },
       apns: {
         payload: {
           aps: {

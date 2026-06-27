@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { NoteComposer, type NoteComposerPayload } from "../components/NoteComposer";
@@ -259,6 +259,11 @@ export function ProjectDetailScreen() {
 
   return (
     <SafeAreaView edges={["top"]} style={styles.wrapper}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+        style={styles.flexFill}
+      >
       {/* Sabit üst bölüm: başlık + arama + sekmeler */}
       <View style={styles.headerBlock}>
         <DesignBackHeader
@@ -494,6 +499,7 @@ export function ProjectDetailScreen() {
           </ScrollView>
         )
       ) : null}
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -503,6 +509,9 @@ function createStyles(colors: AppColors) {
   wrapper: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  flexFill: {
+    flex: 1,
   },
   headerBlock: {
     flexShrink: 0,
