@@ -2,6 +2,7 @@
   "expo": {
     "name": "Planova",
     "slug": "mimar-app",
+    "owner": "celikler",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
@@ -43,6 +44,11 @@
       ],
       "@react-native-google-signin/google-signin",
       "expo-web-browser"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "36fccdcf-f7cf-4d48-978c-03998a7e6a23"
+      }
+    }
   }
 }
