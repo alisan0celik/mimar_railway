@@ -14,15 +14,15 @@
       },
       "oauth_client": [
         {
-          "client_id": "863980504433-nsuuam4p2s4ij138jjbo3qc6stsq3ndt.apps.googleusercontent.com",
+          "client_id": "863980504433-krs93cj4l1uub8u2mt7t0tko79l4c620.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.mimar.app",
-            "certificate_hash": "577c7753ab640f59df032aad9fc05af536cdb602"
+            "certificate_hash": "63dfec6e03d6539f74d9b9c4df957daaa89cc8a3"
           }
         },
         {
-          "client_id": "863980504433-k3urd33pdnb3iabpbe0unlo79c26pdes.apps.googleusercontent.com",
+          "client_id": "863980504433-ui54bn3hnab3spo3san3l5afmo2f6uto.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
