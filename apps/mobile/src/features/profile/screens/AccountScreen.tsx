@@ -15,14 +15,13 @@ export function AccountScreen() {
   const [name, setName] = useState(user?.fullName ?? "");
   const [email, setEmail] = useState(user?.email ?? "");
   const [phone, setPhone] = useState(user?.phone ?? "");
-  const [title, setTitle] = useState(user?.title ?? "");
   const [loading, setLoading] = useState(false);
   const setUser = useAuthStore((s) => s.setUser);
 
   const handleSave = async () => {
     setLoading(true);
     try {
-      const res = await usersApi.updateProfile({ fullName: name, phone, title });
+      const res = await usersApi.updateProfile({ fullName: name, phone });
       if (res.data) {
         setUser({ ...user, ...res.data } as any);
         router.back();
@@ -56,7 +55,6 @@ export function AccountScreen() {
             onChangeText={setPhone}
             value={phone}
           />
-          <AppInput label={t("profile.account.titleField")} onChangeText={setTitle} value={title} />
         </View>
         <AppButton
           loading={loading}

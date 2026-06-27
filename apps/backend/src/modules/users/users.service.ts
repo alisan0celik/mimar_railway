@@ -12,6 +12,11 @@ import { CompanyScopeService } from "../../common/tenant/company-scope.service";
 import { PermissionService } from "../../common/permissions/permission.service";
 import { NotificationsService } from "../notifications/notifications.service";
 import { CompaniesService } from "../companies/companies.service";
+
+// Çıkarılan kullanıcının yeniden katılım talebi gönderebilmesi için geri verilen
+// temel izinler (kayıttaki DEFAULT_USER_PERMISSIONS ile aynı).
+const BASELINE_USER_PERMISSIONS = ["company.join", "notification.view"];
+
 export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
@@ -302,6 +307,10 @@ export class UsersService {
       }),
       this.prisma.userRole.deleteMany({ where: { userId } }),
       this.prisma.userPermission.deleteMany({ where: { userId } }),
+      // Temel izinleri geri ver ki çıkarılan kullanıcı tekrar katılım talebi gönderebilsin
+      this.prisma.userPermission.createMany({
+        data: BASELINE_USER_PERMISSIONS.map((permission) => ({ userId, permission })),
+      }),
       this.prisma.user.update({
         where: { id: userId },
         data: {
