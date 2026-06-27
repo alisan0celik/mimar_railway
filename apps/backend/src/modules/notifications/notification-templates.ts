@@ -71,6 +71,41 @@ export function projectNoteCreatedNotification(
   };
 }
 
+export function projectCreatedNotification(
+  locale: NotificationLocale,
+  params: { creatorName: string; projectName: string },
+) {
+  if (locale === "en") {
+    return {
+      title: "New project",
+      message: `${params.creatorName} created the project "${params.projectName}".`,
+    };
+  }
+  return {
+    title: "Yeni proje",
+    message: `${params.creatorName}, "${params.projectName}" projesini oluşturdu.`,
+  };
+}
+
+export function financeRecordCreatedNotification(
+  locale: NotificationLocale,
+  params: { creatorName: string; amount: string; isCollection: boolean; projectName?: string },
+) {
+  const scope = params.projectName ? ` (${params.projectName})` : "";
+  if (locale === "en") {
+    const kind = params.isCollection ? "collection" : "expense";
+    return {
+      title: "New finance record",
+      message: `${params.creatorName} added a ${kind} of ${params.amount}${scope}.`,
+    };
+  }
+  const kind = params.isCollection ? "tahsilat" : "gider";
+  return {
+    title: "Yeni finans kaydı",
+    message: `${params.creatorName}, ${params.amount} tutarında ${kind} kaydı ekledi${scope}.`,
+  };
+}
+
 export function calendarEventCreatedNotification(
   locale: NotificationLocale,
   params: { creatorName: string; eventTitle: string; time: string },

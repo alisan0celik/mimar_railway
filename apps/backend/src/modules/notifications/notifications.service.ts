@@ -74,7 +74,9 @@ export class NotificationsService {
       const channelId =
         input.targetType === "membership"
           ? FCM_CHANNEL_MEMBERSHIP
-          : input.targetType === "project_task" || input.targetType === "project_note"
+          : input.targetType === "project" ||
+              input.targetType === "project_task" ||
+              input.targetType === "project_note"
             ? FCM_CHANNEL_PROJECT
             : input.targetType === "support_ticket"
               ? FCM_CHANNEL_SUPPORT

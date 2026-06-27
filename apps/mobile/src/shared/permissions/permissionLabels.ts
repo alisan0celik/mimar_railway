@@ -18,7 +18,10 @@ const PERMISSION_GROUP_ICONS: Record<string, string> = {
 };
 
 function permissionBaseKey(code: PermissionCode): string {
-  return `permissions.${code.replace(/\./g, ".")}`;
+  // İzin kodları kebab-case (ör. "completed-project.view") ama çeviri anahtarları
+  // camelCase (ör. "completedProject.view") — tireleri camelCase'e çevir.
+  const camel = code.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
+  return `permissions.${camel}`;
 }
 
 export function getPermissionMeta(code: PermissionCode): PermissionMeta {

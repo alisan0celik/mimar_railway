@@ -3,12 +3,15 @@ import { PrismaService } from '../../common/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import {
   NOTIFICATION_TARGET,
+  PROJECT_ACTION,
   PROJECT_NOTE_ACTION,
   PROJECT_TASK_ACTION,
   projectNoteRoute,
+  projectRoute,
   projectTaskRoute,
 } from '../notifications/notification-events.constants';
 import {
+  projectCreatedNotification,
   projectNoteCreatedNotification,
   projectTaskCreatedNotification,
   resolveNotificationLocale,
@@ -87,7 +90,58 @@ export class ProjectsService {
       },
     });
 
+    await this.notifyCompanyOnProjectCreated(companyId, userId, project.id, project.name);
+
     return project;
+  }
+
+  private async notifyCompanyOnProjectCreated(
+    companyId: string,
+    creatorId: string,
+    projectId: string,
+    projectName: string,
+  ) {
+    const creator = await this.prisma.user.findUnique({
+      where: { id: creatorId },
+      select: { fullName: true },
+    });
+    if (!creator) return;
+
+    const route = projectRoute(projectId);
+    const locale = resolveNotificationLocale(null);
+    const copy = projectCreatedNotification(locale, {
+      creatorName: creator.fullName,
+      projectName,
+    });
+
+    const users = await this.prisma.user.findMany({
+      where: {
+        companyId,
+        approvalStatus: 'approved',
+        id: { not: creatorId },
+      },
+      select: { id: true, notificationPreferences: true },
+    });
+    if (users.length === 0) return;
+
+    await Promise.all(
+      users.map((user: NotificationRecipient) => {
+        const prefs = user.notificationPreferences as Record<string, boolean> | null;
+        if (prefs?.projects === false) return Promise.resolve();
+
+        return this.notificationsService.createForUser({
+          userId: user.id,
+          title: copy.title,
+          message: copy.message,
+          type: 'info',
+          targetType: NOTIFICATION_TARGET.PROJECT,
+          targetId: projectId,
+          action: PROJECT_ACTION.CREATED,
+          route,
+          metadata: { projectId },
+        });
+      }),
+    );
   }
 
   async findAll(companyId: string) {

@@ -1,8 +1,10 @@
 export const NOTIFICATION_TARGET = {
   MEMBERSHIP: "membership",
   JOIN_REQUEST: "join_request",
+  PROJECT: "project",
   PROJECT_TASK: "project_task",
   PROJECT_NOTE: "project_note",
+  FINANCE_RECORD: "finance_record",
   CALENDAR_EVENT: "calendar_event",
   SUPPORT_TICKET: "support_ticket",
 } as const;
@@ -17,6 +19,14 @@ export const PROJECT_TASK_ACTION = {
 } as const;
 
 export const PROJECT_NOTE_ACTION = {
+  CREATED: "created",
+} as const;
+
+export const PROJECT_ACTION = {
+  CREATED: "created",
+} as const;
+
+export const FINANCE_ACTION = {
   CREATED: "created",
 } as const;
 
@@ -40,6 +50,14 @@ export function projectTaskRoute(projectId: string): string {
 
 export function projectNoteRoute(projectId: string): string {
   return `/(main)/projects/${projectId}?tab=notes`;
+}
+
+export function projectRoute(projectId: string): string {
+  return `/(main)/projects/${projectId}`;
+}
+
+export function financeRoute(): string {
+  return "/(main)/(tabs)/finance";
 }
 
 export function calendarRoute(): string {

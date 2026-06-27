@@ -1,5 +1,15 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../../common/prisma.service";
+import { NotificationsService } from "../notifications/notifications.service";
+import {
+  FINANCE_ACTION,
+  NOTIFICATION_TARGET,
+  financeRoute,
+} from "../notifications/notification-events.constants";
+import {
+  financeRecordCreatedNotification,
+  resolveNotificationLocale,
+} from "../notifications/notification-templates";
 import { CreateFinanceRecordDto } from "./dto/create-finance-record.dto";
 import { UpdateFinanceRecordDto } from "./dto/update-finance-record.dto";
 import {
@@ -10,7 +20,10 @@ import { mapFinanceRecordForResponse, normalizeFinanceRecordType } from "./finan
 
 @Injectable()
 export class FinanceService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   private async buildSummariesResponse(companyId: string) {
     const projects = await this.prisma.project.findMany({
@@ -61,6 +74,8 @@ export class FinanceService {
       },
     });
 
+    await this.notifyManagersOnFinanceCreated(companyId, userId, record);
+
     const summary = await this.buildSummariesResponse(companyId);
 
     return {
@@ -75,6 +90,71 @@ export class FinanceService {
       }),
       summary,
     };
+  }
+
+  private async notifyManagersOnFinanceCreated(
+    companyId: string,
+    creatorId: string,
+    record: { id: string; type: string; amount: number; projectId: string | null },
+  ) {
+    const creator = await this.prisma.user.findUnique({
+      where: { id: creatorId },
+      select: { fullName: true },
+    });
+    if (!creator) return;
+
+    let projectName: string | undefined;
+    if (record.projectId) {
+      const project = await this.prisma.project.findUnique({
+        where: { id: record.projectId },
+        select: { name: true },
+      });
+      projectName = project?.name;
+    }
+
+    const locale = resolveNotificationLocale(null);
+    const amountText = new Intl.NumberFormat("tr-TR", {
+      style: "currency",
+      currency: "TRY",
+      maximumFractionDigits: 0,
+    }).format(record.amount);
+    const copy = financeRecordCreatedNotification(locale, {
+      creatorName: creator.fullName,
+      amount: amountText,
+      isCollection: normalizeFinanceRecordType(record.type) === "collection",
+      projectName,
+    });
+
+    // Sadece finans görüntüleme izni olan kullanıcılar (yöneticiler) bildirim alır
+    const managers = await this.prisma.user.findMany({
+      where: {
+        companyId,
+        approvalStatus: "approved",
+        id: { not: creatorId },
+        permissions: { some: { permission: "finance.view", granted: true } },
+      },
+      select: { id: true, notificationPreferences: true },
+    });
+    if (managers.length === 0) return;
+
+    await Promise.all(
+      managers.map((user) => {
+        const prefs = user.notificationPreferences as Record<string, boolean> | null;
+        if (prefs?.finance === false) return Promise.resolve();
+
+        return this.notificationsService.createForUser({
+          userId: user.id,
+          title: copy.title,
+          message: copy.message,
+          type: "info",
+          targetType: NOTIFICATION_TARGET.FINANCE_RECORD,
+          targetId: record.id,
+          action: FINANCE_ACTION.CREATED,
+          route: financeRoute(),
+          metadata: { financeRecordId: record.id },
+        });
+      }),
+    );
   }
 
   async findAll(companyId: string) {
