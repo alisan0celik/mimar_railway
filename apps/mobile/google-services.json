@@ -12,7 +12,12 @@
           "package_name": "com.mimar.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "863980504433-3ou0kfta2fgg4btuegtb34ol3nvf797n.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAbFL3wpXJMY7FsXxGXLjJ2sUjBJNZGkRM"
@@ -20,7 +25,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "863980504433-3ou0kfta2fgg4btuegtb34ol3nvf797n.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
