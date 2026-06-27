@@ -14,7 +14,15 @@
       },
       "oauth_client": [
         {
-          "client_id": "863980504433-3ou0kfta2fgg4btuegtb34ol3nvf797n.apps.googleusercontent.com",
+          "client_id": "863980504433-nsuuam4p2s4ij138jjbo3qc6stsq3ndt.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mimar.app",
+            "certificate_hash": "577c7753ab640f59df032aad9fc05af536cdb602"
+          }
+        },
+        {
+          "client_id": "863980504433-k3urd33pdnb3iabpbe0unlo79c26pdes.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
@@ -29,6 +37,13 @@
             {
               "client_id": "863980504433-3ou0kfta2fgg4btuegtb34ol3nvf797n.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "863980504433-tohah1oj5kdkmt8hbus81keuqp8vt0vs.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.mimar.app"
+              }
             }
           ]
         }
