@@ -1,8 +1,9 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter, type Href } from "expo-router";
-import { useMemo } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useMemo, useState } from "react";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 
+import { usersApi } from "../../../services/api/users.api";
 import { useTranslation } from "../../../shared/i18n";
 import { PERMISSIONS, useCan } from "../../../shared/permissions";
 import { useAuthStore } from "../../../store";
@@ -34,6 +35,45 @@ export function ProfileScreen() {
   const canManageTeam = useCan(PERMISSIONS.USER_ROLE_ASSIGN);
   const canViewRoles = useCan(PERMISSIONS.ROLE_VIEW);
   const canApproveUsers = useCan(PERMISSIONS.USER_APPROVE);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDeleteAccount = () => {
+    Alert.alert(t("profile.deleteAccount.title"), t("profile.deleteAccount.warning"), [
+      { text: t("common.cancel"), style: "cancel" },
+      {
+        text: t("profile.deleteAccount.confirmButton"),
+        style: "destructive",
+        onPress: () => {
+          // İkinci onay — kalıcı silme öncesi son kontrol
+          Alert.alert(
+            t("profile.deleteAccount.finalTitle"),
+            t("profile.deleteAccount.finalWarning"),
+            [
+              { text: t("common.cancel"), style: "cancel" },
+              {
+                text: t("profile.deleteAccount.finalButton"),
+                style: "destructive",
+                onPress: async () => {
+                  setDeleting(true);
+                  try {
+                    await usersApi.deleteAccount();
+                    await logout();
+                    router.replace("/(auth)/login");
+                  } catch (error: any) {
+                    const message =
+                      error?.response?.data?.message || t("profile.deleteAccount.error");
+                    Alert.alert(t("common.error"), message);
+                  } finally {
+                    setDeleting(false);
+                  }
+                },
+              },
+            ],
+          );
+        },
+      },
+    ]);
+  };
 
   const menuItems = useMemo((): MenuItem[] => {
     const allItems: MenuItem[] = [
@@ -180,6 +220,12 @@ export function ProfileScreen() {
       >
         <Text style={styles.logoutText}>{t("profile.logout")}</Text>
       </Pressable>
+
+      <Pressable disabled={deleting} onPress={handleDeleteAccount} style={styles.deleteBtn}>
+        <Text style={styles.deleteText}>
+          {deleting ? t("profile.deleteAccount.deleting") : t("profile.deleteAccount.button")}
+        </Text>
+      </Pressable>
     </Screen>
   );
 }
@@ -265,6 +311,17 @@ function createStyles(colors: AppColors) {
       ...typography.body,
       color: colors.dangerLogout,
       fontWeight: "700",
+    },
+    deleteBtn: {
+      marginTop: spacing.md,
+      alignItems: "center",
+      paddingVertical: spacing.md,
+    },
+    deleteText: {
+      ...typography.bodySmall,
+      color: colors.danger,
+      fontWeight: "600",
+      textDecorationLine: "underline",
     },
   });
 }

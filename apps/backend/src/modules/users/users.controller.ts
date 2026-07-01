@@ -58,6 +58,16 @@ export class UsersController {
     return this.usersService.updateProfile(user.sub, dto);
   }
 
+  @Delete("me")
+  @ApiOperation({
+    summary: "Kendi hesabını sil",
+    description:
+      "Hesabı kalıcı olarak kapatır: kişisel veriler anonimleştirilir, cihaz/bildirim kayıtları silinir. Tek üyesi olduğu sahip olunan ofisler de silinir.",
+  })
+  async deleteOwnAccount(@CurrentUser() user: JwtPayload) {
+    return this.usersService.deleteOwnAccount(user.sub);
+  }
+
   @Patch("notification-preferences")
   @ApiOperation({ summary: "Bildirim tercihlerini güncelle" })
   async updateNotificationPrefs(

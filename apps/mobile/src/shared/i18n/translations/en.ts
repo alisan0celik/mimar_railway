@@ -470,6 +470,18 @@ export const en = {
     theme: "Theme",
     logout: "Log Out",
     defaultRole: "Project Manager",
+    deleteAccount: {
+      button: "Delete My Account",
+      deleting: "Deleting account...",
+      title: "Delete your account?",
+      warning:
+        "This cannot be undone. Your profile details, notifications and device records will be permanently deleted.",
+      confirmButton: "Continue",
+      finalTitle: "Final confirmation",
+      finalWarning: "Your account will be permanently deleted. Are you sure?",
+      finalButton: "Permanently Delete My Account",
+      error: "Something went wrong while deleting your account. Please try again.",
+    },
     account: {
       title: "Account Information",
       fullName: "Full Name",

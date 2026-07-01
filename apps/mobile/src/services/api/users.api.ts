@@ -61,4 +61,7 @@ export const usersApi = {
 
   updateNotificationPrefs: (prefs: any) =>
     apiClient.patch("/users/notification-preferences", { notificationPreferences: prefs }),
+
+  deleteAccount: () =>
+    apiClient.delete<{ message: string }>("/users/me"),
 };

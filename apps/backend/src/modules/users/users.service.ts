@@ -333,6 +333,64 @@ export class UsersService {
     return { message: "Kullanıcı ofisten çıkarıldı" };
   }
 
+  async deleteOwnAccount(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { ownedCompanies: { select: { id: true, name: true } } },
+    });
+    if (!user) throw new NotFoundException("Kullanıcı bulunamadı");
+
+    // Sahip olunan ofislerde başka onaylı üye varsa hesap silinemez;
+    // önce ofis devredilmeli veya üyeler çıkarılmalı.
+    for (const company of user.ownedCompanies) {
+      const otherMembers = await this.prisma.user.count({
+        where: {
+          companyId: company.id,
+          id: { not: userId },
+          approvalStatus: "approved",
+        },
+      });
+      if (otherMembers > 0) {
+        throw new ForbiddenException(
+          `"${company.name}" ofisinin sahibisiniz ve ofiste başka üyeler var. Hesabınızı silmeden önce üyeleri çıkarmalısınız.`,
+        );
+      }
+    }
+
+    await this.prisma.$transaction([
+      // Üyesi kalmayan sahip olunan ofisleri sil (projeler/finans/roller cascade ile temizlenir)
+      ...user.ownedCompanies.map((company) =>
+        this.prisma.company.delete({ where: { id: company.id } }),
+      ),
+      this.prisma.deviceToken.deleteMany({ where: { userId } }),
+      this.prisma.notification.deleteMany({ where: { userId } }),
+      this.prisma.userRole.deleteMany({ where: { userId } }),
+      this.prisma.userPermission.deleteMany({ where: { userId } }),
+      this.prisma.projectTeam.deleteMany({ where: { userId } }),
+      this.prisma.passwordResetToken.deleteMany({ where: { userId } }),
+      // Ortak içerik (not/görev/finans) FK kısıtları nedeniyle korunur;
+      // kullanıcı satırındaki tüm kişisel veriler anonimleştirilir.
+      this.prisma.user.update({
+        where: { id: userId },
+        data: {
+          email: `deleted-${userId}@silinmis-hesap.planova.app`,
+          fullName: "Silinmiş Kullanıcı",
+          phone: null,
+          avatarUrl: null,
+          passwordHash: null,
+          refreshToken: null,
+          fcmToken: null,
+          socialId: null,
+          title: null,
+          companyId: null,
+          approvalStatus: "suspended",
+        },
+      }),
+    ]);
+
+    return { message: "Hesabınız kalıcı olarak silindi" };
+  }
+
   private async userHasRoleCode(
     userId: string,
     companyId: string,

@@ -470,6 +470,18 @@ export const tr = {
     theme: "Tema",
     logout: "Çıkış Yap",
     defaultRole: "Proje Yöneticisi",
+    deleteAccount: {
+      button: "Hesabımı Sil",
+      deleting: "Hesap siliniyor...",
+      title: "Hesabını silmek istiyor musun?",
+      warning:
+        "Bu işlem geri alınamaz. Profil bilgilerin, bildirimlerin ve cihaz kayıtların kalıcı olarak silinir.",
+      confirmButton: "Devam Et",
+      finalTitle: "Son onay",
+      finalWarning: "Hesabın kalıcı olarak silinecek. Emin misin?",
+      finalButton: "Hesabımı Kalıcı Olarak Sil",
+      error: "Hesap silinirken bir hata oluştu. Lütfen tekrar deneyin.",
+    },
     account: {
       title: "Hesap Bilgileri",
       fullName: "Ad Soyad",
