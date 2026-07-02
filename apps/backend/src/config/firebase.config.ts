@@ -44,4 +44,17 @@ export class FirebaseConfig implements OnModuleInit {
     }
     return null;
   }
+
+  async getAccessToken(): Promise<string | null> {
+    if (!admin.apps.length) return null;
+    try {
+      const credential = admin.app().options.credential;
+      if (!credential) return null;
+      const token = await credential.getAccessToken();
+      return token?.access_token ?? null;
+    } catch (error) {
+      this.logger.error("Failed to obtain Google access token", error);
+      return null;
+    }
+  }
 }

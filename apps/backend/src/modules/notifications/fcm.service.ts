@@ -13,9 +13,16 @@ export interface FcmSendResult {
   invalidTokens: string[];
 }
 
+const IID_BATCH_IMPORT_URL = "https://iid.googleapis.com/iid/v1:batchImport";
+const IOS_BUNDLE_ID = process.env.IOS_BUNDLE_ID || "com.mimar.app";
+
 @Injectable()
 export class FcmService {
   private readonly logger = new Logger(FcmService.name);
+
+  // iOS'ta Expo, FCM token'ı değil ham APNs token'ı verir; FCM'e göndermeden önce
+  // Instance ID batchImport ile FCM kayıt token'ına çevrilir ve burada cache'lenir.
+  private readonly apnsToFcmCache = new Map<string, string>();
 
   constructor(private readonly firebaseConfig: FirebaseConfig) {}
 
@@ -53,6 +60,65 @@ export class FcmService {
     );
   }
 
+  private isLikelyApnsToken(token: string): boolean {
+    return !token.includes(":") && /^[0-9a-fA-F]{64,200}$/.test(token);
+  }
+
+  /** Ham APNs token'ını FCM kayıt token'ına çevirir; FCM token'ları olduğu gibi döner. */
+  private async resolveSendableToken(token: string): Promise<string | null> {
+    if (!this.isLikelyApnsToken(token)) return token;
+
+    const cached = this.apnsToFcmCache.get(token);
+    if (cached) return cached;
+
+    const accessToken = await this.firebaseConfig.getAccessToken();
+    if (!accessToken) {
+      this.logger.warn("No Google access token; cannot convert APNs token");
+      return null;
+    }
+
+    // TestFlight/App Store production APNs kullanır; development build'ler sandbox.
+    for (const sandbox of [false, true]) {
+      try {
+        const response = await (globalThis as any).fetch(IID_BATCH_IMPORT_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+            access_token_auth: "true",
+          },
+          body: JSON.stringify({
+            application: IOS_BUNDLE_ID,
+            sandbox,
+            apns_tokens: [token],
+          }),
+        });
+
+        if (!response.ok) {
+          this.logger.warn(
+            `APNs batchImport HTTP ${response.status} (sandbox=${sandbox})`,
+          );
+          continue;
+        }
+
+        const data = await response.json();
+        const result = data?.results?.[0];
+        if (result?.status === "OK" && result.registration_token) {
+          this.apnsToFcmCache.set(token, result.registration_token);
+          return result.registration_token;
+        }
+        this.logger.warn(
+          `APNs batchImport status=${result?.status ?? "?"} (sandbox=${sandbox})`,
+        );
+      } catch (error: any) {
+        this.logger.warn(`APNs->FCM conversion failed: ${error.message}`);
+      }
+    }
+
+    this.logger.warn(`APNs token could not be converted: ${token.substring(0, 12)}...`);
+    return null;
+  }
+
   async sendToDevice(token: string, payload: PushNotificationPayload): Promise<FcmSendResult> {
     const messaging = this.firebaseConfig.messaging;
 
@@ -61,12 +127,16 @@ export class FcmService {
       return { invalidTokens: [] };
     }
 
+    const sendable = await this.resolveSendableToken(token);
+    if (!sendable) return { invalidTokens: [] };
+
     try {
-      await messaging.send(this.buildMessage(token, payload));
+      await messaging.send(this.buildMessage(sendable, payload));
       return { invalidTokens: [] };
     } catch (error: any) {
       if (this.isInvalidTokenError(error.code)) {
         this.logger.warn(`Device token not registered: ${token.substring(0, 20)}...`);
+        this.apnsToFcmCache.delete(token);
         return { invalidTokens: [token] };
       }
       this.logger.error(`FCM send failed: ${error.message}`);
@@ -96,7 +166,16 @@ export class FcmService {
         return { invalidTokens };
       }
 
-      const messages = tokens.map((token) => this.buildMessage(token, payload));
+      // Orijinal token -> gönderilebilir (FCM) token eşlemesi; hata durumunda
+      // temizlik için invalidTokens'a DB'deki orijinal token yazılır.
+      const resolved: Array<{ original: string; sendable: string }> = [];
+      for (const token of tokens) {
+        const sendable = await this.resolveSendableToken(token);
+        if (sendable) resolved.push({ original: token, sendable });
+      }
+      if (resolved.length === 0) return { invalidTokens };
+
+      const messages = resolved.map((entry) => this.buildMessage(entry.sendable, payload));
       const response = await messaging.sendEach(messages);
       this.logger.log(
         `FCM: ${response.successCount} sent, ${response.failureCount} failed`,
@@ -106,7 +185,9 @@ export class FcmService {
         if (res.success) return;
         const code = (res.error as { code?: string } | undefined)?.code;
         if (this.isInvalidTokenError(code)) {
-          invalidTokens.push(tokens[index]);
+          const original = resolved[index].original;
+          this.apnsToFcmCache.delete(original);
+          invalidTokens.push(original);
         }
       });
     } catch (error: any) {
