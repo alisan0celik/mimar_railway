@@ -105,6 +105,9 @@ export class FcmService {
         const result = data?.results?.[0];
         if (result?.status === "OK" && result.registration_token) {
           this.apnsToFcmCache.set(token, result.registration_token);
+          this.logger.log(
+            `APNs token converted to FCM (${token.substring(0, 8)}..., sandbox=${sandbox})`,
+          );
           return result.registration_token;
         }
         this.logger.warn(
@@ -132,6 +135,7 @@ export class FcmService {
 
     try {
       await messaging.send(this.buildMessage(sendable, payload));
+      this.logger.log(`FCM sent (${token.substring(0, 8)}...)`);
       return { invalidTokens: [] };
     } catch (error: any) {
       if (this.isInvalidTokenError(error.code)) {
