@@ -71,6 +71,8 @@ export class FcmService {
     const cached = this.apnsToFcmCache.get(token);
     if (cached) return cached;
 
+    this.logger.log(`Converting APNs token (${token.substring(0, 8)}...)`);
+
     const accessToken = await this.firebaseConfig.getAccessToken();
     if (!accessToken) {
       this.logger.warn("No Google access token; cannot convert APNs token");
@@ -143,7 +145,9 @@ export class FcmService {
         this.apnsToFcmCache.delete(token);
         return { invalidTokens: [token] };
       }
-      this.logger.error(`FCM send failed: ${error.message}`);
+      this.logger.error(
+        `FCM send failed (${token.substring(0, 8)}..., code=${error.code ?? "?"}): ${error.message}`,
+      );
       return { invalidTokens: [] };
     }
   }
@@ -187,9 +191,12 @@ export class FcmService {
 
       response.responses.forEach((res, index) => {
         if (res.success) return;
+        const original = resolved[index].original;
         const code = (res.error as { code?: string } | undefined)?.code;
+        this.logger.warn(
+          `FCM item failed (${original.substring(0, 8)}..., code=${code ?? "?"}): ${res.error?.message ?? ""}`,
+        );
         if (this.isInvalidTokenError(code)) {
-          const original = resolved[index].original;
           this.apnsToFcmCache.delete(original);
           invalidTokens.push(original);
         }
