@@ -48,6 +48,7 @@
           "iosUrlScheme": "com.googleusercontent.apps.863980504433-tohah1oj5kdkmt8hbus81keuqp8vt0vs"
         }
       ],
+      "./plugins/withGoogleSignInModularHeaders.js",
       "expo-web-browser"
     ],
     "extra": {
