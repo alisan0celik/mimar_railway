@@ -560,6 +560,13 @@ export const tr = {
       symbol: "Özel karakter (!@#$% vb.)",
     },
     terms: "Kullanım koşullarını okudum, kabul ediyorum",
+    termsAgree: {
+      prefix: "",
+      termsLink: "Kullanım Koşulları",
+      middle: "'nı ve ",
+      privacyLink: "Gizlilik Politikası",
+      suffix: "'nı okudum, kabul ediyorum",
+    },
     social: {
       appleMobileOnly: "Apple ile giriş sadece mobil cihazlarda desteklenmektedir.",
       googleMobileOnly: "Google ile giriş sadece mobil cihazlarda desteklenmektedir.",

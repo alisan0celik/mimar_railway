@@ -560,6 +560,13 @@ export const en = {
       symbol: "Special character (!@#$% etc.)",
     },
     terms: "I have read and accept the terms of use",
+    termsAgree: {
+      prefix: "I have read and agree to the ",
+      termsLink: "Terms of Use",
+      middle: " and the ",
+      privacyLink: "Privacy Policy",
+      suffix: "",
+    },
     social: {
       appleMobileOnly: "Sign in with Apple is only supported on mobile devices.",
       googleMobileOnly: "Sign in with Google is only supported on mobile devices.",

@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { useAuthStore } from "../../../store/authStore";
 import { radius, spacing, typography } from "../../../shared/theme";
@@ -17,6 +17,9 @@ import {
   AuthFormCard,
   AuthScreenShell,
 } from "../../../shared/ui";
+
+const TERMS_URL = "https://alisan0celik.github.io/planova-legal/kullanim-kosullari.html";
+const PRIVACY_URL = "https://alisan0celik.github.io/planova-legal/";
 
 export function RegisterScreen() {
   const styles = useThemedStyles(createStyles);
@@ -229,7 +232,17 @@ export function RegisterScreen() {
             size={22}
             color={agreed ? colors.primaryLight : "rgba(255,255,255,0.45)"}
           />
-          <Text style={styles.checkboxText}>{t("auth.terms")}</Text>
+          <Text style={styles.checkboxText}>
+            {t("auth.termsAgree.prefix")}
+            <Text style={styles.checkboxLink} onPress={() => Linking.openURL(TERMS_URL)}>
+              {t("auth.termsAgree.termsLink")}
+            </Text>
+            {t("auth.termsAgree.middle")}
+            <Text style={styles.checkboxLink} onPress={() => Linking.openURL(PRIVACY_URL)}>
+              {t("auth.termsAgree.privacyLink")}
+            </Text>
+            {t("auth.termsAgree.suffix")}
+          </Text>
         </Pressable>
 
         <AppButton
@@ -337,6 +350,11 @@ function createStyles(colors: AppColors) {
       ...typography.bodySmall,
       color: "rgba(255,255,255,0.7)",
       flex: 1,
+    },
+    checkboxLink: {
+      color: colors.primaryLight,
+      fontWeight: "600",
+      textDecorationLine: "underline",
     },
     submitButton: {
       marginTop: spacing.sm,
