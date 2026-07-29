@@ -13,7 +13,6 @@ import { AppleStrategy } from "./strategies/apple.strategy";
 import { GoogleAuthService } from "./social/google-auth.service";
 import { AppleAuthService } from "./social/apple-auth.service";
 import { MicrosoftAuthService } from "./social/microsoft-auth.service";
-import { PrismaService } from "../../common/prisma.service";
 import { FirebaseConfig } from "../../config/firebase.config";
 import { getJwtAccessSecret } from "../../config/jwt.config";
 import { AuthRateLimitGuard } from "../../common/guards/auth-rate-limit.guard";
@@ -60,7 +59,6 @@ function getOptionalSocialStrategyProviders(): Provider[] {
     JwtStrategy,
     JwtRefreshStrategy,
     ...getOptionalSocialStrategyProviders(),
-    PrismaService,
     FirebaseConfig,
   ],
   exports: [AuthService],
