@@ -25,15 +25,29 @@ const SUBSCRIPTION_BLOCK_CODES = new Set([
   "COMPANY_INACTIVE",
 ]);
 
+const SUBSCRIPTION_MESSAGE_KEYS: Record<string, string> = {
+  COMPANY_SUBSCRIPTION_EXPIRED: "auth.errors.subscriptionExpired",
+  COMPANY_SUBSCRIPTION_BLOCKED: "auth.errors.subscriptionBlocked",
+  COMPANY_INACTIVE: "auth.errors.companyInactive",
+};
+
 function getLoginErrorMessage(
   error: any,
   t: (key: string, params?: Record<string, string | number>) => string,
 ) {
   const code = error?.response?.data?.code;
+  if (code && SUBSCRIPTION_MESSAGE_KEYS[code]) {
+    return t(SUBSCRIPTION_MESSAGE_KEYS[code]);
+  }
   if ((code && SUBSCRIPTION_BLOCK_CODES.has(code)) || error?.response?.status === 403) {
     return t("auth.errors.subscriptionRenewRequired");
   }
   return error?.response?.data?.message || t("auth.errors.invalidCredentials");
+}
+
+/** Backend'den gelen hata mı (sunucu yanıtı var), yoksa SDK/ağ hatası mı? */
+function isApiError(error: any): boolean {
+  return Boolean(error?.response);
 }
 
 export function LoginScreen() {
@@ -88,9 +102,13 @@ export function LoginScreen() {
         router.replace(getPostAuthRoute(user));
       }
     } catch (e: any) {
-      if (e.code !== "ERR_REQUEST_CANCELED") {
-        console.error(e);
+      if (e?.code === "ERR_REQUEST_CANCELED") return;
+      if (isApiError(e)) {
+        Alert.alert(t("common.error"), getLoginErrorMessage(e, t));
+        return;
       }
+      console.error(e);
+      Alert.alert(t("common.error"), e?.message || t("auth.errors.socialLoginFailed"));
     } finally {
       setLoading(false);
     }
@@ -131,14 +149,18 @@ export function LoginScreen() {
         );
       }
     } catch (e: any) {
-      // SIGN_IN_CANCELLED kodunu yutuyoruz; diğer her hatayı görünür kılıyoruz
-      if (e?.code !== "SIGN_IN_CANCELLED" && e?.code !== "-5") {
-        console.error(e);
-        Alert.alert(
-          t("common.error"),
-          `Google giriş hatası\ncode: ${e?.code ?? "?"}\nmessage: ${e?.message ?? String(e)}`,
-        );
+      // Kullanıcı iptal ettiyse sessiz geç
+      if (e?.code === "SIGN_IN_CANCELLED" || e?.code === "-5") return;
+      if (isApiError(e)) {
+        // Backend reddetti (ör. şirket lisansı dolmuş) — anlaşılır mesaj göster
+        Alert.alert(t("common.error"), getLoginErrorMessage(e, t));
+        return;
       }
+      console.error(e);
+      Alert.alert(
+        t("common.error"),
+        `Google giriş hatası\ncode: ${e?.code ?? "?"}\nmessage: ${e?.message ?? String(e)}`,
+      );
     } finally {
       setLoading(false);
     }

@@ -544,6 +544,12 @@ export const tr = {
       passwordMinLength: "Şifre en az 6 karakter olmalıdır.",
       invalidCredentials: "Geçersiz e-posta veya şifre girdiniz.",
       subscriptionRenewRequired: "Üyeliğiniz pasif veya süresi dolmuş. Lütfen üyeliğinizi yenileyin.",
+      subscriptionExpired:
+        "Şirketinizin lisans süresi doldu. Kullanmaya devam etmek için lütfen lisansınızı yenileyin.",
+      subscriptionBlocked:
+        "Şirket hesabınız geçici olarak engellendi. Lütfen destek ekibiyle iletişime geçin.",
+      companyInactive:
+        "Şirket hesabınız şu anda aktif değil. Lütfen ofis yöneticinizle iletişime geçin.",
       fullNameMinLength: "Ad soyad en az 3 karakter olmalıdır.",
       passwordRules: "Lütfen şifre kurallarının tümünü karşılayın.",
       passwordsMismatch: "Şifreler eşleşmiyor.",

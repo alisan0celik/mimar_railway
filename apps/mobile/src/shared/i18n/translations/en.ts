@@ -544,6 +544,12 @@ export const en = {
       passwordMinLength: "Password must be at least 6 characters.",
       invalidCredentials: "Invalid email or password.",
       subscriptionRenewRequired: "Your membership is inactive or expired. Please renew your membership.",
+      subscriptionExpired:
+        "Your company's licence has expired. Please renew it to continue using Planova.",
+      subscriptionBlocked:
+        "Your company account has been temporarily blocked. Please contact support.",
+      companyInactive:
+        "Your company account is not active right now. Please contact your office administrator.",
       fullNameMinLength: "Full name must be at least 3 characters.",
       passwordRules: "Please meet all password requirements.",
       passwordsMismatch: "Passwords do not match.",
