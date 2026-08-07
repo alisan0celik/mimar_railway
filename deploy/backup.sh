@@ -29,11 +29,19 @@ log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"; }
 
 [ -f "$ENV_FILE" ] || { log "HATA: $ENV_FILE bulunamadı"; exit 1; }
 
-# POSTGRES_USER / POSTGRES_DB değerlerini .env.production'dan al
-set -a
-# shellcheck disable=SC1090
-. "$ENV_FILE"
-set +a
+# .env.production bir shell scripti DEĞİL (ör. MAIL_FROM içindeki "<" bash'i bozar),
+# bu yüzden source etmiyoruz; yalnızca gereken iki değeri okuyoruz.
+read_env() {
+  grep -E "^$1=" "$ENV_FILE" | head -1 | cut -d= -f2- | sed -e 's/^"//' -e 's/"$//'
+}
+
+POSTGRES_USER="$(read_env POSTGRES_USER)"
+POSTGRES_DB="$(read_env POSTGRES_DB)"
+
+if [ -z "$POSTGRES_USER" ] || [ -z "$POSTGRES_DB" ]; then
+  log "HATA: POSTGRES_USER/POSTGRES_DB $ENV_FILE içinde bulunamadı"
+  exit 1
+fi
 
 mkdir -p "$BACKUP_DIR"
 STAMP="$(date +%Y%m%d-%H%M%S)"
