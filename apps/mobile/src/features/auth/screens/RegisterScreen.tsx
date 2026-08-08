@@ -33,6 +33,8 @@ export function RegisterScreen() {
   const [passwordRepeat, setPasswordRepeat] = useState("");
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordRepeat, setShowPasswordRepeat] = useState(false);
 
   const [fullNameError, setFullNameError] = useState<string>();
   const [emailError, setEmailError] = useState<string>();
@@ -51,7 +53,9 @@ export function RegisterScreen() {
   const hasUpperCase = /[A-Z]/.test(password);
   const hasLowerCase = /[a-z]/.test(password);
   const hasNumber = /[0-9]/.test(password);
-  const hasSymbol = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+  // Harf ve rakam dışındaki her karakter özel sayılır (iOS'un ürettiği güçlü
+  // şifreler tire kullanıyor; dar bir liste bunları kabul etmiyordu).
+  const hasSymbol = /[^A-Za-z0-9]/.test(password);
   const isPasswordValid = hasMinLength && hasUpperCase && hasLowerCase && hasNumber && hasSymbol;
 
   const isValid = isFullNameValid && isEmailValid && isPasswordValid && passwordsMatch && agreed;
@@ -152,11 +156,20 @@ export function RegisterScreen() {
             }}
             onBlur={onPasswordBlur}
             placeholder={t("auth.passwordPlaceholder")}
-            secureTextEntry
+            secureTextEntry={!showPassword}
             value={password}
             error={passwordError}
             leftIcon={
               <MaterialCommunityIcons name="lock-outline" size={20} color={colors.textMuted} />
+            }
+            rightIcon={
+              <Pressable hitSlop={8} onPress={() => setShowPassword((v) => !v)}>
+                <MaterialCommunityIcons
+                  color={colors.textMuted}
+                  name={showPassword ? "eye-off-outline" : "eye-outline"}
+                  size={20}
+                />
+              </Pressable>
             }
           />
           <View style={styles.passwordRequirements}>
@@ -213,7 +226,7 @@ export function RegisterScreen() {
               setApiError(undefined);
             }}
             placeholder={t("auth.passwordPlaceholder")}
-            secureTextEntry
+            secureTextEntry={!showPasswordRepeat}
             value={passwordRepeat}
             error={
               passwordRepeat.length > 0 && !passwordsMatch
@@ -222,6 +235,15 @@ export function RegisterScreen() {
             }
             leftIcon={
               <MaterialCommunityIcons name="lock-check-outline" size={20} color={colors.textMuted} />
+            }
+            rightIcon={
+              <Pressable hitSlop={8} onPress={() => setShowPasswordRepeat((v) => !v)}>
+                <MaterialCommunityIcons
+                  color={colors.textMuted}
+                  name={showPasswordRepeat ? "eye-off-outline" : "eye-outline"}
+                  size={20}
+                />
+              </Pressable>
             }
           />
         </View>

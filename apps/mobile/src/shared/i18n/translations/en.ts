@@ -563,7 +563,7 @@ export const en = {
       minLength: "At least 8 characters",
       upperLower: "Upper and lower case letters",
       number: "Number (0-9)",
-      symbol: "Special character (!@#$% etc.)",
+      symbol: "Special character (!@#$%?-_ etc.)",
     },
     terms: "I have read and accept the terms of use",
     termsAgree: {

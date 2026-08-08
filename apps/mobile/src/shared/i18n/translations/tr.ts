@@ -563,7 +563,7 @@ export const tr = {
       minLength: "En az 8 karakter",
       upperLower: "Büyük ve küçük harf",
       number: "Rakam (0-9)",
-      symbol: "Özel karakter (!@#$% vb.)",
+      symbol: "Özel karakter (!@#$%?-_ vb.)",
     },
     terms: "Kullanım koşullarını okudum, kabul ediyorum",
     termsAgree: {

@@ -98,7 +98,12 @@ export function AppInput({
           placeholder={placeholder}
           placeholderTextColor={colors.textMuted}
           secureTextEntry={secureTextEntry}
-          style={[styles.input, multiline && styles.multilineInput, inputStyle]}
+          style={[
+            styles.input,
+            !secureTextEntry && styles.inputLineHeight,
+            multiline && styles.multilineInput,
+            inputStyle,
+          ]}
           value={value}
         />
         {rightIcon ? <View style={styles.iconRight}>{rightIcon}</View> : null}
@@ -108,6 +113,10 @@ export function AppInput({
     </View>
   );
 }
+
+// iOS'ta secureTextEntry + lineHeight birlikte kullanılınca maskeleme
+// noktaları görünmez oluyor; bu yüzden lineHeight'ı ayrı stile aldık.
+const { lineHeight: bodyLineHeight, ...bodyTypography } = typography.body;
 
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
@@ -140,9 +149,12 @@ function createStyles(colors: AppColors) {
   },
   input: {
     flex: 1,
-    ...typography.body,
+    ...bodyTypography,
     color: colors.text,
     paddingVertical: spacing.md,
+  },
+  inputLineHeight: {
+    lineHeight: bodyLineHeight,
   },
   multilineInput: {
     minHeight: 100,
