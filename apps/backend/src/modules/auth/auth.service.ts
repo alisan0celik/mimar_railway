@@ -225,13 +225,12 @@ export class AuthService {
 
       const tokens = await this.generateTokens(user.id, user.email, user.companyId);
 
-      await this.prisma.user.update({
-        where: { id: user.id },
-        data: { refreshToken: tokens.refreshToken },
-      });
-
+      // Refresh token'ı DÖNDÜRMÜYORUZ: arka plan senkronu ile ön yüz aynı anda
+      // yenileme yaptığında biri eski token ile 401 alıp oturumu düşürüyordu.
+      // Mevcut refresh token süresi bitene ya da kullanıcı çıkış yapana kadar geçerli.
       return {
-        ...tokens,
+        accessToken: tokens.accessToken,
+        refreshToken,
         user: this.mapUserResponse(user),
       };
     } catch (error) {
@@ -399,11 +398,15 @@ export class AuthService {
   private async generateTokens(userId: string, email: string, companyId: string | null) {
     const payload: Record<string, unknown> = { sub: userId, email, companyId };
 
+    // Oturum ömrü env'den; mobilde kullanıcı elle çıkış yapmadıkça atılmasın diye uzun.
+    const refreshExpiresIn =
+      this.configService.get<string>("JWT_REFRESH_EXPIRATION")?.trim() || "90d";
+
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload),
       this.jwtService.signAsync(payload, {
         secret: getJwtRefreshSecret(this.configService),
-        expiresIn: "7d" as const,
+        expiresIn: refreshExpiresIn,
       }),
     ]);
 
