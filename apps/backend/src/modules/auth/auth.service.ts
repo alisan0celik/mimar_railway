@@ -445,8 +445,10 @@ export class AuthService {
     const payload: Record<string, unknown> = { sub: userId, email, companyId };
 
     // Oturum ömrü env'den; mobilde kullanıcı elle çıkış yapmadıkça atılmasın diye uzun.
-    const refreshExpiresIn =
-      this.configService.get<string>("JWT_REFRESH_EXPIRATION")?.trim() || "90d";
+    // @nestjs/jwt expiresIn için ms literal tipi bekliyor ("90d", "12h" gibi),
+    // env'den gelen string'i o tipe çeviriyoruz.
+    const refreshExpiresIn = (this.configService.get<string>("JWT_REFRESH_EXPIRATION")?.trim() ||
+      "90d") as `${number}d`;
 
     const [accessToken, refreshToken] = await Promise.all([
       this.generateAccessToken(userId, email, companyId),
