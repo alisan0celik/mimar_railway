@@ -107,8 +107,12 @@ export class AuthController {
   @ApiBearerAuth(SWAGGER_BEARER_AUTH)
   @ApiOperation({ summary: "Oturumu kapat" })
   @ApiResponse({ status: 200, description: "Çıkış başarılı" })
-  async logout(@CurrentUser() user: JwtPayload) {
-    return this.authService.logout(user.sub);
+  async logout(
+    @CurrentUser() user: JwtPayload,
+    @Body() body: { refreshToken?: string } = {},
+  ) {
+    // refreshToken gönderilirse yalnızca o cihazın oturumu kapatılır
+    return this.authService.logout(user.sub, body?.refreshToken);
   }
 
   @Get("me")

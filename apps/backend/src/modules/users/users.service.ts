@@ -311,6 +311,8 @@ export class UsersService {
       this.prisma.userPermission.createMany({
         data: BASELINE_USER_PERMISSIONS.map((permission) => ({ userId, permission })),
       }),
+      // Ofisten çıkarılan kullanıcının tüm cihaz oturumları kapanır
+      this.prisma.refreshToken.deleteMany({ where: { userId } }),
       this.prisma.user.update({
         where: { id: userId },
         data: {
@@ -368,6 +370,7 @@ export class UsersService {
       this.prisma.userPermission.deleteMany({ where: { userId } }),
       this.prisma.projectTeam.deleteMany({ where: { userId } }),
       this.prisma.passwordResetToken.deleteMany({ where: { userId } }),
+      this.prisma.refreshToken.deleteMany({ where: { userId } }),
       // Ortak içerik (not/görev/finans) FK kısıtları nedeniyle korunur;
       // kullanıcı satırındaki tüm kişisel veriler anonimleştirilir.
       this.prisma.user.update({

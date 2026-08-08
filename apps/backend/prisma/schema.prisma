@@ -69,6 +69,7 @@ model User {
   supportTickets          SupportTicket[]
   supportTicketMessages   SupportTicketMessage[]
   passwordResetTokens     PasswordResetToken[]
+  refreshTokens           RefreshToken[]
 
   @@unique([authProvider, socialId])
   @@index([companyId])
@@ -389,6 +390,23 @@ model ProjectFile {
 
   @@index([projectId])
   @@index([authorId])
+}
+
+/// Cihaz/oturum başına refresh token. Kullanıcı tablosundaki tek alanlı
+/// eski yapı, ikinci cihazdan giriş yapıldığında ilk cihazın oturumunu
+/// düşürüyordu; burada her oturum ayrı satırda tutulur.
+model RefreshToken {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model PasswordResetToken {

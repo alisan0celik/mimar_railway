@@ -217,19 +217,39 @@ export class AuthService {
         },
       });
 
-      if (!user || user.refreshToken !== refreshToken) {
+      if (!user) {
+        throw new UnauthorizedException("Geçersiz refresh token");
+      }
+
+      const tokenHash = this.hashRefreshToken(refreshToken);
+      const session = await this.prisma.refreshToken.findUnique({ where: { tokenHash } });
+
+      // Oturum tablosunda kayıt varsa onu doğrula; yoksa eski tek alanlı yapıyla
+      // giriş yapmış istemciler için geriye dönük uyumluluk sağla.
+      const sessionValid = Boolean(
+        session && !session.revokedAt && session.userId === user.id && session.expiresAt > new Date(),
+      );
+      const legacyValid = !session && user.refreshToken === refreshToken;
+
+      if (!sessionValid && !legacyValid) {
         throw new UnauthorizedException("Geçersiz refresh token");
       }
 
       await this.assertCompanyAccess(user);
 
-      const tokens = await this.generateTokens(user.id, user.email, user.companyId);
-
       // Refresh token'ı DÖNDÜRMÜYORUZ: arka plan senkronu ile ön yüz aynı anda
       // yenileme yaptığında biri eski token ile 401 alıp oturumu düşürüyordu.
       // Mevcut refresh token süresi bitene ya da kullanıcı çıkış yapana kadar geçerli.
+      const accessToken = await this.generateAccessToken(user.id, user.email, user.companyId);
+
+      if (session) {
+        await this.prisma.refreshToken
+          .update({ where: { tokenHash }, data: { lastUsedAt: new Date() } })
+          .catch(() => undefined);
+      }
+
       return {
-        accessToken: tokens.accessToken,
+        accessToken,
         refreshToken,
         user: this.mapUserResponse(user),
       };
@@ -241,7 +261,23 @@ export class AuthService {
     }
   }
 
-  async logout(userId: string) {
+  /**
+   * Çıkış. refreshToken verilirse yalnızca o cihazın oturumu kapatılır;
+   * verilmezse (eski istemciler) kullanıcının tüm oturumları kapatılır.
+   */
+  async logout(userId: string, refreshToken?: string) {
+    if (refreshToken) {
+      const tokenHash = this.hashRefreshToken(refreshToken);
+      await this.prisma.refreshToken.deleteMany({ where: { userId, tokenHash } });
+      // Eski tek alanlı yapıyla açılmış oturumsa onu da temizle
+      await this.prisma.user.updateMany({
+        where: { id: userId, refreshToken },
+        data: { refreshToken: null },
+      });
+      return { message: "Başarıyla çıkış yapıldı" };
+    }
+
+    await this.prisma.refreshToken.deleteMany({ where: { userId } });
     await this.prisma.user.update({
       where: { id: userId },
       data: { refreshToken: null },
@@ -309,6 +345,8 @@ export class AuthService {
         where: { id: resetToken.id },
         data: { usedAt: new Date() },
       }),
+      // Şifre değişince tüm cihazlardaki oturumlar kapanmalı
+      this.prisma.refreshToken.deleteMany({ where: { userId: resetToken.userId } }),
       this.prisma.passwordResetToken.updateMany({
         where: { userId: resetToken.userId, usedAt: null },
         data: { usedAt: new Date() },
@@ -395,6 +433,14 @@ export class AuthService {
     });
   }
 
+  private hashRefreshToken(token: string): string {
+    return createHash("sha256").update(token).digest("hex");
+  }
+
+  private async generateAccessToken(userId: string, email: string, companyId: string | null) {
+    return this.jwtService.signAsync({ sub: userId, email, companyId });
+  }
+
   private async generateTokens(userId: string, email: string, companyId: string | null) {
     const payload: Record<string, unknown> = { sub: userId, email, companyId };
 
@@ -403,12 +449,28 @@ export class AuthService {
       this.configService.get<string>("JWT_REFRESH_EXPIRATION")?.trim() || "90d";
 
     const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(payload),
+      this.generateAccessToken(userId, email, companyId),
       this.jwtService.signAsync(payload, {
         secret: getJwtRefreshSecret(this.configService),
         expiresIn: refreshExpiresIn,
       }),
     ]);
+
+    // Her oturumu ayrı satırda tut: aynı hesapla farklı cihazlardan girmek
+    // birbirinin oturumunu düşürmesin.
+    const decoded = this.jwtService.decode(refreshToken) as { exp?: number } | null;
+    const expiresAt = decoded?.exp
+      ? new Date(decoded.exp * 1000)
+      : new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
+
+    await this.prisma.refreshToken.create({
+      data: { userId, tokenHash: this.hashRefreshToken(refreshToken), expiresAt },
+    });
+
+    // Süresi geçmiş oturum kayıtlarını fırsat buldukça temizle
+    await this.prisma.refreshToken
+      .deleteMany({ where: { userId, expiresAt: { lt: new Date() } } })
+      .catch(() => undefined);
 
     return { accessToken, refreshToken };
   }

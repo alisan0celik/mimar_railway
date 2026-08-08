@@ -1,5 +1,5 @@
 import { authApi } from "../api/auth.api";
-import { setTokens, clearTokens } from "./token-storage";
+import { setTokens, clearTokens, getTokens } from "./token-storage";
 
 export class AuthService {
   static async login(email: string, password: string) {
@@ -25,7 +25,10 @@ export class AuthService {
 
   static async logout() {
     try {
-      await authApi.logout();
+      // Refresh token'ı gönderiyoruz: yalnızca bu cihazın oturumu kapansın,
+      // aynı hesabın diğer cihazlardaki oturumları etkilenmesin.
+      const tokens = await getTokens();
+      await authApi.logout(tokens?.refreshToken);
     } catch {
       // ignore logout errors
     }
