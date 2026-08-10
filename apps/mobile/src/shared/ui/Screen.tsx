@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import {
   type ScrollViewProps,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleProp,
   StyleSheet,
@@ -38,15 +40,25 @@ export function Screen({
   return (
     <SafeAreaView edges={edges} style={[styles.safeArea, style]}>
       {scroll ? (
+        // automaticallyAdjustKeyboardInsets: klavye açılınca iOS'ta alt boşluk
+        // eklenir, böylece klavyenin kapattığı içerik kaydırılarak görülebilir.
+        // (Android'de manifest'teki adjustResize aynı işi yapıyor.)
         <ScrollView
+          automaticallyAdjustKeyboardInsets
           contentContainerStyle={[styles.scrollContent, contentContainerStyle]}
+          keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
           keyboardShouldPersistTaps={keyboardShouldPersistTaps}
           showsVerticalScrollIndicator={showsVerticalScrollIndicator}
         >
           {children}
         </ScrollView>
       ) : (
-        <View style={[styles.content, contentContainerStyle]}>{children}</View>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          style={styles.flexFill}
+        >
+          <View style={[styles.content, contentContainerStyle]}>{children}</View>
+        </KeyboardAvoidingView>
       )}
     </SafeAreaView>
   );
@@ -57,6 +69,9 @@ function createStyles(colors: AppColors) {
     safeArea: {
       flex: 1,
       backgroundColor: colors.background,
+    },
+    flexFill: {
+      flex: 1,
     },
     content: {
       flex: 1,
