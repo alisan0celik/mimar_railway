@@ -122,6 +122,22 @@ export function calendarEventCreatedNotification(
   };
 }
 
+export function subscriptionExpiringNotification(
+  locale: NotificationLocale,
+  params: { companyName: string; daysLeft: number; contactEmail: string },
+) {
+  if (locale === "en") {
+    return {
+      title: "Your licence is about to expire",
+      message: `${params.companyName} licence expires in ${params.daysLeft} day(s). To renew, contact us at ${params.contactEmail}.`,
+    };
+  }
+  return {
+    title: "Lisans süreniz doluyor",
+    message: `${params.companyName} lisansınızın bitmesine ${params.daysLeft} gün kaldı. Yenilemek için ${params.contactEmail} adresinden bizimle iletişime geçebilirsiniz.`,
+  };
+}
+
 export function supportTicketRepliedNotification(
   locale: NotificationLocale,
   params: { subject: string },

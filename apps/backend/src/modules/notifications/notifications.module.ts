@@ -5,6 +5,7 @@ import { NotificationsController } from "./notifications.controller";
 import { NotificationsGateway } from "./notifications.gateway";
 import { NotificationsService } from "./notifications.service";
 import { FcmService } from "./fcm.service";
+import { SubscriptionReminderService } from "./subscription-reminder.service";
 import { FirebaseConfig } from "../../config/firebase.config";
 import { getJwtAccessSecret } from "../../config/jwt.config";
 
@@ -20,7 +21,13 @@ import { getJwtAccessSecret } from "../../config/jwt.config";
     }),
   ],
   controllers: [NotificationsController],
-  providers: [NotificationsGateway, NotificationsService, FcmService, FirebaseConfig],
+  providers: [
+    NotificationsGateway,
+    NotificationsService,
+    FcmService,
+    FirebaseConfig,
+    SubscriptionReminderService,
+  ],
   exports: [FcmService, NotificationsService, NotificationsGateway],
 })
 export class NotificationsModule {}

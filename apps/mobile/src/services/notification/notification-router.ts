@@ -98,6 +98,13 @@ export async function handleNotificationData(data: NotificationDataPayload): Pro
     }
   }
 
+  // Özel yönlendirmesi olmayan türler (ör. lisans hatırlatması) için
+  // backend'in verdiği rotayı kullan.
+  if (typeof data.route === "string" && data.route.length > 0) {
+    router.push(data.route as Href);
+    return true;
+  }
+
   return false;
 }
 

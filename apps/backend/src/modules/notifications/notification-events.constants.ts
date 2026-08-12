@@ -7,6 +7,11 @@ export const NOTIFICATION_TARGET = {
   FINANCE_RECORD: "finance_record",
   CALENDAR_EVENT: "calendar_event",
   SUPPORT_TICKET: "support_ticket",
+  SUBSCRIPTION: "subscription",
+} as const;
+
+export const SUBSCRIPTION_ACTION = {
+  EXPIRING: "expiring",
 } as const;
 
 export const MEMBERSHIP_ACTION = {
@@ -58,6 +63,10 @@ export function projectRoute(projectId: string): string {
 
 export function financeRoute(): string {
   return "/(main)/(tabs)/finance";
+}
+
+export function subscriptionRoute(): string {
+  return "/(main)/(tabs)/profile";
 }
 
 export function calendarRoute(): string {
