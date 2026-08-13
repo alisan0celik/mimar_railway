@@ -11,6 +11,7 @@ import {
   resolveNotificationLocale,
   subscriptionExpiringNotification,
 } from "./notification-templates";
+import { OFFICE_ROLE_CODE_PREFIX } from "../companies/company-role.constants";
 
 /** Bitişe kaç gün kalınca hatırlatma başlar */
 const REMINDER_WINDOW_DAYS = 3;
@@ -86,17 +87,6 @@ export class SubscriptionReminderService implements OnModuleInit, OnModuleDestro
       for (const company of companies) {
         if (!company.subscriptionEndsAt) continue;
 
-        const alreadySentToday = await this.prisma.notification.findFirst({
-          where: {
-            userId: company.ownerId,
-            targetType: NOTIFICATION_TARGET.SUBSCRIPTION,
-            targetId: company.id,
-            createdAt: { gte: startOfDay },
-          },
-          select: { id: true },
-        });
-        if (alreadySentToday) continue;
-
         const daysLeft = Math.max(
           1,
           Math.ceil((company.subscriptionEndsAt.getTime() - now.getTime()) / DAY_MS),
@@ -108,22 +98,64 @@ export class SubscriptionReminderService implements OnModuleInit, OnModuleDestro
           contactEmail,
         });
 
-        await this.notificationsService.createForUser({
-          userId: company.ownerId,
-          title: copy.title,
-          message: copy.message,
-          type: "warning",
-          targetType: NOTIFICATION_TARGET.SUBSCRIPTION,
-          targetId: company.id,
-          action: SUBSCRIPTION_ACTION.EXPIRING,
-          route: subscriptionRoute(),
-          metadata: { companyId: company.id, daysLeft: String(daysLeft) },
-        });
+        const recipientIds = await this.getRecipients(company.id, company.ownerId);
+        let sentCount = 0;
 
-        this.logger.log(`Lisans hatırlatması gönderildi: ${company.name} (${daysLeft} gün)`);
+        for (const userId of recipientIds) {
+          const alreadySentToday = await this.prisma.notification.findFirst({
+            where: {
+              userId,
+              targetType: NOTIFICATION_TARGET.SUBSCRIPTION,
+              targetId: company.id,
+              createdAt: { gte: startOfDay },
+            },
+            select: { id: true },
+          });
+          if (alreadySentToday) continue;
+
+          await this.notificationsService.createForUser({
+            userId,
+            title: copy.title,
+            message: copy.message,
+            type: "warning",
+            targetType: NOTIFICATION_TARGET.SUBSCRIPTION,
+            targetId: company.id,
+            action: SUBSCRIPTION_ACTION.EXPIRING,
+            route: subscriptionRoute(),
+            metadata: { companyId: company.id, daysLeft: String(daysLeft) },
+          });
+          sentCount += 1;
+        }
+
+        if (sentCount > 0) {
+          this.logger.log(
+            `Lisans hatırlatması gönderildi: ${company.name} (${daysLeft} gün, ${sentCount} kişi)`,
+          );
+        }
       }
     } finally {
       this.isRunning = false;
     }
+  }
+
+  /** Ofis sahibi + ofis yöneticisi rolündeki onaylı üyeler (tekrarsız) */
+  private async getRecipients(companyId: string, ownerId: string): Promise<string[]> {
+    const managers = await this.prisma.user.findMany({
+      where: {
+        companyId,
+        approvalStatus: "approved",
+        roles: {
+          some: {
+            role: {
+              companyId,
+              code: { startsWith: OFFICE_ROLE_CODE_PREFIX["office-manager"] },
+            },
+          },
+        },
+      },
+      select: { id: true },
+    });
+
+    return Array.from(new Set([ownerId, ...managers.map((manager) => manager.id)]));
   }
 }
