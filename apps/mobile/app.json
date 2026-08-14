@@ -20,7 +20,9 @@
       "bundleIdentifier": "com.mimar.app",
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleDevelopmentRegion": "tr",
+        "CFBundleLocalizations": ["tr", "en"]
       }
     },
     "web": {
