@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Patch, Body, Param, Query } from "@nestjs/common";
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Body,
+  ForbiddenException,
+  Param,
+  Query,
+} from "@nestjs/common";
 import { ApiOperation } from "@nestjs/swagger";
 import { SupportService } from "./support.service";
 import { CreateSupportTicketDto } from "./dto/create-support-ticket.dto";
@@ -6,7 +15,7 @@ import { CreateTicketMessageDto } from "./dto/create-ticket-message.dto";
 import { UpdateTicketStatusDto } from "./dto/update-ticket-status.dto";
 import { SupportInboxQueryDto } from "./dto/support-inbox-query.dto";
 import { CurrentUser } from "../../common/decorators/current-user.decorator";
-import { Permissions } from "../../common/decorators/permissions.decorator";
+import { isPlatformAdminEmail } from "../../common/subscription.util";
 import { RequireCompany } from "../../common/tenant/require-company.decorator";
 import { RequireApproved } from "../../common/tenant/require-approved.decorator";
 import { JwtPayload } from "../../common/interfaces/jwt-payload.interface";
@@ -22,35 +31,49 @@ export class SupportController {
     private readonly companyScope: CompanyScopeService,
   ) {}
 
+  /**
+   * Gelen kutusu tüm şirketlerin taleplerini içerir; bu yüzden şirket içi bir
+   * izinle (support.manage) değil, yalnızca platform yöneticisiyle korunur.
+   */
+  private assertPlatformAdmin(user: JwtPayload) {
+    if (!isPlatformAdminEmail(user.email)) {
+      throw new ForbiddenException("Bu alan sadece platform yöneticisine açıktır");
+    }
+  }
+
   @Get("inbox")
-  @Permissions("support.manage")
   @ApiOperation({ summary: "Platform destek gelen kutusu" })
-  getInbox(@Query() query: SupportInboxQueryDto) {
+  getInbox(@CurrentUser() user: JwtPayload, @Query() query: SupportInboxQueryDto) {
+    this.assertPlatformAdmin(user);
     return this.supportService.getInbox(query);
   }
 
   @Get("inbox/:id")
-  @Permissions("support.manage")
   @ApiOperation({ summary: "Platform destek talebi detayı" })
-  getInboxTicket(@Param("id") id: string) {
+  getInboxTicket(@CurrentUser() user: JwtPayload, @Param("id") id: string) {
+    this.assertPlatformAdmin(user);
     return this.supportService.getInboxTicket(id);
   }
 
   @Patch("inbox/:id/status")
-  @Permissions("support.manage")
   @ApiOperation({ summary: "Destek talebi durumunu güncelle" })
-  updateInboxStatus(@Param("id") id: string, @Body() body: UpdateTicketStatusDto) {
+  updateInboxStatus(
+    @CurrentUser() user: JwtPayload,
+    @Param("id") id: string,
+    @Body() body: UpdateTicketStatusDto,
+  ) {
+    this.assertPlatformAdmin(user);
     return this.supportService.updateStatus(id, body.status);
   }
 
   @Post("inbox/:id/reply")
-  @Permissions("support.manage")
   @ApiOperation({ summary: "Destek talebine platform yanıtı ekle" })
   replyInbox(
     @CurrentUser() user: JwtPayload,
     @Param("id") id: string,
     @Body() body: CreateTicketMessageDto,
   ) {
+    this.assertPlatformAdmin(user);
     return this.supportService.addStaffReply(user.sub, id, body.body);
   }
 
