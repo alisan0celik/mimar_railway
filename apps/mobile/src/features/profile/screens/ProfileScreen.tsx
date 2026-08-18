@@ -120,6 +120,13 @@ export function ProfileScreen() {
         color: "#14B8A6",
       },
       {
+        id: "platformSupport",
+        icon: "inbox-arrow-down-outline",
+        label: t("profile.platformSupport"),
+        route: "/(main)/platform/support",
+        color: "#0EA5E9",
+      },
+      {
         id: "notif",
         icon: "bell-outline",
         label: t("profile.notifications"),
@@ -160,7 +167,9 @@ export function ProfileScreen() {
       if (item.id === "team") return canManageTeam;
       if (item.id === "pending") return canApproveUsers;
       if (item.id === "roles") return canViewRoles;
-      if (item.id === "platformCompanies") return Boolean(user?.isPlatformAdmin);
+      if (item.id === "platformCompanies" || item.id === "platformSupport") {
+        return Boolean(user?.isPlatformAdmin);
+      }
       return true;
     });
   }, [t, colors, canManageTeam, canViewRoles, canApproveUsers, user?.isPlatformAdmin]);

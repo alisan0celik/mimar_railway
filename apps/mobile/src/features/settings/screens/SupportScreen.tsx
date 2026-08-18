@@ -36,6 +36,13 @@ export function SupportScreen() {
         route: "/(main)/settings/user-guide" as const,
       },
       {
+        id: "tickets",
+        icon: "lightbulb-on-outline",
+        label: t("support.tickets"),
+        desc: t("support.ticketsDesc"),
+        route: "/(main)/settings/support-tickets" as const,
+      },
+      {
         id: "contact",
         icon: "email-outline",
         label: t("support.contact"),
