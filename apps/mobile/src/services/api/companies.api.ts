@@ -118,6 +118,9 @@ export const companiesApi = {
       },
     ),
 
+  removeLogo: (companyId: string) =>
+    apiClient.delete<{ id: string; logoUrl: string | null }>(`/companies/${companyId}/logo`),
+
   update: (id: string, data: Partial<CreateCompanyInput>) =>
     apiClient.patch(`/companies/${id}`, data),
 

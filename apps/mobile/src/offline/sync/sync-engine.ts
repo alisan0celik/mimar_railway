@@ -145,6 +145,11 @@ export async function runSync(): Promise<void> {
     const since = await getLastPullAt();
     const pullResponse = await syncApi.pull(since ?? undefined);
     await applyPullToCache(user.companyId, pullResponse.data);
+
+    // Finans/takvim/ekip verisi sync kapsamında değil; kullanıcı bu ekranları
+    // açmadan da çevrimdışı görebilsin diye arka planda önbelleğe alınır.
+    const { prefetchOfflineData } = await import("../cache/prefetch");
+    await prefetchOfflineData(user.companyId);
   } finally {
     offlineStore.setSyncing(false);
     await offlineStore.refreshPendingCount();

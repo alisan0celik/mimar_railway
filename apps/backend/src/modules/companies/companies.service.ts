@@ -346,6 +346,22 @@ export class CompaniesService {
     };
   }
 
+  /** Logoyu kaldırır; şirket yeniden baş harfleriyle gösterilir. */
+  async removeLogo(companyId: string) {
+    const company = await this.prisma.company.findUnique({ where: { id: companyId } });
+    if (!company) throw new NotFoundException("Şirket bulunamadı");
+
+    const updated = await this.prisma.company.update({
+      where: { id: companyId },
+      data: { logoUrl: null },
+    });
+
+    return {
+      id: updated.id,
+      logoUrl: updated.logoUrl,
+    };
+  }
+
   async update(id: string, companyId: string, dto: UpdateCompanyDto) {
     if (id !== companyId) {
       throw new ForbiddenException("Bu şirket kaynağına erişim yetkiniz yok");

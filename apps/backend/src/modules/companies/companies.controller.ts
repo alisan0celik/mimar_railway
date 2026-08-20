@@ -1,5 +1,6 @@
 import {
   Controller,
+  Delete,
   Get,
   Post,
   Patch,
@@ -94,6 +95,15 @@ export class CompaniesController {
     @UploadedFile() file: Express.Multer.File,
   ) {
     return this.companiesService.uploadLogo(id, file);
+  }
+
+  @Delete(":id/logo")
+  @CompanyScoped("id")
+  @RequireApproved()
+  @Permissions("company.update")
+  @ApiOperation({ summary: "Şirket logosunu kaldır" })
+  async removeLogo(@Param("id") id: string) {
+    return this.companiesService.removeLogo(id);
   }
 
   @Patch(":id")

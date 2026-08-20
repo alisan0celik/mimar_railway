@@ -38,8 +38,10 @@ export function CalendarScreen() {
   const styles = useThemedStyles(createStyles);
   const colors = useThemeColors();
   const { t } = useTranslation();
-  const [year, setYear] = useState(2026);
-  const [month, setMonth] = useState(5);
+  // Takvim içinde bulunulan ayda açılmalı (önceden sabit Haziran 2026'ydı).
+  // month 0 tabanlı: hem monthNames dizisi hem backend bu düzeni kullanıyor.
+  const [year, setYear] = useState(() => new Date().getFullYear());
+  const [month, setMonth] = useState(() => new Date().getMonth());
   const [selectedDay, setSelectedDay] = useState(new Date().getDate());
   const [events, setEvents] = useState<CalendarEventDTO[]>([]);
   const [title, setTitle] = useState("");

@@ -2,7 +2,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useCallback, useState } from "react";
 import { useFocusEffect } from "expo-router";
-import { ActivityIndicator, Alert, Image, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Image, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { getApiErrorMessage, type CompanyLogoAsset } from "../utils/company-form";
 import { companiesApi } from "../../../services/api";
@@ -94,6 +94,32 @@ export function CompanyLogoScreen() {
     }
   };
 
+  const confirmRemove = () => {
+    if (!companyId) return;
+    Alert.alert(t("companies.logo.removeTitle"), t("companies.logo.removeConfirm"), [
+      { text: t("common.cancel"), style: "cancel" },
+      {
+        text: t("common.delete"),
+        style: "destructive",
+        onPress: async () => {
+          setUploading(true);
+          try {
+            await companiesApi.removeLogo(companyId);
+            setLogoUrl(null);
+            Alert.alert(t("common.success"), t("companies.logo.removed"));
+          } catch (error) {
+            Alert.alert(
+              t("common.error"),
+              getApiErrorMessage(error, t("companies.alerts.logoUploadFailedDesc")),
+            );
+          } finally {
+            setUploading(false);
+          }
+        },
+      },
+    ]);
+  };
+
   if (!canEditCompany) {
     return (
       <Screen>
@@ -142,6 +168,12 @@ export function CompanyLogoScreen() {
               title={resolvedUrl ? t("companies.logo.change") : t("companies.logo.add")}
             />
 
+            {resolvedUrl ? (
+              <Pressable disabled={uploading} onPress={confirmRemove} style={styles.removeBtn}>
+                <Text style={styles.removeText}>{t("companies.logo.remove")}</Text>
+              </Pressable>
+            ) : null}
+
             <View style={styles.noteRow}>
               <MaterialCommunityIcons color={colors.textMuted} name="information-outline" size={16} />
               <Text style={styles.note}>{t("companies.logo.note")}</Text>
@@ -187,6 +219,13 @@ function createStyles(colors: AppColors) {
       marginTop: spacing.xs,
     },
     button: { marginTop: spacing.lg },
+    removeBtn: { marginTop: spacing.md, paddingVertical: spacing.xs },
+    removeText: {
+      ...typography.bodySmall,
+      color: colors.danger,
+      fontWeight: "600",
+      textDecorationLine: "underline",
+    },
     noteRow: {
       flexDirection: "row",
       alignItems: "center",
