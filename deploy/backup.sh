@@ -11,10 +11,14 @@
 #   # her gece 03:00'te:
 #   0 3 * * * GCS_BUCKET=gs://planova-yedek $HOME/planova/deploy/backup.sh >> $HOME/planova-backup.log 2>&1
 #
-# GERİ YÜKLEME:
+# GERİ YÜKLEME (veritabanı):
 #   cat planova-YYYYMMDD-HHMMSS.dump | docker compose -f deploy/docker-compose.prod.yml \
 #     --env-file .env.production exec -T postgres \
 #     pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB" --clean --if-exists --no-owner
+#
+# GERİ YÜKLEME (yüklenen dosyalar):
+#   cat planova-uploads-YYYYMMDD-HHMMSS.tar.gz | docker compose -f deploy/docker-compose.prod.yml \
+#     --env-file .env.production exec -T backend tar -xzf - -C /app/apps/backend
 #
 set -euo pipefail
 
@@ -59,9 +63,23 @@ if [ ! -s "$FILE" ]; then
 fi
 log "Yerel yedek tamam ($(du -h "$FILE" | cut -f1))"
 
+# Yüklenen dosyalar (şirket logoları, proje görselleri) veritabanında değil,
+# backend konteynerindeki uploads klasöründe; onları da arşivle.
+UPLOADS_FILE="$BACKUP_DIR/planova-uploads-$STAMP.tar.gz"
+log "Yüklenen dosyalar arşivleniyor: $UPLOADS_FILE"
+if docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" exec -T backend \
+  tar -czf - -C /app/apps/backend uploads > "$UPLOADS_FILE" 2>/dev/null && [ -s "$UPLOADS_FILE" ]; then
+  log "Dosya arşivi tamam ($(du -h "$UPLOADS_FILE" | cut -f1))"
+else
+  log "UYARI: uploads arşivi alınamadı (backend çalışmıyor olabilir)"
+  rm -f "$UPLOADS_FILE"
+  UPLOADS_FILE=""
+fi
+
 if [ -n "$GCS_BUCKET" ]; then
   log "GCS'e yükleniyor: $GCS_BUCKET"
   gcloud storage cp "$FILE" "$GCS_BUCKET/" --quiet
+  [ -n "$UPLOADS_FILE" ] && gcloud storage cp "$UPLOADS_FILE" "$GCS_BUCKET/" --quiet
   log "GCS yüklemesi tamam"
 else
   log "UYARI: GCS_BUCKET tanımlı değil — yedek yalnızca bu sunucuda duruyor."
@@ -69,4 +87,5 @@ fi
 
 # Eski yerel yedekleri temizle (GCS'teki saklama süresini lifecycle kuralı yönetir)
 find "$BACKUP_DIR" -name 'planova-*.dump' -mtime "+$KEEP_LOCAL_DAYS" -delete
+find "$BACKUP_DIR" -name 'planova-uploads-*.tar.gz' -mtime "+$KEEP_LOCAL_DAYS" -delete
 log "Bitti."
