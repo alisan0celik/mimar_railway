@@ -35,6 +35,7 @@ export function ProfileScreen() {
   const canManageTeam = useCan(PERMISSIONS.USER_ROLE_ASSIGN);
   const canViewRoles = useCan(PERMISSIONS.ROLE_VIEW);
   const canApproveUsers = useCan(PERMISSIONS.USER_APPROVE);
+  const canEditCompany = useCan(PERMISSIONS.COMPANY_UPDATE);
   const [deleting, setDeleting] = useState(false);
 
   const handleDeleteAccount = () => {
@@ -97,6 +98,13 @@ export function ProfileScreen() {
         label: t("profile.pendingUsers"),
         route: "/(main)/users/pending",
         color: colors.warning,
+      },
+      {
+        id: "companyLogo",
+        icon: "image-edit-outline",
+        label: t("profile.companyLogo"),
+        route: "/(main)/settings/company-logo",
+        color: "#F97316",
       },
       {
         id: "roles",
@@ -167,12 +175,21 @@ export function ProfileScreen() {
       if (item.id === "team") return canManageTeam;
       if (item.id === "pending") return canApproveUsers;
       if (item.id === "roles") return canViewRoles;
+      if (item.id === "companyLogo") return canEditCompany;
       if (item.id === "platformCompanies" || item.id === "platformSupport") {
         return Boolean(user?.isPlatformAdmin);
       }
       return true;
     });
-  }, [t, colors, canManageTeam, canViewRoles, canApproveUsers, user?.isPlatformAdmin]);
+  }, [
+    t,
+    colors,
+    canManageTeam,
+    canViewRoles,
+    canApproveUsers,
+    canEditCompany,
+    user?.isPlatformAdmin,
+  ]);
 
   return (
     <Screen scroll contentContainerStyle={styles.content}>

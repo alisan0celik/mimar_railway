@@ -466,6 +466,7 @@ export const tr = {
     calendar: "Takvim",
     platformCompanies: "Sirket Lisanslari",
     platformSupport: "Öneri ve Talepler",
+    companyLogo: "Ofis Logosu",
     support: "Destek & Yardım",
     language: "Dil",
     theme: "Tema",
@@ -608,6 +609,15 @@ export const tr = {
     },
   },
   companies: {
+    logo: {
+      title: "Ofis Logosu",
+      hint: "Logonuz ofis arama sonuçlarında ve uygulama içinde görünür.",
+      change: "Logoyu Değiştir",
+      add: "Logo Ekle",
+      updated: "Ofis logosu güncellendi.",
+      note: "Kare görseller en iyi sonucu verir. En fazla 5 MB.",
+      noPermission: "Ofis logosunu yalnızca ofis yöneticileri değiştirebilir.",
+    },
     title: "Şirketler",
     searchPlaceholder: "Şirket ara...",
     join: "Şirkete Katıl",

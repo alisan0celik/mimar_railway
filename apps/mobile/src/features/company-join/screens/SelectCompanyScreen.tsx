@@ -1,8 +1,9 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from "react-native";
 
+import { resolveApiAssetUrl } from "../../../shared/utils";
 import { useTranslation } from "../../../shared/i18n";
 import { radius, spacing, typography } from "../../../shared/theme";
 import { useThemedStyles, type AppColors } from "../../../shared/theme";
@@ -78,11 +79,18 @@ export function SelectCompanyScreen() {
               onPress={() => setSelectedId(company.id)}
               style={[styles.row, isSelected && styles.rowSelected]}
             >
-              <View style={[styles.avatar, isSelected && styles.avatarSelected]}>
-                <Text style={[styles.avatarText, isSelected && styles.avatarTextSelected]}>
-                  {companyInitial(company.name)}
-                </Text>
-              </View>
+              {company.logoUrl ? (
+                <Image
+                  source={{ uri: resolveApiAssetUrl(company.logoUrl) ?? undefined }}
+                  style={[styles.avatar, isSelected && styles.avatarSelected]}
+                />
+              ) : (
+                <View style={[styles.avatar, isSelected && styles.avatarSelected]}>
+                  <Text style={[styles.avatarText, isSelected && styles.avatarTextSelected]}>
+                    {company.logoInitials || companyInitial(company.name)}
+                  </Text>
+                </View>
+              )}
               <View style={styles.info}>
                 <Text style={styles.name}>{company.name}</Text>
                 <Text style={styles.city}>{company.city}</Text>

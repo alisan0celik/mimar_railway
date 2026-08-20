@@ -466,6 +466,7 @@ export const en = {
     calendar: "Calendar",
     platformCompanies: "Company Licenses",
     platformSupport: "Suggestions & Requests",
+    companyLogo: "Office Logo",
     support: "Support & Help",
     language: "Language",
     theme: "Theme",
@@ -608,6 +609,15 @@ export const en = {
     },
   },
   companies: {
+    logo: {
+      title: "Office Logo",
+      hint: "Your logo appears in office search results and across the app.",
+      change: "Change Logo",
+      add: "Add Logo",
+      updated: "Office logo updated.",
+      note: "Square images work best. 5 MB maximum.",
+      noPermission: "Only office managers can change the office logo.",
+    },
     title: "Companies",
     searchPlaceholder: "Search companies...",
     join: "Join Company",
