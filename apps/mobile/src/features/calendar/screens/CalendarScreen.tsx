@@ -6,6 +6,7 @@ import {
   calendarApi,
   CalendarEventDTO,
 } from "../../../services/api/calendar.api";
+import { fetchWithReadCache } from "../../../offline/cache/read-cache";
 import { useTranslation } from "../../../shared/i18n";
 import { radius, spacing, typography } from "../../../shared/theme";
 import { useThemedStyles, type AppColors } from "../../../shared/theme";
@@ -61,8 +62,12 @@ export function CalendarScreen() {
 
   const fetchEvents = async () => {
     try {
-      const res = await calendarApi.getEvents(year, month);
-      setEvents(res.data);
+      // Çevrimdışında o ayın son bilinen etkinlikleri gösterilsin
+      const data = await fetchWithReadCache<CalendarEventDTO[]>(
+        `calendar:${year}-${month}`,
+        async () => (await calendarApi.getEvents(year, month)).data,
+      );
+      setEvents(Array.isArray(data) ? data : []);
     } catch (e) {
       console.error(e);
     }

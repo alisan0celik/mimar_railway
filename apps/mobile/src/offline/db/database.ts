@@ -55,6 +55,14 @@ CREATE TABLE IF NOT EXISTS sync_meta (
   value TEXT NOT NULL
 );
 
+-- Finans, takvim, ekip gibi salt okunur listelerin son başarılı yanıtı.
+-- Çevrimdışında bu ekranlar boş kalmasın diye tutulur.
+CREATE TABLE IF NOT EXISTS cached_reads (
+  key TEXT PRIMARY KEY NOT NULL,
+  payload TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS idx_cached_tasks_project ON cached_tasks(project_id);
 CREATE INDEX IF NOT EXISTS idx_cached_notes_project ON cached_notes(project_id);
 CREATE INDEX IF NOT EXISTS idx_cached_messages_project ON cached_messages(project_id);
@@ -86,6 +94,7 @@ export async function clearOfflineDatabase(): Promise<void> {
     DELETE FROM cached_tasks;
     DELETE FROM cached_notes;
     DELETE FROM cached_messages;
+    DELETE FROM cached_reads;
     DELETE FROM sync_outbox;
     DELETE FROM sync_meta;
   `);

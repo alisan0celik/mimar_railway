@@ -4,6 +4,7 @@ import { router } from "expo-router";
 
 import { TeamMemberCard } from "../components/TeamMemberCard";
 import { usersApi, type UserDTO } from "../../../services/api";
+import { fetchWithReadCache } from "../../../offline/cache/read-cache";
 import { useAuthStore } from "../../../store/authStore";
 import { useTranslation } from "../../../shared/i18n";
 import { PERMISSIONS, useCan } from "../../../shared/permissions";
@@ -62,13 +63,14 @@ export function OfficeTeamScreen() {
 
   const fetchMembers = useCallback(() => {
     setLoading(true);
-    usersApi
-      .getTeamMembers()
-      .then((res) => {
-        const payload = res.data as { data?: UserDTO[] } | UserDTO[];
-        const list = Array.isArray(payload) ? payload : payload.data;
-        setMembers(Array.isArray(list) ? list : []);
-      })
+    // Çevrimdışında son bilinen ekip listesi gösterilsin
+    fetchWithReadCache<UserDTO[]>("team:members", async () => {
+      const res = await usersApi.getTeamMembers();
+      const payload = res.data as { data?: UserDTO[] } | UserDTO[];
+      const list = Array.isArray(payload) ? payload : payload.data;
+      return Array.isArray(list) ? list : [];
+    })
+      .then((list) => setMembers(Array.isArray(list) ? list : []))
       .catch(() => setMembers([]))
       .finally(() => setLoading(false));
   }, []);

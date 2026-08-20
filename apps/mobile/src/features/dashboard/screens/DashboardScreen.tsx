@@ -5,6 +5,7 @@ import type { ComponentProps } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { companiesApi } from "../../../services/api/companies.api";
+import { fetchWithReadCache } from "../../../offline/cache/read-cache";
 import { useTranslation } from "../../../shared/i18n";
 import { PERMISSIONS, PermissionGate } from "../../../shared/permissions";
 import { radius, spacing } from "../../../shared/theme";
@@ -56,7 +57,11 @@ export function DashboardScreen() {
     }
 
     try {
-      const { data } = await companiesApi.getById(companyId);
+      // Çevrimdışında şirket adı/baş harfleri kaybolmasın
+      const data = await fetchWithReadCache(
+        `company:${companyId}`,
+        async () => (await companiesApi.getById(companyId)).data,
+      );
       setCompanyLogoUrl(resolveApiAssetUrl(data.logoUrl));
       setCompanyInitials(data.logoInitials ?? data.name.slice(0, 2).toUpperCase());
       setLogoLoadFailed(false);

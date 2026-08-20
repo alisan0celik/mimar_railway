@@ -7,6 +7,7 @@ import {
   type FinanceSummaryDTO,
   type FinanceSummariesResponseDTO,
 } from "../services/api/finance.api";
+import { fetchWithReadCache } from "../offline/cache/read-cache";
 
 type FetchSummariesOptions = {
   silent?: boolean;
@@ -49,10 +50,14 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
     }
 
     try {
-      const res = await financeApi.getSummaries();
+      // Çevrimdışında son başarılı özet gösterilsin
+      const data = await fetchWithReadCache<FinanceSummariesResponseDTO>(
+        "finance:summaries",
+        async () => (await financeApi.getSummaries()).data,
+      );
       set({
-        summaries: res.data.projects,
-        globalSummary: res.data.global,
+        summaries: data.projects,
+        globalSummary: data.global,
         updatedAt: Date.now(),
         isLoading: false,
         error: null,
