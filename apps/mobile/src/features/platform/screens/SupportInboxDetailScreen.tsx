@@ -12,6 +12,8 @@ import {
   View,
 } from "react-native";
 
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
 import { supportApi, type SupportTicketDetailDTO } from "../../../services/api/support.api";
 import { useTranslation, useLocaleCode } from "../../../shared/i18n";
 import { radius, spacing, typography } from "../../../shared/theme";
@@ -26,6 +28,7 @@ export function SupportInboxDetailScreen({ ticketId }: { ticketId: string }) {
   const colors = useThemeColors();
   const { t } = useTranslation();
   const locale = useLocaleCode();
+  const insets = useSafeAreaInsets();
 
   const [ticket, setTicket] = useState<SupportTicketDetailDTO | null>(null);
   const [loading, setLoading] = useState(true);
@@ -181,7 +184,7 @@ export function SupportInboxDetailScreen({ ticketId }: { ticketId: string }) {
           )}
         />
 
-        <View style={styles.composer}>
+        <View style={[styles.composer, { paddingBottom: Math.max(insets.bottom, spacing.sm) }]}>
           <TextInput
             multiline
             onChangeText={setReply}

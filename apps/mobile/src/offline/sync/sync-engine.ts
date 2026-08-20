@@ -145,12 +145,17 @@ export async function runSync(): Promise<void> {
     const since = await getLastPullAt();
     const pullResponse = await syncApi.pull(since ?? undefined);
     await applyPullToCache(user.companyId, pullResponse.data);
-
+  } finally {
     // Finans/takvim/ekip verisi sync kapsamında değil; kullanıcı bu ekranları
     // açmadan da çevrimdışı görebilsin diye arka planda önbelleğe alınır.
-    const { prefetchOfflineData } = await import("../cache/prefetch");
-    await prefetchOfflineData(user.companyId);
-  } finally {
+    // Pull başarısız olsa bile denenir.
+    try {
+      const { prefetchOfflineData } = await import("../cache/prefetch");
+      await prefetchOfflineData(user.companyId);
+    } catch {
+      // önbellek ısıtma başarısız olursa senkronu bozmasın
+    }
+
     offlineStore.setSyncing(false);
     await offlineStore.refreshPendingCount();
   }

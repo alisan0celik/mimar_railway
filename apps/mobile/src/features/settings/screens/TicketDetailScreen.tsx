@@ -11,6 +11,8 @@ import {
   View,
 } from "react-native";
 
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
 import {
   supportApi,
   type SupportTicketDetailDTO,
@@ -28,6 +30,7 @@ export function TicketDetailScreen({ ticketId }: { ticketId: string }) {
   const colors = useThemeColors();
   const { t } = useTranslation();
   const locale = useLocaleCode();
+  const insets = useSafeAreaInsets();
   const userId = useAuthStore((s) => s.user?.id);
 
   const [ticket, setTicket] = useState<SupportTicketDetailDTO | null>(null);
@@ -162,7 +165,7 @@ export function TicketDetailScreen({ ticketId }: { ticketId: string }) {
         {isClosed ? (
           <Text style={styles.closedHint}>{t("support.ticketClosedHint")}</Text>
         ) : (
-          <View style={styles.composer}>
+          <View style={[styles.composer, { paddingBottom: Math.max(insets.bottom, spacing.sm) }]}>
             <TextInput
               multiline
               onChangeText={setMessage}
