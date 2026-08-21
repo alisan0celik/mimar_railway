@@ -8,8 +8,40 @@ export type ProjectSectionDTO = {
   content: string | null;
   updatedBy: string | null;
   projectId: string;
+  /** Sözleşme bedelindeki payı. Finans yetkisi yoksa sunucu bu alanı göndermez. */
+  amount?: number;
+  /** Tamamlanma yüzdesi (0-100). */
+  progress: number;
   createdAt: string;
   updatedAt: string;
+};
+
+export type ProgressPaymentStatus = "draft" | "approved" | "paid" | "cancelled";
+
+export type ProgressPaymentDTO = {
+  id: string;
+  number: number;
+  issueDate: string;
+  cumulativeAmount: number;
+  previousAmount: number;
+  amount: number;
+  progressPercent: number;
+  status: ProgressPaymentStatus;
+  note: string | null;
+  projectId: string;
+  createdAt: string;
+  createdBy: { id: string; fullName: string };
+};
+
+export type ProgressSummaryDTO = {
+  contractTotal: number;
+  earnedAmount: number;
+  progressPercent: number;
+  billedAmount: number;
+  billableAmount: number;
+  collectedAmount: number;
+  outstandingAmount: number;
+  itemCount: number;
 };
 
 export type ProjectNoteDTO = {
@@ -165,11 +197,6 @@ export const projectApi = {
     return data;
   },
 
-  async updateSection(projectId: string, sectionId: string, payload: { status?: string; content?: string }) {
-    const { data } = await apiClient.patch<ProjectSectionDTO>(`/projects/${projectId}/sections/${sectionId}`, payload);
-    return data;
-  },
-
   // Notes
   async getNotes(projectId: string) {
     const { data } = await apiClient.get<ProjectNoteDTO[]>(`/projects/${projectId}/notes`);
@@ -261,6 +288,75 @@ export const projectApi = {
   },
   async removeTeamMember(projectId: string, teamId: string) {
     const { data } = await apiClient.delete(`/projects/${projectId}/team/${teamId}`);
+    return data;
+  },
+
+  // --- İmalat kalemleri ve hakediş ---
+
+  async getSections(projectId: string) {
+    const { data } = await apiClient.get<ProjectSectionDTO[]>(`/projects/${projectId}/sections`);
+    return data;
+  },
+  async createSection(
+    projectId: string,
+    payload: { name: string; amount?: number; progress?: number },
+  ) {
+    const { data } = await apiClient.post<ProjectSectionDTO>(
+      `/projects/${projectId}/sections`,
+      payload,
+    );
+    return data;
+  },
+  async updateSection(
+    projectId: string,
+    sectionId: string,
+    payload: { name?: string; amount?: number; progress?: number; status?: string },
+  ) {
+    const { data } = await apiClient.patch<ProjectSectionDTO>(
+      `/projects/${projectId}/sections/${sectionId}`,
+      payload,
+    );
+    return data;
+  },
+  async deleteSection(projectId: string, sectionId: string) {
+    const { data } = await apiClient.delete(`/projects/${projectId}/sections/${sectionId}`);
+    return data;
+  },
+
+  async getProgressSummary(projectId: string) {
+    const { data } = await apiClient.get<ProgressSummaryDTO>(
+      `/projects/${projectId}/progress-summary`,
+    );
+    return data;
+  },
+  async getProgressPayments(projectId: string) {
+    const { data } = await apiClient.get<ProgressPaymentDTO[]>(
+      `/projects/${projectId}/progress-payments`,
+    );
+    return data;
+  },
+  async createProgressPayment(projectId: string, payload: { note?: string } = {}) {
+    const { data } = await apiClient.post<ProgressPaymentDTO>(
+      `/projects/${projectId}/progress-payments`,
+      payload,
+    );
+    return data;
+  },
+  async updateProgressPayment(
+    projectId: string,
+    paymentId: string,
+    payload: { status?: ProgressPaymentStatus; note?: string },
+  ) {
+    const { data } = await apiClient.patch<ProgressPaymentDTO>(
+      `/projects/${projectId}/progress-payments/${paymentId}`,
+      payload,
+    );
+    return data;
+  },
+  async deleteProgressPayment(projectId: string, paymentId: string) {
+    const { data } = await apiClient.delete(
+      `/projects/${projectId}/progress-payments/${paymentId}`,
+    );
     return data;
   },
 };

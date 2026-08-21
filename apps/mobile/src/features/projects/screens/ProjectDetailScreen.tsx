@@ -277,6 +277,20 @@ export function ProjectDetailScreen() {
           title={project.name}
         />
 
+        <Pressable
+          onPress={() =>
+            router.push({
+              pathname: "/(main)/projects/[projectId]/progress",
+              params: { projectId },
+            })
+          }
+          style={styles.progressLink}
+        >
+          <MaterialCommunityIcons color={colors.primary} name="chart-timeline-variant" size={18} />
+          <Text style={styles.progressLinkText}>{t("progress.title")}</Text>
+          <MaterialCommunityIcons color={colors.textMuted} name="chevron-right" size={18} />
+        </Pressable>
+
         <View style={styles.searchWrap}>
           <MaterialCommunityIcons color={colors.textMuted} name="magnify" size={20} style={styles.searchIcon} />
           <TextInput
@@ -522,6 +536,24 @@ function createStyles(colors: AppColors) {
     flex: 1,
   },
   scrollFill: {
+    flex: 1,
+  },
+  progressLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    backgroundColor: colors.primarySoft,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: `${colors.primary}33`,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  progressLinkText: {
+    ...typography.bodySmall,
+    color: colors.text,
+    fontWeight: "600",
     flex: 1,
   },
   searchWrap: {

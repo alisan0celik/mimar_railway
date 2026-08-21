@@ -1,24 +1,15 @@
 import { IsInt, IsNumber, IsOptional, IsString, Max, MaxLength, Min, MinLength } from "class-validator";
 
-export class UpdateSectionDto {
-  @IsOptional()
+export class CreateSectionDto {
   @IsString()
   @MinLength(2)
   @MaxLength(120)
-  name?: string;
+  name!: string;
 
   @IsOptional()
   @IsInt()
   @Min(0)
   order?: number;
-
-  @IsOptional()
-  @IsString()
-  status?: string;
-
-  @IsOptional()
-  @IsString()
-  content?: string;
 
   /** Sözleşme bedelindeki payı (TL). */
   @IsOptional()
@@ -32,4 +23,8 @@ export class UpdateSectionDto {
   @Min(0)
   @Max(100)
   progress?: number;
+
+  @IsOptional()
+  @IsString()
+  status?: string;
 }

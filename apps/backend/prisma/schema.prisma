@@ -35,41 +35,42 @@ enum NotificationType {
 }
 
 model User {
-  id                      String           @id @default(cuid())
-  email                   String           @unique
+  id                      String                 @id @default(cuid())
+  email                   String                 @unique
   passwordHash            String?
   fullName                String
   phone                   String?
   avatarUrl               String?
   refreshToken            String?
   fcmToken                String?
-  authProvider            AuthProvider     @default(EMAIL)
+  authProvider            AuthProvider           @default(EMAIL)
   socialId                String?
-  approvalStatus          ApprovalStatus   @default(pending)
+  approvalStatus          ApprovalStatus         @default(pending)
   title                   String?
   notificationPreferences Json?
   companyId               String?
-  company                 Company?         @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  company                 Company?               @relation(fields: [companyId], references: [id], onDelete: SetNull)
   roles                   UserRole[]
   permissions             UserPermission[]
-  ownedCompanies          Company[]        @relation("CompanyOwner")
-  createdProjects         Project[]        @relation("ProjectCreator")
+  ownedCompanies          Company[]              @relation("CompanyOwner")
+  createdProjects         Project[]              @relation("ProjectCreator")
   notifications           Notification[]
   deviceTokens            DeviceToken[]
-  createdTasks            Task[]           @relation("TaskCreator")
-  assignedTasks           Task[]           @relation("TaskAssignee")
-  projectNotes            ProjectNote[]    @relation("NoteAuthor")
-  projectMessages         ProjectMessage[] @relation("MessageAuthor")
-  uploadedFiles           ProjectFile[]    @relation("FileUploader")
+  createdTasks            Task[]                 @relation("TaskCreator")
+  assignedTasks           Task[]                 @relation("TaskAssignee")
+  projectNotes            ProjectNote[]          @relation("NoteAuthor")
+  projectMessages         ProjectMessage[]       @relation("MessageAuthor")
+  uploadedFiles           ProjectFile[]          @relation("FileUploader")
   projectTeam             ProjectTeam[]
   financeRecords          FinanceRecord[]
   calendarEvents          CalendarEvent[]
-  createdAt               DateTime         @default(now())
-  updatedAt               DateTime         @updatedAt
+  createdAt               DateTime               @default(now())
+  updatedAt               DateTime               @updatedAt
   supportTickets          SupportTicket[]
   supportTicketMessages   SupportTicketMessage[]
   passwordResetTokens     PasswordResetToken[]
   refreshTokens           RefreshToken[]
+  progressPayments        ProgressPayment[]      @relation("ProgressPaymentCreator")
 
   @@unique([authProvider, socialId])
   @@index([companyId])
@@ -77,30 +78,31 @@ model User {
 }
 
 model Company {
-  id             String          @id @default(cuid())
-  name           String
-  description    String?
-  city           String?
-  address        String?
-  phone          String?
-  logoUrl        String?
-  logoInitials   String?
-  status         CompanyStatus   @default(active)
-  subscriptionStatus String       @default("active")
-  subscriptionStartedAt DateTime  @default(now())
-  subscriptionEndsAt DateTime?
-  blockedReason String?
-  lastActivityAt DateTime?
-  ownerId        String
-  owner          User            @relation("CompanyOwner", fields: [ownerId], references: [id])
-  members        User[]
-  roles          Role[]
-  projects       Project[]
-  financeRecords FinanceRecord[]
-  calendarEvents CalendarEvent[]
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  supportTickets SupportTicket[]
+  id                    String            @id @default(cuid())
+  name                  String
+  description           String?
+  city                  String?
+  address               String?
+  phone                 String?
+  logoUrl               String?
+  logoInitials          String?
+  status                CompanyStatus     @default(active)
+  subscriptionStatus    String            @default("active")
+  subscriptionStartedAt DateTime          @default(now())
+  subscriptionEndsAt    DateTime?
+  blockedReason         String?
+  lastActivityAt        DateTime?
+  ownerId               String
+  owner                 User              @relation("CompanyOwner", fields: [ownerId], references: [id])
+  members               User[]
+  roles                 Role[]
+  projects              Project[]
+  financeRecords        FinanceRecord[]
+  calendarEvents        CalendarEvent[]
+  progressPayments      ProgressPayment[]
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  supportTickets        SupportTicket[]
 
   @@index([ownerId])
 }
@@ -156,34 +158,35 @@ model RolePermission {
 }
 
 model Project {
-  id              String          @id @default(cuid())
-  name            String
-  customerName    String?
-  projectType     String?
-  location        String?
-  description     String?
-  hasInspection   Boolean         @default(false)
+  id                String            @id @default(cuid())
+  name              String
+  customerName      String?
+  projectType       String?
+  location          String?
+  description       String?
+  hasInspection     Boolean           @default(false)
   inspectionCompany String?
-  status          String          @default("active") // "planning", "active", "waiting", "completed"
-  priority        String          @default("medium") // "low", "medium", "high", "urgent"
-  imageUrl        String?
-  sectionProgress Float           @default(0)
-  startDate      DateTime?
-  endDate        DateTime?
-  budget         Float?
-  companyId      String
-  company        Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  createdById    String
-  createdBy      User            @relation("ProjectCreator", fields: [createdById], references: [id])
-  team           ProjectTeam[]
-  tasks          Task[]
-  sections       Section[]
-  notes          ProjectNote[]
-  messages       ProjectMessage[]
-  files          ProjectFile[]
-  financeRecords FinanceRecord[]
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  status            String            @default("active") // "planning", "active", "waiting", "completed"
+  priority          String            @default("medium") // "low", "medium", "high", "urgent"
+  imageUrl          String?
+  sectionProgress   Float             @default(0)
+  startDate         DateTime?
+  endDate           DateTime?
+  budget            Float?
+  companyId         String
+  company           Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdById       String
+  createdBy         User              @relation("ProjectCreator", fields: [createdById], references: [id])
+  team              ProjectTeam[]
+  tasks             Task[]
+  sections          Section[]
+  notes             ProjectNote[]
+  messages          ProjectMessage[]
+  files             ProjectFile[]
+  financeRecords    FinanceRecord[]
+  progressPayments  ProgressPayment[]
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
 
   @@index([companyId])
   @@index([status])
@@ -232,6 +235,10 @@ model Section {
   order     Int      @default(0)
   status    String   @default("not-started") // "not-started", "in-progress", "review", "approved"
   content   String?
+  /// Bu imalat kaleminin sözleşme bedelindeki payı (TL).
+  amount    Float    @default(0)
+  /// Kalemin tamamlanma yüzdesi (0-100). Hakediş bu iki alandan hesaplanır.
+  progress  Float    @default(0)
   updatedBy String?
   projectId String
   project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
@@ -345,14 +352,14 @@ model SupportTicketMessage {
 }
 
 model ProjectNote {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   content   String
   projectId String
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
   authorId  String
-  author    User     @relation("NoteAuthor", fields: [authorId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  author    User      @relation("NoteAuthor", fields: [authorId], references: [id])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
   @@index([projectId])
@@ -360,14 +367,14 @@ model ProjectNote {
 }
 
 model ProjectMessage {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   content   String
   projectId String
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
   authorId  String
-  author    User     @relation("MessageAuthor", fields: [authorId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  author    User      @relation("MessageAuthor", fields: [authorId], references: [id])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
   @@index([projectId])
@@ -375,17 +382,17 @@ model ProjectMessage {
 }
 
 model ProjectFile {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   name      String
   url       String
   size      Int
   type      String
   projectId String
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
   authorId  String
-  author    User     @relation("FileUploader", fields: [authorId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  author    User      @relation("FileUploader", fields: [authorId], references: [id])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
   @@index([projectId])
@@ -434,4 +441,36 @@ model SyncMutation {
 
   @@index([userId])
   @@index([companyId])
+}
+
+/// Hakediş — belirli bir tarihte imalat ilerlemesine göre düzenlenen ödeme talebi.
+/// Tutar, o ana kadar hak edilen toplamdan önceki hakedişlerin düşülmesiyle bulunur
+/// (kümülatif yöntem), böylece dönemler arası fark otomatik doğrular.
+model ProgressPayment {
+  id               String   @id @default(cuid())
+  /// Proje içindeki sıra numarası — "3 No'lu Hakediş".
+  number           Int
+  issueDate        DateTime @default(now())
+  /// Düzenlendiği andaki toplam hak ediş.
+  cumulativeAmount Float
+  /// Bu hakedişten önce düzenlenmiş hakedişlerin toplamı.
+  previousAmount   Float
+  /// Net tutar: cumulativeAmount - previousAmount.
+  amount           Float
+  /// Düzenlendiği andaki toplam imalat yüzdesi.
+  progressPercent  Float
+  status           String   @default("draft") // "draft", "approved", "paid"
+  note             String?
+  projectId        String
+  project          Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  companyId        String
+  company          Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdById      String
+  createdBy        User     @relation("ProgressPaymentCreator", fields: [createdById], references: [id])
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([projectId, number])
+  @@index([companyId])
+  @@index([projectId])
 }

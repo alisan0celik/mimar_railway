@@ -199,23 +199,6 @@ export class ProjectsService {
     });
   }
 
-  async updateSection(companyId: string, projectId: string, sectionId: string, data: { status?: string, content?: string }, userId: string) {
-    await this.findOne(companyId, projectId);
-
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
-
-    return this.prisma.section.updateMany({
-      where: { id: sectionId, projectId },
-      data: {
-        ...data,
-        updatedBy: user?.fullName || 'Sistem',
-      },
-    }).then(async (result: { count: number }) => {
-      if (result.count === 0) throw new NotFoundException('Bölüm bulunamadı');
-      return this.prisma.section.findFirst({ where: { id: sectionId, projectId } });
-    });
-  }
-
   async remove(companyId: string, id: string) {
     await this.findOne(companyId, id);
     return this.prisma.project.delete({

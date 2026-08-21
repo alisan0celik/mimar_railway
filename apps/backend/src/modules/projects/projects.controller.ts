@@ -7,7 +7,6 @@ import { CreateTaskDto } from "./dto/create-task.dto";
 import { UpdateTaskDto } from "./dto/update-task.dto";
 import { UpdateTaskStatusDto } from "./dto/update-task-status.dto";
 import { ContentDto } from "./dto/content.dto";
-import { UpdateSectionDto } from "./dto/update-section.dto";
 import { AddFileDto } from "./dto/add-file.dto";
 import { AddTeamMemberDto } from "./dto/add-team-member.dto";
 import { AddTeamMembersDto } from "./dto/add-team-members.dto";
@@ -60,18 +59,6 @@ export class ProjectsController {
   @ApiOperation({ summary: "Proje bilgilerini güncelle" })
   update(@CurrentUser() user: JwtPayload, @Param("id") id: string, @Body() updateProjectDto: UpdateProjectDto) {
     return this.projectsService.update(this.companyId(user), id, updateProjectDto);
-  }
-
-  @Patch(":id/sections/:sectionId")
-  @Permissions("project.update")
-  @ApiOperation({ summary: "Proje bölümünü güncelle" })
-  updateSection(
-    @CurrentUser() user: JwtPayload,
-    @Param("id") id: string,
-    @Param("sectionId") sectionId: string,
-    @Body() body: UpdateSectionDto,
-  ) {
-    return this.projectsService.updateSection(this.companyId(user), id, sectionId, body, user.sub);
   }
 
   @Delete(":id")
