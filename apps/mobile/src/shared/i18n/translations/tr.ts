@@ -724,6 +724,7 @@ export const tr = {
     hoursTitle: "Destek Saatleri",
     liveHours: "Hafta içi 09:00 – 18:00",
     contact: "Bize Ulaşın",
+    website: "Web Sitemiz",
     contactEmail: "destek@mimarlik.app",
     emailSubject: "Mimar Platform Destek Talebi",
     tickets: "Öneri ve Taleplerim",
@@ -794,6 +795,8 @@ export const tr = {
       },
     },
     guide: {
+      videoTitle: "Video Anlatım",
+      videoDesc: "Adım adım kullanım videolarını YouTube'da izleyin",
       sections: {
         projects: {
           title: "Projeler",

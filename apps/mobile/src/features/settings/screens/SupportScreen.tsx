@@ -4,7 +4,10 @@ import { useRouter } from "expo-router";
 import { useCallback, useMemo } from "react";
 import { Alert, Linking, Pressable, StyleSheet, Text, View } from "react-native";
 
-import { SUPPORT_CONTACT_EMAIL } from "../constants/support.constants";
+import { SUPPORT_CONTACT_EMAIL, SUPPORT_WEBSITE_URL } from "../constants/support.constants";
+
+// Satır açıklamasında şema ve sondaki eğik çizgi gürültü yapıyor.
+const SUPPORT_WEBSITE_LABEL = SUPPORT_WEBSITE_URL.replace(/^https?:\/\//, "").replace(/\/$/, "");
 import { useTranslation } from "../../../shared/i18n";
 import { radius, spacing, typography } from "../../../shared/theme";
 import { useThemedStyles, type AppColors } from "../../../shared/theme";
@@ -50,6 +53,13 @@ export function SupportScreen() {
         action: "email" as const,
       },
       {
+        id: "website",
+        icon: "web",
+        label: t("support.website"),
+        desc: SUPPORT_WEBSITE_LABEL,
+        action: "website" as const,
+      },
+      {
         id: "hours",
         icon: "clock-outline",
         label: t("support.hoursTitle"),
@@ -70,9 +80,21 @@ export function SupportScreen() {
     Alert.alert(t("support.contact"), SUPPORT_CONTACT_EMAIL);
   };
 
+  const openWebsite = async () => {
+    try {
+      await Linking.openURL(SUPPORT_WEBSITE_URL);
+    } catch {
+      Alert.alert(t("support.website"), SUPPORT_WEBSITE_LABEL);
+    }
+  };
+
   const handlePress = (item: (typeof links)[number]) => {
     if (item.action === "email") {
       openEmail();
+      return;
+    }
+    if (item.action === "website") {
+      openWebsite();
       return;
     }
     if (item.route) {
@@ -114,7 +136,7 @@ export function SupportScreen() {
               <Text style={styles.label}>{item.label}</Text>
               {item.desc ? <Text style={styles.desc}>{item.desc}</Text> : null}
             </View>
-            {item.route || item.action === "email" ? (
+            {item.route || item.action === "email" || item.action === "website" ? (
               <MaterialCommunityIcons color={colors.textMuted} name="chevron-right" size={22} />
             ) : null}
           </Pressable>

@@ -1,7 +1,8 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useMemo } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Alert, Linking, Pressable, StyleSheet, Text, View } from "react-native";
 
+import { USER_GUIDE_VIDEO_URL } from "../constants/support.constants";
 import { USER_GUIDE_SECTION_IDS } from "../data/faqContent";
 import { useTranslation } from "../../../shared/i18n";
 import { radius, spacing, typography } from "../../../shared/theme";
@@ -24,9 +25,28 @@ export function UserGuideScreen() {
     [t],
   );
 
+  const openVideoGuide = async () => {
+    try {
+      await Linking.openURL(USER_GUIDE_VIDEO_URL);
+    } catch {
+      Alert.alert(t("support.guide.videoTitle"), USER_GUIDE_VIDEO_URL);
+    }
+  };
+
   return (
     <Screen scroll contentContainerStyle={styles.content}>
       <DesignBackHeader title={t("support.manual")} />
+
+      <Pressable onPress={openVideoGuide} style={styles.videoCard}>
+        <View style={styles.videoIcon}>
+          <MaterialCommunityIcons color={colors.white} name="play" size={22} />
+        </View>
+        <View style={styles.videoBody}>
+          <Text style={styles.videoTitle}>{t("support.guide.videoTitle")}</Text>
+          <Text style={styles.videoDesc}>{t("support.guide.videoDesc")}</Text>
+        </View>
+        <MaterialCommunityIcons color={colors.textMuted} name="open-in-new" size={20} />
+      </Pressable>
 
       {sections.map((section) => (
         <View key={section.id} style={styles.section}>
@@ -51,6 +71,33 @@ export function UserGuideScreen() {
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
     content: { paddingBottom: 100 },
+    videoCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.md,
+      backgroundColor: colors.primarySoft,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: `${colors.primary}33`,
+      padding: spacing.lg,
+      marginBottom: spacing.md,
+    },
+    videoIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.primary,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    videoBody: { flex: 1 },
+    videoTitle: { ...typography.body, color: colors.text, fontWeight: "700" },
+    videoDesc: {
+      ...typography.caption,
+      color: colors.textMuted,
+      marginTop: 2,
+      lineHeight: 18,
+    },
     section: {
       backgroundColor: colors.card,
       borderRadius: radius.lg,

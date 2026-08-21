@@ -724,6 +724,7 @@ export const en = {
     hoursTitle: "Support Hours",
     liveHours: "Weekdays 09:00 – 18:00",
     contact: "Contact Us",
+    website: "Our Website",
     contactEmail: "destek@mimarlik.app",
     emailSubject: "Mimar Platform Support Request",
     tickets: "My Suggestions & Requests",
@@ -794,6 +795,8 @@ export const en = {
       },
     },
     guide: {
+      videoTitle: "Video Guide",
+      videoDesc: "Watch step-by-step walkthroughs on YouTube",
       sections: {
         projects: {
           title: "Projects",
