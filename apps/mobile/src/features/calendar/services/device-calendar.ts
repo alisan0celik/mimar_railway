@@ -7,13 +7,15 @@ import type { CalendarEventDTO } from "../../../services/api/calendar.api";
 /**
  * Uygulama etkinliklerini telefonun takvimine yazar.
  *
- * Telefonda Google hesabı ekliyse Android bu etkinlikleri kendiliğinden
- * Google Takvim'e senkronlar; ayrıca bir OAuth kapsamı ya da sunucu tarafı
- * senkron gerekmez. Akış tek yönlüdür: Google'da yapılan değişiklik geri
- * gelmez, bu yüzden uygulama her zaman kaynak kabul edilir.
+ * Etkinliğin Google Takvim'e ulaşması, yazıldığı takvimin hangi hesaba bağlı
+ * olduğuna bakar. Android'de varsayılan genelde Google hesabıdır ve senkron
+ * kendiliğinden olur; iOS'ta varsayılan çoğunlukla iCloud'dur, dolayısıyla
+ * kullanıcı Google hesabına ait takvimi kendisi seçmelidir. Bu yüzden hedef
+ * takvim seçilebilir ve hesabı ekranda gösterilir.
  *
- * Cihaz etkinlik kimlikleri telefona özeldir; sunucuda değil, yerelde
- * eşleştirme tablosunda tutulur.
+ * Akış tek yönlüdür: Google'da yapılan değişiklik geri gelmez, uygulama her
+ * zaman kaynak kabul edilir. Cihaz etkinlik kimlikleri telefona özeldir;
+ * sunucuda değil, yerelde eşleştirme tablosunda tutulur.
  */
 
 const ENABLED_KEY = "calendar:deviceSyncEnabled";
@@ -103,6 +105,39 @@ async function resolveCalendarId(): Promise<string | null> {
     await AsyncStorage.setItem(CALENDAR_ID_KEY, writable[0].id);
     return writable[0].id;
   }
+}
+
+export type WritableCalendar = {
+  id: string;
+  title: string;
+  /** Takvimin bağlı olduğu hesap — "Gmail", "iCloud" gibi. */
+  accountName: string;
+};
+
+/** Yazılabilir takvimleri, bağlı oldukları hesap adıyla listeler. */
+export async function listWritableCalendars(): Promise<WritableCalendar[]> {
+  const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
+  return calendars
+    .filter((calendar) => calendar.allowsModifications)
+    .map((calendar) => ({
+      id: calendar.id,
+      title: calendar.title,
+      accountName:
+        (calendar as { ownerAccount?: string }).ownerAccount ??
+        calendar.source?.name ??
+        "",
+    }));
+}
+
+export async function getSelectedCalendarId(): Promise<string | null> {
+  return AsyncStorage.getItem(CALENDAR_ID_KEY);
+}
+
+/** Hedef takvimi değiştirir. Önceki takvime yazılanlar orada kalır. */
+export async function setSelectedCalendarId(calendarId: string): Promise<void> {
+  await AsyncStorage.setItem(CALENDAR_ID_KEY, calendarId);
+  // Eşleştirme sıfırlanır ki etkinlikler yeni takvimde yeniden oluşsun.
+  await writeMap({});
 }
 
 function windowOf(event: CalendarEventDTO): { start: Date; end: Date } {

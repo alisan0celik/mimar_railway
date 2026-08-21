@@ -1,5 +1,5 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useMemo, useState, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Pressable,
@@ -16,7 +16,11 @@ import {
 import { fetchWithReadCache } from "../../../offline/cache/read-cache";
 import {
   clearDeviceEvents,
+  getSelectedCalendarId,
   isDeviceSyncEnabled,
+  listWritableCalendars,
+  setSelectedCalendarId,
+  type WritableCalendar,
   requestCalendarPermission,
   setDeviceSyncEnabled,
   syncDeviceEvents,
@@ -64,6 +68,9 @@ export function CalendarScreen() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deviceSync, setDeviceSync] = useState(false);
+  const [calendars, setCalendars] = useState<WritableCalendar[]>([]);
+  const [targetCalendarId, setTargetCalendarId] = useState<string | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const weekdays = useMemo(
     () => WEEKDAY_KEYS.map((key) => t(`calendar.weekdays.${key}`)),
@@ -81,6 +88,20 @@ export function CalendarScreen() {
   useEffect(() => {
     isDeviceSyncEnabled().then(setDeviceSync);
   }, []);
+
+  // Hedef takvim yalnızca senkron açıkken anlamlı; kapalıyken izin bile istenmez.
+  const refreshCalendars = useCallback(async () => {
+    const [list, selected] = await Promise.all([
+      listWritableCalendars(),
+      getSelectedCalendarId(),
+    ]);
+    setCalendars(list);
+    setTargetCalendarId(selected);
+  }, []);
+
+  useEffect(() => {
+    if (deviceSync) void refreshCalendars();
+  }, [deviceSync, refreshCalendars]);
 
   const fetchEvents = async () => {
     try {
@@ -115,6 +136,14 @@ export function CalendarScreen() {
 
     await setDeviceSyncEnabled(true);
     setDeviceSync(true);
+    await syncDeviceEvents(events);
+    await refreshCalendars();
+  };
+
+  const handlePickCalendar = async (calendarId: string) => {
+    await setSelectedCalendarId(calendarId);
+    setTargetCalendarId(calendarId);
+    setPickerOpen(false);
     await syncDeviceEvents(events);
   };
 
@@ -173,6 +202,55 @@ export function CalendarScreen() {
           value={deviceSync}
         />
       </View>
+
+      {deviceSync && calendars.length > 0 ? (
+        <View style={styles.targetCard}>
+          <Pressable onPress={() => setPickerOpen((open) => !open)} style={styles.targetRow}>
+            <View style={styles.syncBody}>
+              <Text style={styles.targetLabel}>{t("calendar.deviceSync.targetLabel")}</Text>
+              <Text style={styles.targetValue}>
+                {(() => {
+                  const active = calendars.find((c) => c.id === targetCalendarId);
+                  if (!active) return t("calendar.deviceSync.targetAuto");
+                  return active.accountName
+                    ? `${active.title} · ${active.accountName}`
+                    : active.title;
+                })()}
+              </Text>
+            </View>
+            <MaterialCommunityIcons
+              color={colors.textMuted}
+              name={pickerOpen ? "chevron-up" : "chevron-down"}
+              size={20}
+            />
+          </Pressable>
+
+          {pickerOpen ? (
+            <View style={styles.targetList}>
+              <Text style={styles.targetHint}>{t("calendar.deviceSync.targetHint")}</Text>
+              {calendars.map((calendar) => (
+                <Pressable
+                  key={calendar.id}
+                  onPress={() => handlePickCalendar(calendar.id)}
+                  style={styles.targetOption}
+                >
+                  <MaterialCommunityIcons
+                    color={calendar.id === targetCalendarId ? colors.primary : colors.textDisabled}
+                    name={calendar.id === targetCalendarId ? "radiobox-marked" : "radiobox-blank"}
+                    size={18}
+                  />
+                  <View style={styles.syncBody}>
+                    <Text style={styles.targetOptionTitle}>{calendar.title}</Text>
+                    {calendar.accountName ? (
+                      <Text style={styles.targetOptionAccount}>{calendar.accountName}</Text>
+                    ) : null}
+                  </View>
+                </Pressable>
+              ))}
+            </View>
+          ) : null}
+        </View>
+      ) : null}
 
       <View style={styles.monthNav}>
         <Pressable
@@ -326,6 +404,29 @@ function createStyles(colors: AppColors) {
     marginTop: 2,
     lineHeight: 16,
   },
+  targetCard: {
+    backgroundColor: colors.cardSoft,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  targetRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
+  targetLabel: { ...typography.caption, color: colors.textMuted },
+  targetValue: { ...typography.bodySmall, color: colors.text, fontWeight: "600", marginTop: 2 },
+  targetList: {
+    marginTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingTop: spacing.sm,
+    gap: spacing.sm,
+  },
+  targetHint: { ...typography.caption, color: colors.textMuted, lineHeight: 16 },
+  targetOption: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
+  targetOptionTitle: { ...typography.bodySmall, color: colors.text },
+  targetOptionAccount: { ...typography.caption, color: colors.textMuted },
   monthNav: {
     flexDirection: "row",
     alignItems: "center",
