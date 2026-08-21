@@ -44,7 +44,8 @@ async function ensureAndroidChannels(language: "tr" | "en") {
       name: channel.name,
       importance: Notifications.AndroidImportance.HIGH,
       vibrationPattern: [0, 250, 250, 250],
-      lightColor: "#7C3AED",
+      // Kozmoz temasının birincil rengi
+      lightColor: "#F97316",
     });
   }
 }
