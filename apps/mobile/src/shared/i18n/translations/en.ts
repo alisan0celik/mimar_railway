@@ -1056,7 +1056,7 @@ export const en = {
       permissionDenied: "Calendar permission was declined, so sync stays off. You can grant it in your phone settings.",
       targetLabel: "Target calendar",
       targetAuto: "Chosen automatically",
-      targetHint: "Pick a calendar on your Google account for events to show in Google Calendar. On iPhone the default is usually iCloud; add your Google account under Settings > Calendar > Accounts.",
+      targetHint: "Chosen from how you signed in: your Google calendar for a Google account, iCloud for an Apple one. Change it here to write somewhere else.",
     },
     title: "Calendar",
     events: "Events on {date}",

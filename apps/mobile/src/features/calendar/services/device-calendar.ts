@@ -1,19 +1,21 @@
 import * as Calendar from "expo-calendar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Platform } from "react-native";
 
 import type { CalendarEventDTO } from "../../../services/api/calendar.api";
+import { useAuthStore } from "../../../store/authStore";
+import { pickPreferredCalendar, type WritableCalendar } from "./calendar-target";
+
+export type { WritableCalendar } from "./calendar-target";
 
 /**
  * Uygulama etkinliklerini telefonun takvimine yazar.
  *
- * Etkinliğin Google Takvim'e ulaşması, yazıldığı takvimin hangi hesaba bağlı
- * olduğuna bakar. Android'de varsayılan genelde Google hesabıdır ve senkron
- * kendiliğinden olur; iOS'ta varsayılan çoğunlukla iCloud'dur, dolayısıyla
- * kullanıcı Google hesabına ait takvimi kendisi seçmelidir. Bu yüzden hedef
- * takvim seçilebilir ve hesabı ekranda gösterilir.
+ * Etkinliğin Google Takvim'e (ya da iCloud'a) ulaşması, yazıldığı takvimin
+ * hangi hesaba bağlı olduğuna bakar. Bu yüzden hedef takvim kullanıcının
+ * giriş yöntemine göre seçilir ve ekranda hesabıyla birlikte gösterilir;
+ * kullanıcı dilediğinde değiştirebilir.
  *
- * Akış tek yönlüdür: Google'da yapılan değişiklik geri gelmez, uygulama her
+ * Akış tek yönlüdür: bulutta yapılan değişiklik geri gelmez, uygulama her
  * zaman kaynak kabul edilir. Cihaz etkinlik kimlikleri telefona özeldir;
  * sunucuda değil, yerelde eşleştirme tablosunda tutulur.
  */
@@ -21,9 +23,6 @@ import type { CalendarEventDTO } from "../../../services/api/calendar.api";
 const ENABLED_KEY = "calendar:deviceSyncEnabled";
 const MAP_KEY = "calendar:deviceEventMap";
 const CALENDAR_ID_KEY = "calendar:deviceCalendarId";
-
-const CALENDAR_TITLE = "Planova";
-const CALENDAR_COLOR = "#F97316";
 
 type EventMap = Record<string, string>;
 
@@ -55,66 +54,33 @@ export async function requestCalendarPermission(): Promise<boolean> {
 }
 
 /**
- * Etkinliklerin yazılacağı takvimi bulur ya da oluşturur.
+ * Etkinliklerin yazılacağı takvimi bulur.
  *
- * iOS'ta yeni takvim bir kaynağa bağlanmak zorunda; varsayılan takvimin
- * kaynağı kullanılır. Android'de yerel bir hesap altında açılır ve telefona
- * eklenmiş Google hesabı varsa kullanıcı onu Google Takvim'de görebilir.
+ * Uygulama kendi takvimini **oluşturmaz**. Android'de Takvim Sağlayıcısı
+ * üzerinden açılan bir takvim Google sunucularına senkronlanmaz; cihazda
+ * kalır. Etkinliğin Google Takvim'de görünmesi için hesabın **mevcut**
+ * takvimlerinden birine yazmak gerekiyor.
  */
 async function resolveCalendarId(): Promise<string | null> {
+  const calendars = await listWritableCalendars();
+  if (calendars.length === 0) return null;
+
   const stored = await AsyncStorage.getItem(CALENDAR_ID_KEY);
-  if (stored) {
-    // Kullanıcı takvimi telefondan silmiş olabilir; doğrula.
-    const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
-    if (calendars.some((calendar) => calendar.id === stored)) return stored;
-  }
+  if (stored && calendars.some((calendar) => calendar.id === stored)) return stored;
 
-  const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
+  const user = useAuthStore.getState().user;
+  const preferred = pickPreferredCalendar({
+    authProvider: user?.authProvider,
+    email: user?.email,
+    calendars,
+  });
+  if (!preferred) return null;
 
-  const existing = calendars.find(
-    (calendar) => calendar.title === CALENDAR_TITLE && calendar.allowsModifications,
-  );
-  if (existing) {
-    await AsyncStorage.setItem(CALENDAR_ID_KEY, existing.id);
-    return existing.id;
-  }
-
-  const writable = calendars.filter((calendar) => calendar.allowsModifications);
-  if (writable.length === 0) return null;
-
-  const source =
-    Platform.OS === "ios"
-      ? (await Calendar.getDefaultCalendarAsync()).source
-      : (writable[0].source ?? { isLocalAccount: true, name: CALENDAR_TITLE, type: "LOCAL" });
-
-  try {
-    const id = await Calendar.createCalendarAsync({
-      title: CALENDAR_TITLE,
-      name: CALENDAR_TITLE,
-      color: CALENDAR_COLOR,
-      entityType: Calendar.EntityTypes.EVENT,
-      sourceId: Platform.OS === "ios" ? source.id : undefined,
-      source: Platform.OS === "android" ? source : undefined,
-      ownerAccount: Platform.OS === "android" ? source.name : undefined,
-      accessLevel: Calendar.CalendarAccessLevel.OWNER,
-    });
-    await AsyncStorage.setItem(CALENDAR_ID_KEY, id);
-    return id;
-  } catch {
-    // Kendi takvimimizi açamazsak yazılabilir ilk takvime düşeriz.
-    await AsyncStorage.setItem(CALENDAR_ID_KEY, writable[0].id);
-    return writable[0].id;
-  }
+  await AsyncStorage.setItem(CALENDAR_ID_KEY, preferred);
+  return preferred;
 }
 
-export type WritableCalendar = {
-  id: string;
-  title: string;
-  /** Takvimin bağlı olduğu hesap — "Gmail", "iCloud" gibi. */
-  accountName: string;
-};
-
-/** Yazılabilir takvimleri, bağlı oldukları hesap adıyla listeler. */
+/** Yazılabilir takvimleri, bağlı oldukları hesap ve kaynak türüyle listeler. */
 export async function listWritableCalendars(): Promise<WritableCalendar[]> {
   const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
   return calendars
@@ -122,10 +88,9 @@ export async function listWritableCalendars(): Promise<WritableCalendar[]> {
     .map((calendar) => ({
       id: calendar.id,
       title: calendar.title,
-      accountName:
-        (calendar as { ownerAccount?: string }).ownerAccount ??
-        calendar.source?.name ??
-        "",
+      accountName: calendar.ownerAccount ?? calendar.source?.name ?? "",
+      sourceType: String(calendar.source?.type ?? ""),
+      isPrimary: calendar.isPrimary === true,
     }));
 }
 

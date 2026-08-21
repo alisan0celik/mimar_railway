@@ -1056,7 +1056,7 @@ export const tr = {
       permissionDenied: "Takvim izni verilmediği için senkron açılamadı. İzni telefon ayarlarından verebilirsiniz.",
       targetLabel: "Yazılacak takvim",
       targetAuto: "Otomatik seçilecek",
-      targetHint: "Etkinliklerin Google Takvim'de görünmesi için Google hesabınıza ait takvimi seçin. iPhone'da varsayılan takvim genellikle iCloud'dur; Google hesabınızı Ayarlar > Takvim > Hesaplar'dan ekleyebilirsiniz.",
+      targetHint: "Giriş yönteminize göre otomatik seçilir: Google ile girdiyseniz Google takviminiz, Apple ile girdiyseniz iCloud. Başka bir hesaba yazmak isterseniz buradan değiştirin.",
     },
     title: "Takvim",
     events: "{date} Etkinlikleri",
