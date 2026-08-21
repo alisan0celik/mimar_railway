@@ -4,7 +4,7 @@ import { StatusBar } from "expo-status-bar";
 
 import { useAppStore } from "../../store/appStore";
 import type { AppColors, ThemeMode } from "./colors";
-import { getPalette, isDarkThemeMode } from "./colors";
+import { DEFAULT_THEME_MODE, getPalette, isDarkThemeMode } from "./colors";
 
 type ThemeContextValue = {
   mode: ThemeMode;
@@ -12,8 +12,8 @@ type ThemeContextValue = {
 };
 
 const ThemeContext = createContext<ThemeContextValue>({
-  mode: "dark",
-  colors: getPalette("dark"),
+  mode: DEFAULT_THEME_MODE,
+  colors: getPalette(DEFAULT_THEME_MODE),
 });
 
 export function ThemeProvider({ children }: { children: ReactNode }) {

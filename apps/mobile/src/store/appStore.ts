@@ -25,7 +25,8 @@ type AppState = {
 };
 
 export const useAppStore = create<AppState>((set) => ({
-  themeMode: "dark",
+  // Varsayılan tema Kozmoz; kullanıcı değiştirirse tercihi diskten geri gelir.
+  themeMode: "kozmoz",
   language: "tr",
   notificationPrefs: {
     projects: true,

@@ -9,10 +9,11 @@ import { useThemeColors } from "../../../shared/theme/ThemeProvider";
 import { useThemedStyles } from "../../../shared/theme/useThemedStyles";
 import { DesignBackHeader, Screen } from "../../../shared/ui";
 
+// Varsayılan tema başta listelenir.
 const options: Array<{ mode: ThemeMode; icon: string; titleKey: string; descKey: string }> = [
+  { mode: "kozmoz", icon: "flare", titleKey: "theme.kozmoz", descKey: "theme.kozmozDesc" },
   { mode: "dark", icon: "weather-night", titleKey: "theme.dark", descKey: "theme.darkDesc" },
   { mode: "light", icon: "white-balance-sunny", titleKey: "theme.light", descKey: "theme.lightDesc" },
-  { mode: "kozmoz", icon: "flare", titleKey: "theme.kozmoz", descKey: "theme.kozmozDesc" },
 ];
 
 export function ThemeScreen() {

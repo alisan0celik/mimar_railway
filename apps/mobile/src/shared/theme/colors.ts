@@ -11,6 +11,9 @@ export const DARK_THEME_MODES: ThemeMode[] = ["dark", "kozmoz"];
 
 export const THEME_MODES: ThemeMode[] = ["dark", "light", "kozmoz"];
 
+/** Kurulumdan sonraki ilk açılışta kullanılan tema. */
+export const DEFAULT_THEME_MODE: ThemeMode = "kozmoz";
+
 export const palettes: Record<ThemeMode, AppColors> = {
   dark: { ...darkColors },
   light: { ...lightColors },
@@ -21,7 +24,7 @@ export const palettes: Record<ThemeMode, AppColors> = {
 export const colors: AppColors = { ...darkColors };
 
 export function getPalette(mode: ThemeMode): AppColors {
-  return palettes[mode] ?? palettes.dark;
+  return palettes[mode] ?? palettes[DEFAULT_THEME_MODE];
 }
 
 export function isDarkThemeMode(mode: ThemeMode): boolean {
