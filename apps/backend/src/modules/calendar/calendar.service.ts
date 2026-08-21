@@ -1,5 +1,7 @@
 import { Injectable } from "@nestjs/common";
+import { NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../../common/prisma.service";
+import { resolveEventWindow } from "./calendar-event.utils";
 import { NotificationsService } from "../notifications/notifications.service";
 import {
   CALENDAR_EVENT_ACTION,
@@ -33,19 +35,54 @@ export class CalendarService {
       orderBy: { date: "asc" },
     });
 
-    return events.map((e) => ({
-      ...e,
-      date: e.date.toISOString(),
-      createdAt: e.createdAt.toISOString(),
-      updatedAt: e.updatedAt.toISOString(),
-    }));
+    return events.map((e) => this.toResponse(e));
+  }
+
+  /**
+   * Yanıtta her zaman gerçek başlangıç/bitiş anı bulunur.
+   *
+   * Eski kayıtlarda bu alanlar boş olabildiği için `date` + `time` ikilisinden
+   * türetilir; böylece cihaz takvimine yazan istemci hep bir zaman aralığı görür.
+   */
+  private toResponse(event: {
+    date: Date;
+    time: string;
+    startsAt: Date | null;
+    endsAt: Date | null;
+    createdAt: Date;
+    updatedAt: Date;
+  }) {
+    const { startsAt, endsAt } = resolveEventWindow(event);
+    return {
+      ...event,
+      date: event.date.toISOString(),
+      startsAt: startsAt.toISOString(),
+      endsAt: endsAt.toISOString(),
+      createdAt: event.createdAt.toISOString(),
+      updatedAt: event.updatedAt.toISOString(),
+    };
   }
 
   async createEvent(
     userId: string,
     companyId: string,
-    dto: { title: string; projectName?: string; time: string; type?: string; date: string },
+    dto: {
+      title: string;
+      projectName?: string;
+      time: string;
+      type?: string;
+      date: string;
+      startsAt?: string;
+      endsAt?: string;
+    },
   ) {
+    const window = resolveEventWindow({
+      date: new Date(dto.date),
+      time: dto.time,
+      startsAt: dto.startsAt ? new Date(dto.startsAt) : null,
+      endsAt: dto.endsAt ? new Date(dto.endsAt) : null,
+    });
+
     const event = await this.prisma.calendarEvent.create({
       data: {
         userId,
@@ -55,17 +92,65 @@ export class CalendarService {
         time: dto.time,
         type: dto.type ?? "meeting",
         date: new Date(dto.date),
+        startsAt: window.startsAt,
+        endsAt: window.endsAt,
       },
     });
 
     await this.notifyCompanyOnEventCreated(companyId, userId, event.id, event.title, event.time);
 
-    return {
-      ...event,
-      date: event.date.toISOString(),
-      createdAt: event.createdAt.toISOString(),
-      updatedAt: event.updatedAt.toISOString(),
-    };
+    return this.toResponse(event);
+  }
+
+  /** Etkinlik güncelleme. Şirket dışından bir kayda erişilemez. */
+  async updateEvent(
+    companyId: string,
+    eventId: string,
+    dto: {
+      title?: string;
+      projectName?: string;
+      time?: string;
+      type?: string;
+      date?: string;
+      startsAt?: string;
+      endsAt?: string;
+    },
+  ) {
+    const existing = await this.prisma.calendarEvent.findFirst({
+      where: { id: eventId, companyId },
+    });
+    if (!existing) throw new NotFoundException("Etkinlik bulunamadı");
+
+    const date = dto.date ? new Date(dto.date) : existing.date;
+    const window = resolveEventWindow({
+      date,
+      time: dto.time ?? existing.time,
+      startsAt: dto.startsAt ? new Date(dto.startsAt) : null,
+      endsAt: dto.endsAt ? new Date(dto.endsAt) : null,
+    });
+
+    const event = await this.prisma.calendarEvent.update({
+      where: { id: eventId },
+      data: {
+        ...(dto.title !== undefined ? { title: dto.title } : {}),
+        ...(dto.projectName !== undefined ? { projectName: dto.projectName } : {}),
+        ...(dto.time !== undefined ? { time: dto.time } : {}),
+        ...(dto.type !== undefined ? { type: dto.type } : {}),
+        date,
+        startsAt: window.startsAt,
+        endsAt: window.endsAt,
+      },
+    });
+
+    return this.toResponse(event);
+  }
+
+  async removeEvent(companyId: string, eventId: string) {
+    const result = await this.prisma.calendarEvent.deleteMany({
+      where: { id: eventId, companyId },
+    });
+    if (result.count === 0) throw new NotFoundException("Etkinlik bulunamadı");
+    return { success: true };
   }
 
   private async notifyCompanyOnEventCreated(

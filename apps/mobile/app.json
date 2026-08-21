@@ -70,7 +70,13 @@
         }
       ],
       "./plugins/withGoogleSignInModularHeaders.js",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-calendar",
+        {
+          "calendarPermission": "Planova, takvim etkinliklerinizi telefonunuzun takvimine yazmak için izin istiyor."
+        }
+      ]
     ],
     "extra": {
       "eas": {

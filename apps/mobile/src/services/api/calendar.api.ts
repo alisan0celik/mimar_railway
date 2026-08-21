@@ -7,6 +7,9 @@ export interface CalendarEventDTO {
   time: string;
   type: string;
   date: string;
+  /** Gerçek başlangıç/bitiş anı. Eski sunucu sürümlerinde gelmeyebilir. */
+  startsAt?: string;
+  endsAt?: string;
 }
 
 export type CalendarEventType = "deadline" | "meeting" | "other";
@@ -26,4 +29,7 @@ export const calendarApi = {
     }),
   createEvent: (payload: CreateCalendarEventDTO) =>
     apiClient.post<CalendarEventDTO>("/calendar", payload),
+  updateEvent: (id: string, payload: Partial<CreateCalendarEventDTO>) =>
+    apiClient.patch<CalendarEventDTO>(`/calendar/${id}`, payload),
+  deleteEvent: (id: string) => apiClient.delete(`/calendar/${id}`),
 };

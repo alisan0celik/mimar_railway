@@ -1050,6 +1050,11 @@ export const tr = {
     },
   },
   calendar: {
+    deviceSync: {
+      title: "Telefon takvimiyle senkronla",
+      description: "Etkinlikler telefonunuzun takvimine yazılır. Telefonda Google hesabınız ekliyse Google Takvim'de de görünür. Aktarım tek yönlüdür: Google'da yaptığınız değişiklik uygulamaya yansımaz.",
+      permissionDenied: "Takvim izni verilmediği için senkron açılamadı. İzni telefon ayarlarından verebilirsiniz.",
+    },
     title: "Takvim",
     events: "{date} Etkinlikleri",
     eventsOnDay: "{day} {month} Etkinlikleri",

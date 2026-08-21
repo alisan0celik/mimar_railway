@@ -1050,6 +1050,11 @@ export const en = {
     },
   },
   calendar: {
+    deviceSync: {
+      title: "Sync with phone calendar",
+      description: "Events are written to your phone's calendar. If your Google account is on the phone they also appear in Google Calendar. This is one-way: changes made in Google do not come back to the app.",
+      permissionDenied: "Calendar permission was declined, so sync stays off. You can grant it in your phone settings.",
+    },
     title: "Calendar",
     events: "Events on {date}",
     eventsOnDay: "Events on {day} {month}",

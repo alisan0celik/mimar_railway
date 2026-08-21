@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Query, Body } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from "@nestjs/common";
 import { ApiOperation, ApiQuery } from "@nestjs/swagger";
 import { CalendarService } from "./calendar.service";
 import { CreateCalendarEventDto } from "./dto/create-calendar-event.dto";
+import { UpdateCalendarEventDto } from "./dto/update-calendar-event.dto";
 import { CurrentUser } from "../../common/decorators/current-user.decorator";
 import { RequireCompany } from "../../common/tenant/require-company.decorator";
 import { RequireApproved } from "../../common/tenant/require-approved.decorator";
@@ -37,5 +38,21 @@ export class CalendarController {
     @Body() dto: CreateCalendarEventDto,
   ) {
     return this.calendarService.createEvent(user.sub, user.companyId!, dto);
+  }
+
+  @Patch(":id")
+  @ApiOperation({ summary: "Takvim etkinliğini güncelle" })
+  async updateEvent(
+    @CurrentUser() user: JwtPayload,
+    @Param("id") id: string,
+    @Body() dto: UpdateCalendarEventDto,
+  ) {
+    return this.calendarService.updateEvent(user.companyId!, id, dto);
+  }
+
+  @Delete(":id")
+  @ApiOperation({ summary: "Takvim etkinliğini sil" })
+  async removeEvent(@CurrentUser() user: JwtPayload, @Param("id") id: string) {
+    return this.calendarService.removeEvent(user.companyId!, id);
   }
 }

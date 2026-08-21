@@ -314,6 +314,11 @@ model CalendarEvent {
   time        String
   type        String   @default("meeting") // "deadline", "meeting", "other"
   date        DateTime
+  /// Etkinliğin gerçek başlangıç/bitiş anı. `date` + serbest metin `time`
+  /// ikilisi cihaz takvimine yazmaya yetmiyordu (bitiş saati yoktu).
+  /// Eski istemciler `date`/`time` okumaya devam ettiği için o alanlar korundu.
+  startsAt    DateTime?
+  endsAt      DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

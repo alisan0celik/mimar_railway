@@ -1,12 +1,27 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useMemo, useState, useEffect } from "react";
-import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  Alert,
+  Pressable,
+  StyleSheet,
+  Switch,
+  Text,
+  View,
+} from "react-native";
 
 import {
   calendarApi,
   CalendarEventDTO,
 } from "../../../services/api/calendar.api";
 import { fetchWithReadCache } from "../../../offline/cache/read-cache";
+import {
+  clearDeviceEvents,
+  isDeviceSyncEnabled,
+  requestCalendarPermission,
+  setDeviceSyncEnabled,
+  syncDeviceEvents,
+  upsertDeviceEvent,
+} from "../services/device-calendar";
 import { useTranslation } from "../../../shared/i18n";
 import { radius, spacing, typography } from "../../../shared/theme";
 import { useThemedStyles, type AppColors } from "../../../shared/theme";
@@ -48,6 +63,7 @@ export function CalendarScreen() {
   const [time, setTime] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [deviceSync, setDeviceSync] = useState(false);
 
   const weekdays = useMemo(
     () => WEEKDAY_KEYS.map((key) => t(`calendar.weekdays.${key}`)),
@@ -62,6 +78,10 @@ export function CalendarScreen() {
     fetchEvents();
   }, [year, month]);
 
+  useEffect(() => {
+    isDeviceSyncEnabled().then(setDeviceSync);
+  }, []);
+
   const fetchEvents = async () => {
     try {
       // Çevrimdışında o ayın son bilinen etkinlikleri gösterilsin
@@ -69,10 +89,33 @@ export function CalendarScreen() {
         `calendar:${year}-${month}`,
         async () => (await calendarApi.getEvents(year, month)).data,
       );
-      setEvents(Array.isArray(data) ? data : []);
+      const list = Array.isArray(data) ? data : [];
+      setEvents(list);
+      // Senkron kapalıysa bu çağrı kendiliğinden hiçbir şey yapmaz.
+      void syncDeviceEvents(list);
     } catch (e) {
       console.error(e);
     }
+  };
+
+  const handleToggleDeviceSync = async (next: boolean) => {
+    if (!next) {
+      await setDeviceSyncEnabled(false);
+      setDeviceSync(false);
+      // Kullanıcı kapattığında uygulamanın yazdıkları telefonda kalmasın.
+      await clearDeviceEvents();
+      return;
+    }
+
+    const granted = await requestCalendarPermission();
+    if (!granted) {
+      Alert.alert(t("calendar.deviceSync.title"), t("calendar.deviceSync.permissionDenied"));
+      return;
+    }
+
+    await setDeviceSyncEnabled(true);
+    setDeviceSync(true);
+    await syncDeviceEvents(events);
   };
 
   const handleCreateEvent = async () => {
@@ -92,6 +135,7 @@ export function CalendarScreen() {
         date: toEventDate(year, month, selectedDay),
       });
       setEvents((current) => [...current, res.data].sort((a, b) => a.date.localeCompare(b.date)));
+      void upsertDeviceEvent(res.data);
       setTitle("");
       setTime("");
       setIsFormOpen(false);
@@ -115,6 +159,20 @@ export function CalendarScreen() {
   return (
     <Screen scroll contentContainerStyle={styles.content}>
       <DesignBackHeader title={t("calendar.title")} />
+
+      <View style={styles.syncCard}>
+        <MaterialCommunityIcons color={colors.primary} name="calendar-sync" size={22} />
+        <View style={styles.syncBody}>
+          <Text style={styles.syncTitle}>{t("calendar.deviceSync.title")}</Text>
+          <Text style={styles.syncDesc}>{t("calendar.deviceSync.description")}</Text>
+        </View>
+        <Switch
+          onValueChange={handleToggleDeviceSync}
+          thumbColor={deviceSync ? "#fff" : colors.textMuted}
+          trackColor={{ false: colors.border, true: colors.primary }}
+          value={deviceSync}
+        />
+      </View>
 
       <View style={styles.monthNav}>
         <Pressable
@@ -249,6 +307,25 @@ export function CalendarScreen() {
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
   content: { paddingBottom: 100 },
+  syncCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    backgroundColor: colors.card,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  syncBody: { flex: 1 },
+  syncTitle: { ...typography.bodySmall, color: colors.text, fontWeight: "600" },
+  syncDesc: {
+    ...typography.caption,
+    color: colors.textMuted,
+    marginTop: 2,
+    lineHeight: 16,
+  },
   monthNav: {
     flexDirection: "row",
     alignItems: "center",

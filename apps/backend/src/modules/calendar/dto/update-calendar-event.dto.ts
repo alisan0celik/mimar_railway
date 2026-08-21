@@ -1,24 +1,26 @@
 import { IsDateString, IsIn, IsOptional, IsString } from "class-validator";
 
-export class CreateCalendarEventDto {
+export class UpdateCalendarEventDto {
+  @IsOptional()
   @IsString()
-  title!: string;
+  title?: string;
 
   @IsOptional()
   @IsString()
   projectName?: string;
 
+  @IsOptional()
   @IsString()
-  time!: string;
+  time?: string;
 
   @IsOptional()
   @IsIn(["deadline", "meeting", "other"])
   type?: string;
 
+  @IsOptional()
   @IsDateString()
-  date!: string;
+  date?: string;
 
-  /** Gerçek başlangıç anı. Gönderilmezse `date` + `time` ikilisinden türetilir. */
   @IsOptional()
   @IsDateString()
   startsAt?: string;
