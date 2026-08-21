@@ -11,7 +11,7 @@ import {
   View,
 } from "react-native";
 
-import type { Edge } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import {
   supportApi,
@@ -22,18 +22,23 @@ import { useTranslation, useLocaleCode } from "../../../shared/i18n";
 import { radius, spacing, typography } from "../../../shared/theme";
 import { useThemedStyles, type AppColors } from "../../../shared/theme";
 import { useThemeColors } from "../../../shared/theme/ThemeProvider";
+import { useKeyboardVisible } from "../../../shared/hooks";
 import { DesignBackHeader, Screen } from "../../../shared/ui";
 import { useAuthStore } from "../../../store/authStore";
 
-// Yanıt kutusu ekranın en altında duruyor; alt kenar payı olmadan cihazın
-// gezinme çubuğu "Gönder" düğmesinin üstüne biniyor.
-const SCREEN_EDGES: Edge[] = ["top", "bottom"];
+// Android'de pencere klavye açılınca yeniden boyutlanmadığı için "height"
+// gerekiyor; iOS'ta dış Screen zaten "padding" uyguluyor, burada tekrar
+// uygulanırsa içerik iki kat yukarı kayar.
+const KEYBOARD_BEHAVIOR = Platform.OS === "android" ? ("height" as const) : undefined;
 
 export function TicketDetailScreen({ ticketId }: { ticketId: string }) {
   const styles = useThemedStyles(createStyles);
   const colors = useThemeColors();
   const { t } = useTranslation();
   const locale = useLocaleCode();
+  const insets = useSafeAreaInsets();
+  const keyboardVisible = useKeyboardVisible();
+  const composerBottom = keyboardVisible ? spacing.sm : Math.max(insets.bottom, spacing.sm);
   const userId = useAuthStore((s) => s.user?.id);
 
   const [ticket, setTicket] = useState<SupportTicketDetailDTO | null>(null);
@@ -107,7 +112,7 @@ export function TicketDetailScreen({ ticketId }: { ticketId: string }) {
 
   if (loading) {
     return (
-      <Screen contentContainerStyle={styles.content} edges={SCREEN_EDGES}>
+      <Screen contentContainerStyle={styles.content}>
         <DesignBackHeader title={t("support.ticketDetail")} />
         <ActivityIndicator color={colors.primary} size="large" style={styles.loader} />
       </Screen>
@@ -116,7 +121,7 @@ export function TicketDetailScreen({ ticketId }: { ticketId: string }) {
 
   if (error || !ticket) {
     return (
-      <Screen contentContainerStyle={styles.content} edges={SCREEN_EDGES}>
+      <Screen contentContainerStyle={styles.content}>
         <DesignBackHeader title={t("support.ticketDetail")} />
         <Text style={styles.errorText}>{t("support.loadTicketFailed")}</Text>
       </Screen>
@@ -124,7 +129,7 @@ export function TicketDetailScreen({ ticketId }: { ticketId: string }) {
   }
 
   return (
-    <Screen contentContainerStyle={styles.content} edges={SCREEN_EDGES}>
+    <Screen contentContainerStyle={styles.content}>
       <DesignBackHeader title={t("support.ticketDetail")} />
 
       <View style={styles.headerCard}>
@@ -139,10 +144,7 @@ export function TicketDetailScreen({ ticketId }: { ticketId: string }) {
         </View>
       </View>
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={styles.flex}
-      >
+      <KeyboardAvoidingView behavior={KEYBOARD_BEHAVIOR} style={styles.flex}>
         <FlatList
           contentContainerStyle={styles.messagesContent}
           data={ticket.messages}
@@ -168,7 +170,7 @@ export function TicketDetailScreen({ ticketId }: { ticketId: string }) {
         {isClosed ? (
           <Text style={styles.closedHint}>{t("support.ticketClosedHint")}</Text>
         ) : (
-          <View style={styles.composer}>
+          <View style={[styles.composer, { paddingBottom: composerBottom }]}>
             <TextInput
               multiline
               onChangeText={setMessage}
@@ -195,7 +197,9 @@ export function TicketDetailScreen({ ticketId }: { ticketId: string }) {
 
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
-    content: { flex: 1, paddingBottom: spacing.md },
+    // Alt boşluğu yazma kutusu kendi yönetiyor; Screen'in varsayılan
+    // paddingBottom'ı burada kutuyu klavyeden gereksiz yere uzaklaştırır.
+    content: { flex: 1, paddingBottom: 0 },
     flex: { flex: 1 },
     loader: { marginTop: spacing.xxl },
     errorText: {
