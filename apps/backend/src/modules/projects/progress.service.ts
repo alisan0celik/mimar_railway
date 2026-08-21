@@ -20,6 +20,17 @@ type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
 /** Tahsilat sayılan finans kayıt türü — gider tarafı hakedişi ilgilendirmez. */
 const COLLECTION_TYPE = "collection";
 
+/**
+ * Kalem adlarını karşılaştırmak için normalleştirir.
+ *
+ * Düz `toLowerCase()` Türkçe'de yanlış sonuç veriyor: "İ" harfi "i" yerine
+ * birleşik noktalı "i̇" üretiyor ve "Kaba İnşaat" ile "kaba inşaat" farklı
+ * görünüyor. Bu yüzden Türkçe yerel ayarıyla küçültülür.
+ */
+function normaliseName(value: string): string {
+  return value.trim().toLocaleLowerCase("tr").normalize("NFC");
+}
+
 @Injectable()
 export class ProgressService {
   constructor(private readonly prisma: PrismaService) {}
@@ -130,6 +141,88 @@ export class ProgressService {
 
     await this.refreshProjectProgress(projectId);
     return { success: true };
+  }
+
+  // --- ŞİRKET FAVORİ KALEMLERİ ---
+
+  /**
+   * Şirketin favori imalat kalemleri.
+   *
+   * Her ofis/müteahhit kendi imalat listesini kurar; yeni açılan projelere
+   * bu liste uygulanır. Favori yoksa proje boş açılır.
+   */
+  listFavourites(companyId: string) {
+    return this.prisma.companyWorkItem.findMany({
+      where: { companyId },
+      orderBy: [{ order: "asc" }, { createdAt: "asc" }],
+    });
+  }
+
+  /** Kalem adını favorilere ekler; zaten varsa mevcut kaydı döndürür. */
+  async addFavourite(companyId: string, name: string) {
+    const trimmed = name.trim();
+    if (trimmed.length < 2) {
+      throw new BadRequestException("Kalem adı en az 2 karakter olmalı");
+    }
+
+    const existing = await this.prisma.companyWorkItem.findFirst({
+      where: { companyId, name: { equals: trimmed, mode: "insensitive" } },
+    });
+    if (existing) return existing;
+
+    const last = await this.prisma.companyWorkItem.findFirst({
+      where: { companyId },
+      orderBy: { order: "desc" },
+      select: { order: true },
+    });
+
+    return this.prisma.companyWorkItem.create({
+      data: { companyId, name: trimmed, order: (last?.order ?? 0) + 1 },
+    });
+  }
+
+  /** Favoriden çıkarır. Ad üzerinden çalışır ki ekrandaki yıldız tek dokunuşla dönebilsin. */
+  async removeFavouriteByName(companyId: string, name: string) {
+    await this.prisma.companyWorkItem.deleteMany({
+      where: { companyId, name: { equals: name.trim(), mode: "insensitive" } },
+    });
+    return { success: true };
+  }
+
+  /**
+   * Favori kalemleri mevcut bir projeye uygular.
+   *
+   * Projede aynı adla kalem varsa atlanır; böylece tekrar tekrar basmak
+   * kopya kalem üretmez.
+   */
+  async applyFavourites(companyId: string, projectId: string, userId: string) {
+    await this.assertProject(companyId, projectId);
+
+    const [favourites, existing, user] = await Promise.all([
+      this.listFavourites(companyId),
+      this.sectionsOf(projectId),
+      this.prisma.user.findUnique({ where: { id: userId }, select: { fullName: true } }),
+    ]);
+
+    const taken = new Set(existing.map((section) => normaliseName(section.name)));
+    const missing = favourites.filter((item) => !taken.has(normaliseName(item.name)));
+
+    if (missing.length === 0) return this.sectionsOf(projectId);
+
+    let order = existing.reduce((max, section) => Math.max(max, section.order), 0);
+
+    await this.prisma.section.createMany({
+      data: missing.map((item) => ({
+        projectId,
+        name: item.name,
+        order: ++order,
+        status: "not-started",
+        updatedBy: user?.fullName ?? "Sistem",
+      })),
+    });
+
+    await this.refreshProjectProgress(projectId);
+    return this.sectionsOf(projectId);
   }
 
   // --- HAKEDİŞ ---

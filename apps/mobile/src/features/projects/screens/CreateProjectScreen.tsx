@@ -3,9 +3,7 @@ import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { useProjectStore } from "../../../store/projectStore";
-import { useAuthStore } from "../../../store/authStore";
-import { companiesApi, type CompanyDTO } from "../../../services/api";
-import { fetchWithReadCache } from "../../../offline/cache/read-cache";
+import { projectApi } from "../../../services/api/project.api";
 import { useTranslation } from "../../../shared/i18n";
 import { PERMISSIONS, useCan } from "../../../shared/permissions";
 import { radius, spacing, typography } from "../../../shared/theme";
@@ -18,7 +16,6 @@ import {
   Screen,
 } from "../../../shared/ui";
 import {
-  defaultTemplateFor,
   getTemplateItems,
   WORK_ITEM_TEMPLATES,
   type WorkItemTemplate,
@@ -32,7 +29,6 @@ export function CreateProjectScreen() {
   const router = useRouter();
   const canCreate = useCan(PERMISSIONS.PROJECT_CREATE);
   const { createProject, loading } = useProjectStore();
-  const companyId = useAuthStore((state) => state.user?.companyId);
   const [step, setStep] = useState(1);
 
   const [projectName, setProjectName] = useState("");
@@ -40,32 +36,31 @@ export function CreateProjectScreen() {
   const [typeIndex, setTypeIndex] = useState(0);
   const [hasInspection, setHasInspection] = useState(true);
   const [inspectionCompany, setInspectionCompany] = useState("");
-  const [template, setTemplate] = useState<WorkItemTemplate>("architecture");
-  const [workItems, setWorkItems] = useState<string[]>(getTemplateItems("architecture"));
+  const [template, setTemplate] = useState<WorkItemTemplate>("empty");
+  const [workItems, setWorkItems] = useState<string[]>([]);
 
-  // Şirket müteahhitse şantiye kalemleriyle başlansın. Şirket bilgisi
-  // önbellekten okunduğu için çevrimdışında da doğru şablon gelir.
+  // Şirketin favori kalemleriyle başlanır; favori yoksa liste boş kalır ve
+  // kullanıcı kendi kalemlerini kurar. Uygulama genelinde sabit bir kalem
+  // seti dayatmak, farklı iş kollarında yanlış kalemlerin silinmesini
+  // gerektiriyordu. Hazır şablonlar aşağıdaki seçeneklerden tek dokunuşla
+  // yine uygulanabilir.
   useEffect(() => {
-    if (!companyId) return;
     let cancelled = false;
 
-    fetchWithReadCache<CompanyDTO>(`company:${companyId}`, async () =>
-      (await companiesApi.getById(companyId)).data,
-    )
-      .then((company) => {
-        if (cancelled) return;
-        const next = defaultTemplateFor(company.businessType);
-        setTemplate(next);
-        setWorkItems(getTemplateItems(next));
+    projectApi
+      .getFavouriteItems()
+      .then((favourites) => {
+        if (cancelled || favourites.length === 0) return;
+        setWorkItems(favourites.map((item) => item.name));
       })
       .catch(() => {
-        // Şirket bilgisi alınamazsa mimarlık varsayılanıyla devam
+        // Favoriler alınamazsa boş listeyle devam
       });
 
     return () => {
       cancelled = true;
     };
-  }, [companyId]);
+  }, []);
 
   const applyTemplate = (next: WorkItemTemplate) => {
     setTemplate(next);

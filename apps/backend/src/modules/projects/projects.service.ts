@@ -18,7 +18,6 @@ import {
 } from '../notifications/notification-templates';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
-import { defaultTemplateFor, getTemplateItems } from './work-item-templates';
 
 type NotificationRecipient = {
   id: string;
@@ -50,23 +49,25 @@ export class ProjectsService {
   ) {}
 
   /**
-   * Projenin açılış imalat kalemlerini belirler.
+   * Yeni projenin imalat kalemleri.
    *
-   * İstemci bir liste gönderdiyse o kullanılır; göndermediyse şirketin iş
-   * koluna göre varsayılan şablona düşülür — mimarlık ofisinde disiplinler,
-   * müteahhitte şantiye imalat sırası.
+   * Öncelik kullanıcının proje açarken seçtiği listede. Seçim yoksa şirketin
+   * favori kalemleri uygulanır — her ofis/müteahhit kendi listesini kurar.
+   * Favori de yoksa proje boş açılır: uygulama genelinde sabit bir kalem seti
+   * dayatmak, farklı iş kollarında yanlış kalemlerin silinmesini gerektiriyordu.
    */
   private async resolveWorkItems(companyId: string, dto: CreateProjectDto): Promise<string[]> {
     if (dto.workItems) {
       return dto.workItems.map((name) => name.trim()).filter((name) => name.length > 0);
     }
 
-    const company = await this.prisma.company.findUnique({
-      where: { id: companyId },
-      select: { businessType: true },
+    const favourites = await this.prisma.companyWorkItem.findMany({
+      where: { companyId },
+      orderBy: [{ order: "asc" }, { createdAt: "asc" }],
+      select: { name: true },
     });
 
-    return getTemplateItems(defaultTemplateFor(company?.businessType));
+    return favourites.map((item) => item.name);
   }
 
   async create(companyId: string, userId: string, dto: CreateProjectDto) {

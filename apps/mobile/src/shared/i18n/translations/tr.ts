@@ -739,6 +739,10 @@ export const tr = {
   progress: {
     title: "İmalat ve Hakediş",
     items: "İmalat Kalemleri",
+    emptyTitle: "Henüz imalat kalemi yok",
+    emptyDesc: "Sözleşmeyi kendi imalat kalemlerinize bölerek başlayın. Aşağıdan kalem adını ve sözleşme bedelini girin. Sık kullandığınız kalemleri yıldızlayın; sonraki projeleriniz o kalemlerle açılır.",
+    emptyFavouriteHint: "Şirketinizin {count} favori kalemi var.",
+    applyFavourites: "Favori Kalemleri Ekle",
     noItems: "Henüz imalat kalemi eklenmedi. Sözleşmeyi kalemlere bölerek başlayın.",
     addItem: "Kalem Ekle",
     itemNamePlaceholder: "Kalem adı (ör. Kaba İnşaat)",
@@ -870,7 +874,7 @@ export const tr = {
         },
         progress: {
           title: "İmalat ve Hakediş",
-          steps: "Proje detayının üstündeki İmalat ve Hakediş bağlantısına girin.|Sözleşmeyi imalat kalemlerine bölün; her kaleme sözleşme bedelini yazın.|İş ilerledikçe kalemin ilerleme yüzdesini güncelleyin; hak edilen tutar kendiliğinden hesaplanır.|Hakediş Düzenle ile o ana kadar hak edilen tutardan önceki hakedişler düşülerek yeni hakediş oluşturulur.|Hakediş tahsil edildiğinde durumunu Ödendi yapın; finans ekranına tahsilat kaydı otomatik düşer.|İlerlemeyi proje yetkisi olan herkes güncelleyebilir, tutarları yalnızca finans yetkisi olanlar görür."
+          steps: "Proje detayının üstündeki İmalat ve Hakediş bağlantısına girin.|İlk projede liste boş gelir; sözleşmeyi kendi imalat kalemlerinize bölün ve her kaleme bedelini yazın.|Sık kullandığınız kalemleri yıldızlayın; bu liste şirketinize kaydolur ve sonraki projeleriniz o kalemlerle açılır.|İş ilerledikçe kalemin ilerleme yüzdesini güncelleyin; hak edilen tutar kendiliğinden hesaplanır.|Hakediş Düzenle ile o ana kadar hak edilen tutardan önceki hakedişler düşülerek yeni hakediş oluşturulur.|Hakediş tahsil edildiğinde durumunu Ödendi yapın; finans ekranına tahsilat kaydı otomatik düşer.|İlerlemeyi proje yetkisi olan herkes güncelleyebilir, tutarları yalnızca finans yetkisi olanlar görür."
         },
         finance: {
           title: "Finans",

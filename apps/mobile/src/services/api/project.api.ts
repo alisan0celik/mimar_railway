@@ -16,6 +16,12 @@ export type ProjectSectionDTO = {
   updatedAt: string;
 };
 
+export type CompanyWorkItemDTO = {
+  id: string;
+  name: string;
+  order: number;
+};
+
 export type ProgressPaymentStatus = "draft" | "approved" | "paid" | "cancelled";
 
 export type ProgressPaymentDTO = {
@@ -322,6 +328,25 @@ export const projectApi = {
   },
   async deleteSection(projectId: string, sectionId: string) {
     const { data } = await apiClient.delete(`/projects/${projectId}/sections/${sectionId}`);
+    return data;
+  },
+
+  async getFavouriteItems() {
+    const { data } = await apiClient.get<CompanyWorkItemDTO[]>("/work-items");
+    return data;
+  },
+  async addFavouriteItem(name: string) {
+    const { data } = await apiClient.post<CompanyWorkItemDTO>("/work-items", { name });
+    return data;
+  },
+  async removeFavouriteItem(name: string) {
+    const { data } = await apiClient.delete("/work-items", { data: { name } });
+    return data;
+  },
+  async applyFavouriteItems(projectId: string) {
+    const { data } = await apiClient.post<ProjectSectionDTO[]>(
+      `/projects/${projectId}/sections/from-favourites`,
+    );
     return data;
   },
 

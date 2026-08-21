@@ -739,6 +739,10 @@ export const en = {
   progress: {
     title: "Work Items and Billing",
     items: "Work Items",
+    emptyTitle: "No work items yet",
+    emptyDesc: "Start by splitting the contract into your own work items. Enter a name and its contract value below. Star the ones you use often and your next projects will open with them.",
+    emptyFavouriteHint: "Your company has {count} favourite items.",
+    applyFavourites: "Add Favourite Items",
     noItems: "No work items yet. Start by splitting the contract into items.",
     addItem: "Add Item",
     itemNamePlaceholder: "Item name (e.g. Structural Works)",
@@ -870,7 +874,7 @@ export const en = {
         },
         progress: {
           title: "Work Items and Billing",
-          steps: "Open the Work Items and Billing link at the top of the project detail.|Split the contract into work items and give each one its contract value.|Update each item's progress as the work advances; the earned amount is calculated for you.|Issue Payment creates a new progress payment from the earned total minus what earlier payments already billed.|When a payment is collected, set it to Paid; a collection is recorded in finance automatically.|Anyone with project rights can update progress, but only finance rights reveal the amounts."
+          steps: "Open the Work Items and Billing link at the top of the project detail.|The first project starts empty; split the contract into your own work items and give each one its value.|Star the ones you use often; the list is saved for your company and later projects open with them.|Update each item's progress as the work advances; the earned amount is calculated for you.|Issue Payment creates a new progress payment from the earned total minus what earlier payments already billed.|When a payment is collected, set it to Paid; a collection is recorded in finance automatically.|Anyone with project rights can update progress, but only finance rights reveal the amounts."
         },
         finance: {
           title: "Finance",

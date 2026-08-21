@@ -103,6 +103,7 @@ model Company {
   financeRecords        FinanceRecord[]
   calendarEvents        CalendarEvent[]
   progressPayments      ProgressPayment[]
+  workItems             CompanyWorkItem[]
   createdAt             DateTime          @default(now())
   updatedAt             DateTime          @updatedAt
   supportTickets        SupportTicket[]
@@ -479,4 +480,21 @@ model ProgressPayment {
   @@unique([projectId, number])
   @@index([companyId])
   @@index([projectId])
+}
+
+/// Şirketin favori imalat kalemleri.
+/// Her ofis/müteahhit kendi imalat listesini kurar (kaba inşaat, sıva, şap...);
+/// yeni açılan projelere bu liste otomatik uygulanır. Uygulama genelinde sabit
+/// bir varsayılan set yok — mimarlık ofisiyle müteahhidin kalemleri aynı değil.
+model CompanyWorkItem {
+  id        String   @id @default(cuid())
+  name      String
+  order     Int      @default(0)
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([companyId, name])
+  @@index([companyId])
 }

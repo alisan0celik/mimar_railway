@@ -12,6 +12,7 @@ import {
 
 import {
   projectApi,
+  type CompanyWorkItemDTO,
   type ProgressPaymentDTO,
   type ProgressPaymentStatus,
   type ProgressSummaryDTO,
@@ -26,6 +27,11 @@ import { DesignBackHeader, Screen } from "../../../shared/ui";
 import { formatCurrency } from "../../../shared/utils";
 
 const PAYMENT_STATUSES: ProgressPaymentStatus[] = ["draft", "approved", "paid", "cancelled"];
+
+/** Türkçe "İ" düz toLowerCase ile bozulduğu için ad karşılaştırması yerel ayarla yapılır. */
+function normaliseName(value: string): string {
+  return value.trim().toLocaleLowerCase("tr");
+}
 
 /** Kullanıcının girdiği tutar metnini sayıya çevirir; boşsa 0. */
 function parseAmount(text: string): number {
@@ -47,6 +53,7 @@ export function ProgressPaymentScreen({ projectId }: { projectId: string }) {
   const [sections, setSections] = useState<ProjectSectionDTO[]>([]);
   const [summary, setSummary] = useState<ProgressSummaryDTO | null>(null);
   const [payments, setPayments] = useState<ProgressPaymentDTO[]>([]);
+  const [favourites, setFavourites] = useState<CompanyWorkItemDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [newItemName, setNewItemName] = useState("");
@@ -59,12 +66,14 @@ export function ProgressPaymentScreen({ projectId }: { projectId: string }) {
     try {
       // Finans yetkisi olmayan kullanıcı yalnızca kalem listesini görür;
       // özet ve hakediş uçları o kullanıcıda 403 döner.
-      const [sectionList, summaryData, paymentList] = await Promise.all([
+      const [sectionList, favouriteList, summaryData, paymentList] = await Promise.all([
         projectApi.getSections(projectId),
+        projectApi.getFavouriteItems(),
         canSeeFinance ? projectApi.getProgressSummary(projectId) : Promise.resolve(null),
         canSeeFinance ? projectApi.getProgressPayments(projectId) : Promise.resolve([]),
       ]);
       setSections(sectionList);
+      setFavourites(favouriteList);
       setSummary(summaryData);
       setPayments(paymentList);
     } catch {
@@ -116,6 +125,40 @@ export function ProgressPaymentScreen({ projectId }: { projectId: string }) {
       await projectApi.createSection(projectId, { name, amount: parseAmount(newItemAmount) });
       setNewItemName("");
       setNewItemAmount("");
+      await load();
+    } catch {
+      Alert.alert(t("common.error"), t("progress.saveFailed"));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const favouriteNames = useMemo(
+    () => new Set(favourites.map((item) => normaliseName(item.name))),
+    [favourites],
+  );
+
+  const handleToggleFavourite = async (section: ProjectSectionDTO) => {
+    const isFavourite = favouriteNames.has(normaliseName(section.name));
+    setBusy(true);
+    try {
+      if (isFavourite) {
+        await projectApi.removeFavouriteItem(section.name);
+      } else {
+        await projectApi.addFavouriteItem(section.name);
+      }
+      setFavourites(await projectApi.getFavouriteItems());
+    } catch {
+      Alert.alert(t("common.error"), t("progress.saveFailed"));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleApplyFavourites = async () => {
+    setBusy(true);
+    try {
+      await projectApi.applyFavouriteItems(projectId);
       await load();
     } catch {
       Alert.alert(t("common.error"), t("progress.saveFailed"));
@@ -284,7 +327,22 @@ export function ProgressPaymentScreen({ projectId }: { projectId: string }) {
       <Text style={styles.sectionTitle}>{t("progress.items")}</Text>
 
       {sections.length === 0 ? (
-        <Text style={styles.empty}>{t("progress.noItems")}</Text>
+        <View style={styles.emptyCard}>
+          <MaterialCommunityIcons color={colors.primary} name="format-list-checks" size={32} />
+          <Text style={styles.emptyTitle}>{t("progress.emptyTitle")}</Text>
+          <Text style={styles.emptyDesc}>{t("progress.emptyDesc")}</Text>
+          {favourites.length > 0 && canEditItems ? (
+            <>
+              <Text style={styles.emptyHint}>
+                {t("progress.emptyFavouriteHint", { count: String(favourites.length) })}
+              </Text>
+              <Pressable disabled={busy} onPress={handleApplyFavourites} style={styles.applyBtn}>
+                <MaterialCommunityIcons color={colors.white} name="star" size={16} />
+                <Text style={styles.applyBtnText}>{t("progress.applyFavourites")}</Text>
+              </Pressable>
+            </>
+          ) : null}
+        </View>
       ) : (
         sections.map((section) => {
           const editing = editingId === section.id;
@@ -292,6 +350,27 @@ export function ProgressPaymentScreen({ projectId }: { projectId: string }) {
           return (
             <View key={section.id} style={styles.itemCard}>
               <View style={styles.itemHeader}>
+                {canEditItems ? (
+                  <Pressable
+                    disabled={busy}
+                    hitSlop={8}
+                    onPress={() => handleToggleFavourite(section)}
+                  >
+                    <MaterialCommunityIcons
+                      color={
+                        favouriteNames.has(normaliseName(section.name))
+                          ? colors.warning
+                          : colors.textDisabled
+                      }
+                      name={
+                        favouriteNames.has(normaliseName(section.name))
+                          ? "star"
+                          : "star-outline"
+                      }
+                      size={20}
+                    />
+                  </Pressable>
+                ) : null}
                 <Text style={styles.itemName}>{section.name}</Text>
                 <Text style={styles.itemPercent}>{`%${(section.progress ?? 0).toFixed(0)}`}</Text>
               </View>
@@ -512,6 +591,44 @@ function createStyles(colors: AppColors) {
       color: colors.textMuted,
       marginBottom: spacing.md,
     },
+    emptyCard: {
+      alignItems: "center",
+      gap: spacing.sm,
+      backgroundColor: colors.card,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: spacing.xl,
+      marginBottom: spacing.md,
+    },
+    emptyTitle: {
+      ...typography.body,
+      color: colors.text,
+      fontWeight: "700",
+      textAlign: "center",
+    },
+    emptyDesc: {
+      ...typography.bodySmall,
+      color: colors.textMuted,
+      textAlign: "center",
+      lineHeight: 20,
+    },
+    emptyHint: {
+      ...typography.caption,
+      color: colors.textMuted,
+      textAlign: "center",
+      marginTop: spacing.sm,
+    },
+    applyBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.xs,
+      backgroundColor: colors.primary,
+      borderRadius: radius.md,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
+    },
+    applyBtnText: { ...typography.bodySmall, color: colors.white, fontWeight: "700" },
     itemCard: {
       backgroundColor: colors.card,
       borderRadius: radius.lg,

@@ -85,6 +85,13 @@ export class ProgressController {
     return this.progressService.removeSection(this.companyId(user), id, sectionId);
   }
 
+  @Post(":id/sections/from-favourites")
+  @Permissions("project.update")
+  @ApiOperation({ summary: "Favori kalemleri bu projeye uygula" })
+  applyFavourites(@CurrentUser() user: JwtPayload, @Param("id") id: string) {
+    return this.progressService.applyFavourites(this.companyId(user), id, user.sub);
+  }
+
   @Get(":id/progress-summary")
   @Permissions("finance.view")
   @ApiOperation({ summary: "Hakediş özeti" })

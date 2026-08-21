@@ -13,6 +13,7 @@ describe("ProgressService", () => {
       findMany: jest.fn(),
       findFirst: jest.fn(),
       create: jest.fn(),
+      createMany: jest.fn(),
       updateMany: jest.fn(),
       deleteMany: jest.fn(),
     },
@@ -31,6 +32,12 @@ describe("ProgressService", () => {
     },
     user: {
       findUnique: jest.fn(),
+    },
+    companyWorkItem: {
+      findMany: jest.fn(),
+      findFirst: jest.fn(),
+      create: jest.fn(),
+      deleteMany: jest.fn(),
     },
   };
 
@@ -53,6 +60,11 @@ describe("ProgressService", () => {
     prisma.progressPayment.update.mockResolvedValue({});
     prisma.financeRecord.create.mockResolvedValue({ id: "fr1" });
     prisma.financeRecord.deleteMany.mockResolvedValue({ count: 1 });
+    prisma.companyWorkItem.findMany.mockResolvedValue([]);
+    prisma.companyWorkItem.findFirst.mockResolvedValue(null);
+    prisma.companyWorkItem.create.mockImplementation(({ data }: any) => Promise.resolve(data));
+    prisma.companyWorkItem.deleteMany.mockResolvedValue({ count: 1 });
+    prisma.section.createMany.mockResolvedValue({ count: 0 });
   });
 
   it("rejects a project from another company", async () => {
@@ -255,5 +267,45 @@ describe("ProgressService", () => {
     await service.removePayment("c1", "p1", "pp3");
 
     expect(prisma.financeRecord.deleteMany).toHaveBeenCalledWith({ where: { id: "fr9" } });
+  });
+
+  it("does not duplicate a favourite that already exists", async () => {
+    prisma.companyWorkItem.findFirst.mockResolvedValue({ id: "w1", name: "Kaba İnşaat" });
+
+    const result: any = await service.addFavourite("c1", "kaba inşaat");
+
+    expect(result.id).toBe("w1");
+    expect(prisma.companyWorkItem.create).not.toHaveBeenCalled();
+  });
+
+  it("rejects a favourite name that is too short", async () => {
+    await expect(service.addFavourite("c1", "a")).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it("only applies favourites the project does not already have", async () => {
+    prisma.companyWorkItem.findMany.mockResolvedValue([
+      { name: "Kaba İnşaat" },
+      { name: "Sıva" },
+    ]);
+    prisma.section.findMany.mockResolvedValue([
+      { id: "s1", name: "kaba inşaat", order: 1, amount: 0, progress: 0 },
+    ]);
+
+    await service.applyFavourites("c1", "p1", "u1");
+
+    expect(prisma.section.createMany).toHaveBeenCalledWith({
+      data: [expect.objectContaining({ name: "Sıva", order: 2 })],
+    });
+  });
+
+  it("writes nothing when every favourite is already in the project", async () => {
+    prisma.companyWorkItem.findMany.mockResolvedValue([{ name: "Sıva" }]);
+    prisma.section.findMany.mockResolvedValue([
+      { id: "s1", name: "Sıva", order: 1, amount: 0, progress: 0 },
+    ]);
+
+    await service.applyFavourites("c1", "p1", "u1");
+
+    expect(prisma.section.createMany).not.toHaveBeenCalled();
   });
 });
