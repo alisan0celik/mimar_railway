@@ -196,6 +196,7 @@ export class CompaniesService {
         logoUrl: true,
         logoInitials: true,
         status: true,
+        businessType: true,
         createdAt: true,
       },
     });
@@ -248,6 +249,7 @@ export class CompaniesService {
           city: dto.city,
           address: dto.address,
           phone: dto.phone,
+          businessType: dto.businessType ?? "architecture",
           logoInitials,
           ownerId,
           subscriptionStatus: "trial",
@@ -378,6 +380,7 @@ export class CompaniesService {
         city: dto.city,
         address: dto.address,
         phone: dto.phone,
+        ...(dto.businessType !== undefined ? { businessType: dto.businessType } : {}),
       },
     });
 

@@ -1,8 +1,11 @@
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { useProjectStore } from "../../../store/projectStore";
+import { useAuthStore } from "../../../store/authStore";
+import { companiesApi, type CompanyDTO } from "../../../services/api";
+import { fetchWithReadCache } from "../../../offline/cache/read-cache";
 import { useTranslation } from "../../../shared/i18n";
 import { PERMISSIONS, useCan } from "../../../shared/permissions";
 import { radius, spacing, typography } from "../../../shared/theme";
@@ -14,7 +17,12 @@ import {
   NoPermissionState,
   Screen,
 } from "../../../shared/ui";
-import { disciplineOptions } from "../constants/disciplineOptions";
+import {
+  defaultTemplateFor,
+  getTemplateItems,
+  WORK_ITEM_TEMPLATES,
+  type WorkItemTemplate,
+} from "../constants/workItemTemplates";
 
 const PROJECT_TYPE_KEYS = ["residential", "office", "villa", "commercial", "mixed"] as const;
 
@@ -24,6 +32,7 @@ export function CreateProjectScreen() {
   const router = useRouter();
   const canCreate = useCan(PERMISSIONS.PROJECT_CREATE);
   const { createProject, loading } = useProjectStore();
+  const companyId = useAuthStore((state) => state.user?.companyId);
   const [step, setStep] = useState(1);
 
   const [projectName, setProjectName] = useState("");
@@ -31,9 +40,43 @@ export function CreateProjectScreen() {
   const [typeIndex, setTypeIndex] = useState(0);
   const [hasInspection, setHasInspection] = useState(true);
   const [inspectionCompany, setInspectionCompany] = useState("");
-  const [disciplines, setDisciplines] = useState<string[]>(
-    disciplineOptions.map((discipline) => discipline.key),
-  );
+  const [template, setTemplate] = useState<WorkItemTemplate>("architecture");
+  const [workItems, setWorkItems] = useState<string[]>(getTemplateItems("architecture"));
+
+  // Şirket müteahhitse şantiye kalemleriyle başlansın. Şirket bilgisi
+  // önbellekten okunduğu için çevrimdışında da doğru şablon gelir.
+  useEffect(() => {
+    if (!companyId) return;
+    let cancelled = false;
+
+    fetchWithReadCache<CompanyDTO>(`company:${companyId}`, async () =>
+      (await companiesApi.getById(companyId)).data,
+    )
+      .then((company) => {
+        if (cancelled) return;
+        const next = defaultTemplateFor(company.businessType);
+        setTemplate(next);
+        setWorkItems(getTemplateItems(next));
+      })
+      .catch(() => {
+        // Şirket bilgisi alınamazsa mimarlık varsayılanıyla devam
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [companyId]);
+
+  const applyTemplate = (next: WorkItemTemplate) => {
+    setTemplate(next);
+    setWorkItems(getTemplateItems(next));
+  };
+
+  const toggleWorkItem = (name: string) => {
+    setWorkItems((current) =>
+      current.includes(name) ? current.filter((item) => item !== name) : [...current, name],
+    );
+  };
 
   if (!canCreate) {
     return (
@@ -47,7 +90,7 @@ export function CreateProjectScreen() {
     );
   }
 
-  const step1Valid = projectName.trim() && customerName.trim() && disciplines.length > 0;
+  const step1Valid = projectName.trim() && customerName.trim();
   const selectedTypeKey = PROJECT_TYPE_KEYS[typeIndex];
   const selectedTypeLabel = t(`projects.types.${selectedTypeKey}`);
 
@@ -65,6 +108,7 @@ export function CreateProjectScreen() {
           hasInspection,
           inspectionCompany: hasInspection ? inspectionCompany.trim() : "",
           status: "planning",
+          workItems,
         });
         router.replace("/(main)/(tabs)/projects");
       } catch (err) {
@@ -76,12 +120,6 @@ export function CreateProjectScreen() {
   const goBack = () => {
     if (step > 1) setStep(step - 1);
     else router.back();
-  };
-
-  const toggleDiscipline = (key: string) => {
-    setDisciplines((cur) =>
-      cur.includes(key) ? cur.filter((d) => d !== key) : [...cur, key],
-    );
   };
 
   return (
@@ -160,23 +198,41 @@ export function CreateProjectScreen() {
               value={inspectionCompany}
             />
           ) : null}
-          <Text style={styles.fieldLabel}>{t("projects.disciplines.label")}</Text>
+          <Text style={styles.fieldLabel}>{t("projects.workItems.template")}</Text>
           <View style={styles.chipRow}>
-            {disciplineOptions.map((d) => {
-              const on = disciplines.includes(d.key);
-              return (
-                <Pressable
-                  key={d.key}
-                  onPress={() => toggleDiscipline(d.key)}
-                  style={[styles.chip, on && styles.chipActive]}
-                >
-                  <Text style={[styles.chipText, on && styles.chipTextActive]}>
-                    {t(`projects.disciplines.${d.key}`)}
-                  </Text>
-                </Pressable>
-              );
-            })}
+            {WORK_ITEM_TEMPLATES.map((option) => (
+              <Pressable
+                key={option}
+                onPress={() => applyTemplate(option)}
+                style={[styles.chip, template === option && styles.chipActive]}
+              >
+                <Text style={[styles.chipText, template === option && styles.chipTextActive]}>
+                  {t(`projects.workItems.templates.${option}`)}
+                </Text>
+              </Pressable>
+            ))}
           </View>
+
+          <Text style={styles.fieldLabel}>{t("projects.workItems.label")}</Text>
+          <Text style={styles.fieldHint}>{t("projects.workItems.hint")}</Text>
+          {getTemplateItems(template).length === 0 ? (
+            <Text style={styles.fieldHint}>{t("projects.workItems.emptyTemplate")}</Text>
+          ) : (
+            <View style={styles.chipRow}>
+              {getTemplateItems(template).map((name) => {
+                const on = workItems.includes(name);
+                return (
+                  <Pressable
+                    key={name}
+                    onPress={() => toggleWorkItem(name)}
+                    style={[styles.chip, on && styles.chipActive]}
+                  >
+                    <Text style={[styles.chipText, on && styles.chipTextActive]}>{name}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          )}
         </View>
       ) : null}
 
@@ -195,7 +251,7 @@ export function CreateProjectScreen() {
           />
           <SummaryRow
             label={t("projects.createForm.summaryDisciplines")}
-            value={t("projects.disciplines.selectedCount", { count: disciplines.length })}
+            value={t("projects.workItems.selectedCount", { count: workItems.length })}
           />
         </View>
       ) : null}
@@ -253,6 +309,7 @@ function createStyles(colors: AppColors) {
   stepLineActive: { backgroundColor: colors.primary },
   form: { gap: spacing.md, marginBottom: spacing.xl },
   fieldLabel: { ...typography.caption, color: colors.textMuted, fontWeight: "600" },
+  fieldHint: { ...typography.caption, color: colors.textDisabled, marginTop: -spacing.xs },
   chipRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
   chip: {
     borderWidth: 1,

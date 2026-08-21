@@ -6,13 +6,15 @@ import { Alert, Image, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { getApiErrorMessage, type CompanyLogoAsset } from "../utils/company-form";
 import { getPostAuthRoute } from "../../auth/utils/post-auth-route";
-import { companiesApi } from "../../../services/api";
+import { type BusinessType, companiesApi } from "../../../services/api";
 import { useTranslation } from "../../../shared/i18n";
 import { radius, spacing, typography } from "../../../shared/theme";
 import { useThemedStyles, type AppColors } from "../../../shared/theme";
 import { useThemeColors } from "../../../shared/theme/ThemeProvider";
 import { AppButton, AppInput, Screen, ScreenHeader } from "../../../shared/ui";
 import { useAuthStore } from "../../../store/authStore";
+
+const BUSINESS_TYPES: BusinessType[] = ["architecture", "contractor", "both"];
 
 export function CreateCompanyScreen() {
   const styles = useThemedStyles(createStyles);
@@ -25,6 +27,7 @@ export function CreateCompanyScreen() {
   const [city, setCity] = useState("");
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
+  const [businessType, setBusinessType] = useState<BusinessType>("architecture");
   const [logoAsset, setLogoAsset] = useState<CompanyLogoAsset | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -71,6 +74,7 @@ export function CreateCompanyScreen() {
         city: city.trim() || undefined,
         address: address.trim() || undefined,
         phone: phone.trim() || undefined,
+        businessType,
       });
 
       if (logoAsset && data.id) {
@@ -141,6 +145,25 @@ export function CreateCompanyScreen() {
             placeholder={t("companies.createForm.namePlaceholder")}
             value={companyName}
           />
+          <Text style={styles.pickerLabel}>{t("companies.createForm.businessType")}</Text>
+          <Text style={styles.pickerHint}>{t("companies.createForm.businessTypeHint")}</Text>
+          <View style={styles.pickerRow}>
+            {BUSINESS_TYPES.map((option) => {
+              const active = businessType === option;
+              return (
+                <Pressable
+                  key={option}
+                  onPress={() => setBusinessType(option)}
+                  style={[styles.pickerChip, active && styles.pickerChipActive]}
+                >
+                  <Text style={[styles.pickerChipText, active && styles.pickerChipTextActive]}>
+                    {t(`companies.businessTypes.${option}`)}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
           <AppInput
             label={t("companies.createForm.description")}
             multiline
@@ -254,6 +277,36 @@ function createStyles(colors: AppColors) {
       backgroundColor: colors.border,
       marginBottom: spacing.lg,
     },
+    pickerLabel: {
+      ...typography.bodySmall,
+      color: colors.text,
+      fontWeight: "600",
+    },
+    pickerHint: {
+      ...typography.caption,
+      color: colors.textMuted,
+      marginTop: 2,
+      marginBottom: spacing.sm,
+    },
+    pickerRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: spacing.xs,
+    },
+    pickerChip: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: radius.full,
+      backgroundColor: colors.surfaceMuted,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    pickerChipActive: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    pickerChipText: { ...typography.caption, color: colors.textMuted, fontWeight: "600" },
+    pickerChipTextActive: { color: colors.white },
     formGroup: { gap: spacing.md },
     submitBtn: { marginTop: spacing.xl },
   });

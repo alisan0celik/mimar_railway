@@ -14,6 +14,8 @@ export interface CompanyDTO {
   status: string;
   logoUrl?: string | null;
   logoInitials: string | null;
+  /** Mimarlık ofisi mi, müteahhit mi — proje şablonunu belirler. */
+  businessType?: BusinessType;
   subscriptionStatus?: string;
   subscriptionStartedAt?: string;
   subscriptionEndsAt?: string | null;
@@ -52,12 +54,15 @@ export interface UpdateCompanySubscriptionInput {
   blockedReason?: string | null;
 }
 
+export type BusinessType = "architecture" | "contractor" | "both";
+
 export interface CreateCompanyInput {
   name: string;
   description?: string;
   city?: string;
   address?: string;
   phone?: string;
+  businessType?: BusinessType;
 }
 
 export interface JoinRequestInput {

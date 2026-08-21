@@ -1,4 +1,4 @@
-import { IsString, MinLength, IsOptional } from "class-validator";
+import { IsIn, IsString, MinLength, IsOptional } from "class-validator";
 
 export class CreateCompanyDto {
   @IsString()
@@ -20,4 +20,9 @@ export class CreateCompanyDto {
   @IsOptional()
   @IsString()
   phone?: string;
+
+  /** Mimarlık ofisi mi, müteahhit mi — varsayılan imalat şablonunu belirler. */
+  @IsOptional()
+  @IsIn(["architecture", "contractor", "both"])
+  businessType?: string;
 }

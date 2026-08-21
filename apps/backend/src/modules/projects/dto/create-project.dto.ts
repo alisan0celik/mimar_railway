@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsString, IsNumber, IsDateString, IsIn } from 'class-validator';
+import { ArrayMaxSize, IsArray, IsNotEmpty, IsOptional, IsString, IsNumber, IsDateString, IsIn } from 'class-validator';
 
 export class CreateProjectDto {
   @IsNotEmpty()
@@ -51,4 +51,14 @@ export class CreateProjectDto {
   @IsOptional()
   @IsNumber()
   budget?: number;
+
+  /**
+   * Proje açılırken oluşturulacak imalat kalemlerinin adları.
+   * Gönderilmezse şirketin iş koluna göre varsayılan şablon kullanılır.
+   */
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @ArrayMaxSize(40)
+  workItems?: string[];
 }

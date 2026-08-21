@@ -3,6 +3,7 @@ export { authApi } from "./auth.api";
 export { notificationsApi } from "./notifications.api";
 export { companiesApi } from "./companies.api";
 export type {
+  BusinessType,
   CompanyDTO,
   CreateCompanyInput,
   JoinRequestInput,

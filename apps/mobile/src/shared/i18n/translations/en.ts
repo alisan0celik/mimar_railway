@@ -161,6 +161,18 @@ export const en = {
       commercial: "Commercial",
       mixed: "Mixed Use",
     },
+    workItems: {
+      template: "Work Item Template",
+      templates: {
+        architecture: "Architecture",
+        construction: "Construction",
+        empty: "Empty",
+      },
+      label: "Work Items To Create",
+      hint: "These are created with the project; you can add or remove them later.",
+      emptyTemplate: "No items will be created. You can add them after the project is open.",
+      selectedCount: "{count} items",
+    },
     disciplines: {
       label: "Disciplines",
       architecture: "Architecture",
@@ -676,7 +688,14 @@ export const en = {
       subtitle: "Your join request is being reviewed by {companyName}. You will be notified when approved.",
       pushHint: "You will receive a push notification when approved or declined; the app will redirect you automatically while open.",
     },
+    businessTypes: {
+      architecture: "Architecture Office",
+      contractor: "Contractor",
+      both: "Both",
+    },
     createForm: {
+      businessType: "Line of Work",
+      businessTypeHint: "Sets which work items are suggested for new projects.",
       logo: "Company Logo",
       logoHint: "PNG or JPG (Max 5MB)",
       name: "Company Name",

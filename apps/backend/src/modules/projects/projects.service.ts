@@ -18,15 +18,7 @@ import {
 } from '../notifications/notification-templates';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
-
-const DEFAULT_SECTIONS = [
-  { type: "architecture", label: "Mimari", order: 1 },
-  { type: "static", label: "Statik", order: 2 },
-  { type: "mechanical", label: "Mekanik", order: 3 },
-  { type: "electrical", label: "Elektrik", order: 4 },
-  { type: "map", label: "Harita", order: 5 },
-  { type: "geology", label: "Jeoloji", order: 6 },
-];
+import { defaultTemplateFor, getTemplateItems } from './work-item-templates';
 
 type NotificationRecipient = {
   id: string;
@@ -57,7 +49,29 @@ export class ProjectsService {
     private readonly notificationsService: NotificationsService,
   ) {}
 
+  /**
+   * Projenin açılış imalat kalemlerini belirler.
+   *
+   * İstemci bir liste gönderdiyse o kullanılır; göndermediyse şirketin iş
+   * koluna göre varsayılan şablona düşülür — mimarlık ofisinde disiplinler,
+   * müteahhitte şantiye imalat sırası.
+   */
+  private async resolveWorkItems(companyId: string, dto: CreateProjectDto): Promise<string[]> {
+    if (dto.workItems) {
+      return dto.workItems.map((name) => name.trim()).filter((name) => name.length > 0);
+    }
+
+    const company = await this.prisma.company.findUnique({
+      where: { id: companyId },
+      select: { businessType: true },
+    });
+
+    return getTemplateItems(defaultTemplateFor(company?.businessType));
+  }
+
   async create(companyId: string, userId: string, dto: CreateProjectDto) {
+    const workItems = await this.resolveWorkItems(companyId, dto);
+
     const project = await this.prisma.project.create({
       data: {
         name: dto.name,
@@ -76,9 +90,9 @@ export class ProjectsService {
         companyId,
         createdById: userId,
         sections: {
-          create: DEFAULT_SECTIONS.map((sec) => ({
-            name: sec.label,
-            order: sec.order,
+          create: workItems.map((name, index) => ({
+            name,
+            order: index + 1,
             status: "not-started",
             content: "Bekliyor",
             updatedBy: "Sistem",

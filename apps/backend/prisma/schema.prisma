@@ -87,6 +87,9 @@ model Company {
   logoUrl               String?
   logoInitials          String?
   status                CompanyStatus     @default(active)
+  /// "architecture" | "contractor" | "both" — proje açılırken önerilecek
+  /// imalat kalemi şablonunu belirler.
+  businessType          String            @default("architecture")
   subscriptionStatus    String            @default("active")
   subscriptionStartedAt DateTime          @default(now())
   subscriptionEndsAt    DateTime?

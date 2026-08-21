@@ -167,6 +167,8 @@ export type CreateProjectDTO = {
   startDate?: string;
   endDate?: string;
   budget?: number;
+  /** Açılışta oluşturulacak imalat kalemleri; boş bırakılırsa şirket şablonu. */
+  workItems?: string[];
 };
 
 export type UpdateProjectDTO = Partial<CreateProjectDTO>;

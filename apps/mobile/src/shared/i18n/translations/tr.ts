@@ -161,6 +161,18 @@ export const tr = {
       commercial: "Ticari",
       mixed: "Karma Kullanım",
     },
+    workItems: {
+      template: "İmalat Şablonu",
+      templates: {
+        architecture: "Mimarlık",
+        construction: "Yapım / İnşaat",
+        empty: "Boş",
+      },
+      label: "Açılacak İmalat Kalemleri",
+      hint: "Bu kalemler proje açılırken oluşur; sonradan ekleyip silebilirsiniz.",
+      emptyTemplate: "Kalem oluşturulmayacak. Projeyi açtıktan sonra kendiniz ekleyebilirsiniz.",
+      selectedCount: "{count} kalem",
+    },
     disciplines: {
       label: "Disiplinler",
       architecture: "Mimari",
@@ -676,7 +688,14 @@ export const tr = {
       subtitle: "Katılım talebiniz {companyName} tarafından inceleniyor. Onaylandığınızda bildirim alacaksınız.",
       pushHint: "Onay veya red durumunda push bildirimi alırsınız; uygulama açıkken otomatik yönlendirilirsiniz.",
     },
+    businessTypes: {
+      architecture: "Mimarlık Ofisi",
+      contractor: "Müteahhit / Yapım",
+      both: "Her İkisi",
+    },
     createForm: {
+      businessType: "İş Kolu",
+      businessTypeHint: "Yeni projelerde önerilecek imalat kalemlerini belirler.",
       logo: "Şirket Logosu",
       logoHint: "PNG veya JPG (Maks 5MB)",
       name: "Şirket Adı",
