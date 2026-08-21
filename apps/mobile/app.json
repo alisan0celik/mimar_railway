@@ -22,7 +22,10 @@
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "CFBundleDevelopmentRegion": "tr",
-        "CFBundleLocalizations": ["tr", "en"]
+        "CFBundleLocalizations": [
+          "tr",
+          "en"
+        ]
       }
     },
     "web": {
@@ -31,6 +34,19 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/icon.png",
+          "imageWidth": 180,
+          "resizeMode": "contain",
+          "backgroundColor": "#0B1B2E",
+          "dark": {
+            "image": "./assets/icon.png",
+            "backgroundColor": "#0B1B2E"
+          }
+        }
+      ],
       "expo-sqlite",
       "expo-secure-store",
       [
