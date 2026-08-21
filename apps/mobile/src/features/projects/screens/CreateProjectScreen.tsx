@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { useProjectStore } from "../../../store/projectStore";
@@ -21,6 +21,9 @@ import {
   type WorkItemTemplate,
 } from "../constants/workItemTemplates";
 
+/** Kalem listesinin kaynağı: şirket favorileri ya da hazır şablonlardan biri. */
+type WorkItemSource = WorkItemTemplate | "favourites";
+
 const PROJECT_TYPE_KEYS = ["residential", "office", "villa", "commercial", "mixed"] as const;
 
 export function CreateProjectScreen() {
@@ -36,14 +39,15 @@ export function CreateProjectScreen() {
   const [typeIndex, setTypeIndex] = useState(0);
   const [hasInspection, setHasInspection] = useState(true);
   const [inspectionCompany, setInspectionCompany] = useState("");
-  const [template, setTemplate] = useState<WorkItemTemplate>("empty");
+  const [template, setTemplate] = useState<WorkItemSource>("empty");
   const [workItems, setWorkItems] = useState<string[]>([]);
+  const [favouriteItems, setFavouriteItems] = useState<string[]>([]);
 
   // Şirketin favori kalemleriyle başlanır; favori yoksa liste boş kalır ve
   // kullanıcı kendi kalemlerini kurar. Uygulama genelinde sabit bir kalem
   // seti dayatmak, farklı iş kollarında yanlış kalemlerin silinmesini
-  // gerektiriyordu. Hazır şablonlar aşağıdaki seçeneklerden tek dokunuşla
-  // yine uygulanabilir.
+  // gerektiriyordu. Hazır şablonlar seçeneklerden tek dokunuşla yine
+  // uygulanabilir.
   useEffect(() => {
     let cancelled = false;
 
@@ -51,7 +55,10 @@ export function CreateProjectScreen() {
       .getFavouriteItems()
       .then((favourites) => {
         if (cancelled || favourites.length === 0) return;
-        setWorkItems(favourites.map((item) => item.name));
+        const names = favourites.map((item) => item.name);
+        setFavouriteItems(names);
+        setWorkItems(names);
+        setTemplate("favourites");
       })
       .catch(() => {
         // Favoriler alınamazsa boş listeyle devam
@@ -62,9 +69,21 @@ export function CreateProjectScreen() {
     };
   }, []);
 
-  const applyTemplate = (next: WorkItemTemplate) => {
+  // Favori kaynağı yalnızca şirketin kayıtlı kalemi varsa listelenir.
+  const sourceOptions = useMemo<WorkItemSource[]>(
+    () => (favouriteItems.length > 0 ? ["favourites", ...WORK_ITEM_TEMPLATES] : [...WORK_ITEM_TEMPLATES]),
+    [favouriteItems.length],
+  );
+
+  // Çipler bu listeden çizilir; seçili olanlar workItems'ta tutulur.
+  const sourceItems = useMemo(
+    () => (template === "favourites" ? favouriteItems : getTemplateItems(template)),
+    [template, favouriteItems],
+  );
+
+  const applyTemplate = (next: WorkItemSource) => {
     setTemplate(next);
-    setWorkItems(getTemplateItems(next));
+    setWorkItems(next === "favourites" ? favouriteItems : getTemplateItems(next));
   };
 
   const toggleWorkItem = (name: string) => {
@@ -195,7 +214,7 @@ export function CreateProjectScreen() {
           ) : null}
           <Text style={styles.fieldLabel}>{t("projects.workItems.template")}</Text>
           <View style={styles.chipRow}>
-            {WORK_ITEM_TEMPLATES.map((option) => (
+            {sourceOptions.map((option) => (
               <Pressable
                 key={option}
                 onPress={() => applyTemplate(option)}
@@ -210,11 +229,11 @@ export function CreateProjectScreen() {
 
           <Text style={styles.fieldLabel}>{t("projects.workItems.label")}</Text>
           <Text style={styles.fieldHint}>{t("projects.workItems.hint")}</Text>
-          {getTemplateItems(template).length === 0 ? (
+          {sourceItems.length === 0 ? (
             <Text style={styles.fieldHint}>{t("projects.workItems.emptyTemplate")}</Text>
           ) : (
             <View style={styles.chipRow}>
-              {getTemplateItems(template).map((name) => {
+              {sourceItems.map((name) => {
                 const on = workItems.includes(name);
                 return (
                   <Pressable

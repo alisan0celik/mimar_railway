@@ -164,12 +164,13 @@ export const en = {
     workItems: {
       template: "Work Item Template",
       templates: {
+        favourites: "My Favourites",
         architecture: "Architecture",
         construction: "Construction",
         empty: "Empty",
       },
       label: "Work Items To Create",
-      hint: "These are created with the project; you can add or remove them later.",
+      hint: "These are created with the project; you can add or remove them later. Star the ones you use often on the Work Items and Billing screen to build your favourites.",
       emptyTemplate: "No items will be created. You can add them after the project is open.",
       selectedCount: "{count} items",
     },

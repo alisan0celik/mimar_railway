@@ -164,12 +164,13 @@ export const tr = {
     workItems: {
       template: "İmalat Şablonu",
       templates: {
+        favourites: "Favorilerim",
         architecture: "Mimarlık",
         construction: "Yapım / İnşaat",
         empty: "Boş",
       },
       label: "Açılacak İmalat Kalemleri",
-      hint: "Bu kalemler proje açılırken oluşur; sonradan ekleyip silebilirsiniz.",
+      hint: "Bu kalemler proje açılırken oluşur; sonradan ekleyip silebilirsiniz. Sık kullandığınız kalemleri İmalat ve Hakediş ekranından yıldızlayarak favorilerinize ekleyin.",
       emptyTemplate: "Kalem oluşturulmayacak. Projeyi açtıktan sonra kendiniz ekleyebilirsiniz.",
       selectedCount: "{count} kalem",
     },
