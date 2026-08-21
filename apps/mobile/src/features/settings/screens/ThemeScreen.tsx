@@ -12,6 +12,7 @@ import { DesignBackHeader, Screen } from "../../../shared/ui";
 const options: Array<{ mode: ThemeMode; icon: string; titleKey: string; descKey: string }> = [
   { mode: "dark", icon: "weather-night", titleKey: "theme.dark", descKey: "theme.darkDesc" },
   { mode: "light", icon: "white-balance-sunny", titleKey: "theme.light", descKey: "theme.lightDesc" },
+  { mode: "kozmoz", icon: "flare", titleKey: "theme.kozmoz", descKey: "theme.kozmozDesc" },
 ];
 
 export function ThemeScreen() {

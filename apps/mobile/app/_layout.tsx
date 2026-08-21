@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Stack, useRouter } from "expo-router";
 import { ActivityIndicator, Platform, StyleSheet, View } from "react-native";
 import { ThemeProvider, useThemeColors } from "../src/shared/theme";
+import { hydrateAppPreferences } from "../src/store/appStore";
 import { useAuthStore } from "../src/store/authStore";
 import { onAuthSessionExpired } from "../src/services/auth/auth-session";
 import { OfflineBanner } from "../src/components/OfflineBanner";
@@ -34,6 +35,7 @@ function RootShell() {
   });
 
   useEffect(() => {
+    void hydrateAppPreferences();
     hydrate();
     initSyncEngine();
     initSyncNotificationListener();

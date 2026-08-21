@@ -14,6 +14,8 @@ export const en = {
     darkDesc: "Dark background, light text",
     light: "Light",
     lightDesc: "Light background, dark text",
+    kozmoz: "Kozmoz",
+    kozmozDesc: "Black background, orange accents",
   },
   tabs: {
     dashboard: "Dashboard",

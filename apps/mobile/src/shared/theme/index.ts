@@ -1,5 +1,6 @@
 export * from "./colors";
 export * from "./colors.dark";
+export * from "./colors.kozmoz";
 export * from "./colors.light";
 export * from "./radius";
 export * from "./shadows";

@@ -4,7 +4,7 @@ import { StatusBar } from "expo-status-bar";
 
 import { useAppStore } from "../../store/appStore";
 import type { AppColors, ThemeMode } from "./colors";
-import { getPalette } from "./colors";
+import { getPalette, isDarkThemeMode } from "./colors";
 
 type ThemeContextValue = {
   mode: ThemeMode;
@@ -22,7 +22,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   return (
     <ThemeContext.Provider value={value}>
-      <StatusBar style={mode === "dark" ? "light" : "dark"} />
+      <StatusBar style={isDarkThemeMode(mode) ? "light" : "dark"} />
       {children}
     </ThemeContext.Provider>
   );

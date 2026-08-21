@@ -14,6 +14,8 @@ export const tr = {
     darkDesc: "Koyu arka plan, açık metin",
     light: "Açık",
     lightDesc: "Açık arka plan, koyu metin",
+    kozmoz: "Kozmoz",
+    kozmozDesc: "Siyah arka plan, turuncu vurgular",
   },
   tabs: {
     dashboard: "Ana Panel",
