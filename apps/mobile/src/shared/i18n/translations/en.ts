@@ -724,6 +724,9 @@ export const en = {
     addItem: "Add Item",
     itemNamePlaceholder: "Item name (e.g. Structural Works)",
     amountPlaceholder: "Contract value",
+    amountLabel: "Contract value",
+    progressLabel: "Progress (%)",
+    itemNameLabel: "Item name",
     progressPlaceholder: "Progress %",
     nameTooShort: "The item name must be at least 2 characters.",
     progressRange: "Progress must be between 0 and 100.",
@@ -845,6 +848,10 @@ export const en = {
         todos: {
           title: "To-dos",
           steps: "View tasks in the To-dos tab.|Managers add tasks; team members mark them complete.|Completed tasks are visible to the whole team.",
+        },
+        progress: {
+          title: "Work Items and Billing",
+          steps: "Open the Work Items and Billing link at the top of the project detail.|Split the contract into work items and give each one its contract value.|Update each item's progress as the work advances; the earned amount is calculated for you.|Issue Payment creates a new progress payment from the earned total minus what earlier payments already billed.|When a payment is collected, set it to Paid; a collection is recorded in finance automatically.|Anyone with project rights can update progress, but only finance rights reveal the amounts."
         },
         finance: {
           title: "Finance",

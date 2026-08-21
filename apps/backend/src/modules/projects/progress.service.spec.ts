@@ -20,11 +20,14 @@ describe("ProgressService", () => {
       findMany: jest.fn(),
       findFirst: jest.fn(),
       create: jest.fn(),
+      update: jest.fn(),
       updateMany: jest.fn(),
       delete: jest.fn(),
     },
     financeRecord: {
       aggregate: jest.fn(),
+      create: jest.fn(),
+      deleteMany: jest.fn(),
     },
     user: {
       findUnique: jest.fn(),
@@ -47,6 +50,9 @@ describe("ProgressService", () => {
     prisma.section.findMany.mockResolvedValue(sections);
     prisma.financeRecord.aggregate.mockResolvedValue({ _sum: { amount: 0 } });
     prisma.progressPayment.create.mockImplementation(({ data }: any) => Promise.resolve(data));
+    prisma.progressPayment.update.mockResolvedValue({});
+    prisma.financeRecord.create.mockResolvedValue({ id: "fr1" });
+    prisma.financeRecord.deleteMany.mockResolvedValue({ count: 1 });
   });
 
   it("rejects a project from another company", async () => {
@@ -165,5 +171,89 @@ describe("ProgressService", () => {
     expect(summary.billableAmount).toBe(300_000);
     expect(summary.collectedAmount).toBe(400_000);
     expect(summary.outstandingAmount).toBe(700_000);
+  });
+
+  it("records a collection when a payment is marked paid", async () => {
+    prisma.progressPayment.findFirst.mockResolvedValue({
+      id: "pp1",
+      number: 1,
+      amount: 1_400_000,
+      status: "approved",
+      financeRecordId: null,
+      projectId: "p1",
+      companyId: "c1",
+      createdById: "u1",
+      issueDate: new Date("2026-08-21T00:00:00.000Z"),
+    });
+
+    await service.updatePayment("c1", "p1", "pp1", { status: "paid" });
+
+    expect(prisma.financeRecord.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          type: "collection",
+          amount: 1_400_000,
+          projectId: "p1",
+          description: "1 No'lu Hakediş",
+        }),
+      }),
+    );
+    expect(prisma.progressPayment.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: "paid", financeRecordId: "fr1" }),
+      }),
+    );
+  });
+
+  it("removes the collection when a paid payment is reverted", async () => {
+    prisma.progressPayment.findFirst.mockResolvedValue({
+      id: "pp1",
+      number: 1,
+      amount: 1_400_000,
+      status: "paid",
+      financeRecordId: "fr1",
+      projectId: "p1",
+      companyId: "c1",
+      createdById: "u1",
+      issueDate: new Date(),
+    });
+
+    await service.updatePayment("c1", "p1", "pp1", { status: "approved" });
+
+    expect(prisma.financeRecord.deleteMany).toHaveBeenCalledWith({ where: { id: "fr1" } });
+    expect(prisma.progressPayment.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: "approved", financeRecordId: null }),
+      }),
+    );
+  });
+
+  it("leaves the collection alone when only the note changes", async () => {
+    prisma.progressPayment.findFirst.mockResolvedValue({
+      id: "pp1",
+      number: 1,
+      amount: 1_000,
+      status: "paid",
+      financeRecordId: "fr1",
+      projectId: "p1",
+      companyId: "c1",
+      createdById: "u1",
+      issueDate: new Date(),
+    });
+
+    await service.updatePayment("c1", "p1", "pp1", { note: "kontrol edildi" });
+
+    expect(prisma.financeRecord.create).not.toHaveBeenCalled();
+    expect(prisma.financeRecord.deleteMany).not.toHaveBeenCalled();
+  });
+
+  it("deletes the linked collection along with the payment", async () => {
+    prisma.progressPayment.findFirst
+      .mockResolvedValueOnce({ id: "pp3", number: 3, financeRecordId: "fr9" })
+      .mockResolvedValueOnce({ number: 3 });
+
+    await service.removePayment("c1", "p1", "pp3");
+
+    expect(prisma.financeRecord.deleteMany).toHaveBeenCalledWith({ where: { id: "fr9" } });
   });
 });

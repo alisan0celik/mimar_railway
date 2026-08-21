@@ -13,6 +13,7 @@ export const USER_GUIDE_SECTION_IDS = [
   "projects",
   "team",
   "todos",
+  "progress",
   "finance",
   "notifications",
   "support",

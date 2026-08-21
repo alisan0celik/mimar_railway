@@ -724,6 +724,9 @@ export const tr = {
     addItem: "Kalem Ekle",
     itemNamePlaceholder: "Kalem adı (ör. Kaba İnşaat)",
     amountPlaceholder: "Sözleşme bedeli",
+    amountLabel: "Sözleşme bedeli (₺)",
+    progressLabel: "İlerleme (%)",
+    itemNameLabel: "Kalem adı",
     progressPlaceholder: "İlerleme %",
     nameTooShort: "Kalem adı en az 2 karakter olmalı.",
     progressRange: "İlerleme 0 ile 100 arasında olmalı.",
@@ -845,6 +848,10 @@ export const tr = {
         todos: {
           title: "Yapılacaklar",
           steps: "Yapılacaklar sekmesinde görevleri görüntüleyin.|Yönetici yeni görev ekler; ekip üyesi kutucukla tamamlar.|Tamamlanan görevler tüm ekip tarafından görülür.",
+        },
+        progress: {
+          title: "İmalat ve Hakediş",
+          steps: "Proje detayının üstündeki İmalat ve Hakediş bağlantısına girin.|Sözleşmeyi imalat kalemlerine bölün; her kaleme sözleşme bedelini yazın.|İş ilerledikçe kalemin ilerleme yüzdesini güncelleyin; hak edilen tutar kendiliğinden hesaplanır.|Hakediş Düzenle ile o ana kadar hak edilen tutardan önceki hakedişler düşülerek yeni hakediş oluşturulur.|Hakediş tahsil edildiğinde durumunu Ödendi yapın; finans ekranına tahsilat kaydı otomatik düşer.|İlerlemeyi proje yetkisi olan herkes güncelleyebilir, tutarları yalnızca finans yetkisi olanlar görür."
         },
         finance: {
           title: "Finans",

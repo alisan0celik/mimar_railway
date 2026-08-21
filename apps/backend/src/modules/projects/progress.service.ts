@@ -231,6 +231,58 @@ export class ProgressService {
     });
   }
 
+  /**
+   * Hakediş "ödendi" işaretlendiğinde finans tarafına tahsilat kaydı yazar,
+   * durum geri alındığında o kaydı siler.
+   *
+   * Hakediş bir alacak belgesidir, para değildir; bu yüzden düzenlenirken
+   * finansa hiçbir şey yazılmaz. Ancak tahsil edildiği an gerçek bir nakit
+   * hareketi doğar. Kullanıcının aynı tutarı bir de finans ekranından elle
+   * girmesini beklemek iki listenin ayrışmasına yol açıyordu.
+   */
+  private async syncFinanceRecord(
+    payment: {
+      id: string;
+      number: number;
+      amount: number;
+      status: string;
+      financeRecordId: string | null;
+      projectId: string;
+      companyId: string;
+      createdById: string;
+      issueDate: Date;
+    },
+    nextStatus: string,
+  ): Promise<string | null> {
+    const wasPaid = payment.status === "paid";
+    const willBePaid = nextStatus === "paid";
+
+    if (wasPaid === willBePaid) return payment.financeRecordId;
+
+    if (willBePaid) {
+      const record = await this.prisma.financeRecord.create({
+        data: {
+          type: COLLECTION_TYPE,
+          amount: payment.amount,
+          description: `${payment.number} No'lu Hakediş`,
+          category: "progress-payment",
+          date: payment.issueDate,
+          projectId: payment.projectId,
+          companyId: payment.companyId,
+          createdById: payment.createdById,
+        },
+        select: { id: true },
+      });
+      return record.id;
+    }
+
+    if (payment.financeRecordId) {
+      // Kullanıcı finans ekranından silmiş olabilir; yoksa sessizce geç.
+      await this.prisma.financeRecord.deleteMany({ where: { id: payment.financeRecordId } });
+    }
+    return null;
+  }
+
   async updatePayment(
     companyId: string,
     projectId: string,
@@ -243,16 +295,24 @@ export class ProgressService {
       throw new BadRequestException("Geçersiz hakediş durumu");
     }
 
-    const result = await this.prisma.progressPayment.updateMany({
+    const payment = await this.prisma.progressPayment.findFirst({
       where: { id: paymentId, projectId },
+    });
+    if (!payment) throw new NotFoundException("Hakediş bulunamadı");
+
+    const financeRecordId =
+      dto.status !== undefined
+        ? await this.syncFinanceRecord(payment, dto.status)
+        : payment.financeRecordId;
+
+    await this.prisma.progressPayment.update({
+      where: { id: paymentId },
       data: {
-        ...(dto.status !== undefined ? { status: dto.status } : {}),
+        ...(dto.status !== undefined ? { status: dto.status, financeRecordId } : {}),
         ...(dto.note !== undefined ? { note: dto.note } : {}),
         ...(dto.issueDate !== undefined ? { issueDate: new Date(dto.issueDate) } : {}),
       },
     });
-
-    if (result.count === 0) throw new NotFoundException("Hakediş bulunamadı");
 
     return this.prisma.progressPayment.findFirst({
       where: { id: paymentId, projectId },
@@ -271,7 +331,7 @@ export class ProgressService {
 
     const payment = await this.prisma.progressPayment.findFirst({
       where: { id: paymentId, projectId },
-      select: { id: true, number: true },
+      select: { id: true, number: true, financeRecordId: true },
     });
     if (!payment) throw new NotFoundException("Hakediş bulunamadı");
 
@@ -285,6 +345,11 @@ export class ProgressService {
       throw new BadRequestException(
         "Yalnızca son hakediş silinebilir. Aradaki bir hakedişi iptal etmek için durumunu 'iptal' yapın",
       );
+    }
+
+    // Ödendi işaretliyken silinirse tahsilat kaydı ortada kalmasın.
+    if (payment.financeRecordId) {
+      await this.prisma.financeRecord.deleteMany({ where: { id: payment.financeRecordId } });
     }
 
     await this.prisma.progressPayment.delete({ where: { id: payment.id } });

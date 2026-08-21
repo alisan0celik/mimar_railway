@@ -77,7 +77,7 @@ export class ProjectsService {
         createdById: userId,
         sections: {
           create: DEFAULT_SECTIONS.map((sec) => ({
-            name: sec.type, // Map 'type' to 'name' in Section model
+            name: sec.label,
             order: sec.order,
             status: "not-started",
             content: "Bekliyor",

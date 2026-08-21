@@ -459,7 +459,10 @@ model ProgressPayment {
   amount           Float
   /// Düzenlendiği andaki toplam imalat yüzdesi.
   progressPercent  Float
-  status           String   @default("draft") // "draft", "approved", "paid"
+  status           String   @default("draft")
+  /// "Ödendi" işaretlendiğinde oluşturulan tahsilat kaydı. Durum geri alınırsa
+  /// bu kayıt silinir; böylece finans ekranı ile hakediş listesi ayrışmaz.
+  financeRecordId  String? // "draft", "approved", "paid"
   note             String?
   projectId        String
   project          Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)

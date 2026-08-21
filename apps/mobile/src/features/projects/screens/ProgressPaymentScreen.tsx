@@ -312,35 +312,47 @@ export function ProgressPaymentScreen({ projectId }: { projectId: string }) {
               ) : null}
 
               {editing ? (
-                <View style={styles.editRow}>
-                  {canSeeFinance ? (
-                    <TextInput
-                      keyboardType="numeric"
-                      onChangeText={setDraftAmount}
-                      placeholder={t("progress.amountPlaceholder")}
-                      placeholderTextColor={colors.textMuted}
-                      style={styles.input}
-                      value={draftAmount}
-                    />
-                  ) : null}
-                  <TextInput
-                    keyboardType="numeric"
-                    onChangeText={setDraftProgress}
-                    placeholder={t("progress.progressPlaceholder")}
-                    placeholderTextColor={colors.textMuted}
-                    style={styles.input}
-                    value={draftProgress}
-                  />
-                  <Pressable
-                    disabled={busy}
-                    onPress={() => handleSaveItem(section.id)}
-                    style={styles.saveBtn}
-                  >
-                    <MaterialCommunityIcons color={colors.white} name="check" size={18} />
-                  </Pressable>
-                  <Pressable onPress={() => setEditingId(null)} style={styles.cancelBtn}>
-                    <MaterialCommunityIcons color={colors.textMuted} name="close" size={18} />
-                  </Pressable>
+                <View style={styles.editBlock}>
+                  <View style={styles.editFields}>
+                    {canSeeFinance ? (
+                      <View style={styles.editField}>
+                        <Text style={styles.fieldLabel}>{t("progress.amountLabel")}</Text>
+                        <TextInput
+                          keyboardType="numeric"
+                          onChangeText={setDraftAmount}
+                          placeholder="0"
+                          placeholderTextColor={colors.textMuted}
+                          style={styles.input}
+                          value={draftAmount}
+                        />
+                      </View>
+                    ) : null}
+                    <View style={styles.editField}>
+                      <Text style={styles.fieldLabel}>{t("progress.progressLabel")}</Text>
+                      <TextInput
+                        keyboardType="numeric"
+                        onChangeText={setDraftProgress}
+                        placeholder="0"
+                        placeholderTextColor={colors.textMuted}
+                        style={styles.input}
+                        value={draftProgress}
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.editActions}>
+                    <Pressable onPress={() => setEditingId(null)} style={styles.cancelBtn}>
+                      <Text style={styles.cancelBtnText}>{t("common.cancel")}</Text>
+                    </Pressable>
+                    <Pressable
+                      disabled={busy}
+                      onPress={() => handleSaveItem(section.id)}
+                      style={styles.saveBtn}
+                    >
+                      <MaterialCommunityIcons color={colors.white} name="check" size={16} />
+                      <Text style={styles.saveBtnText}>{t("common.save")}</Text>
+                    </Pressable>
+                  </View>
                 </View>
               ) : canEditItems ? (
                 <View style={styles.itemActions}>
@@ -363,6 +375,7 @@ export function ProgressPaymentScreen({ projectId }: { projectId: string }) {
 
       {canEditItems ? (
         <View style={styles.addCard}>
+          <Text style={styles.fieldLabel}>{t("progress.itemNameLabel")}</Text>
           <TextInput
             onChangeText={setNewItemName}
             placeholder={t("progress.itemNamePlaceholder")}
@@ -371,14 +384,17 @@ export function ProgressPaymentScreen({ projectId }: { projectId: string }) {
             value={newItemName}
           />
           {canSeeFinance ? (
-            <TextInput
-              keyboardType="numeric"
-              onChangeText={setNewItemAmount}
-              placeholder={t("progress.amountPlaceholder")}
-              placeholderTextColor={colors.textMuted}
-              style={styles.input}
-              value={newItemAmount}
-            />
+            <>
+              <Text style={styles.fieldLabel}>{t("progress.amountLabel")}</Text>
+              <TextInput
+                keyboardType="numeric"
+                onChangeText={setNewItemAmount}
+                placeholder="0"
+                placeholderTextColor={colors.textMuted}
+                style={styles.input}
+                value={newItemAmount}
+              />
+            </>
           ) : null}
           <Pressable disabled={busy} onPress={handleAddItem} style={styles.addBtn}>
             <Text style={styles.addBtnText}>{t("progress.addItem")}</Text>
@@ -511,11 +527,18 @@ function createStyles(colors: AppColors) {
     itemActions: { flexDirection: "row", gap: spacing.lg, marginTop: spacing.sm },
     linkBtn: { flexDirection: "row", alignItems: "center", gap: 4 },
     linkText: { ...typography.caption, color: colors.primary, fontWeight: "600" },
-    editRow: {
+    editBlock: { marginTop: spacing.md, gap: spacing.sm },
+    editFields: { flexDirection: "row", gap: spacing.sm },
+    editField: { flex: 1 },
+    fieldLabel: {
+      ...typography.caption,
+      color: colors.textMuted,
+      marginBottom: 4,
+    },
+    editActions: {
       flexDirection: "row",
-      alignItems: "center",
-      gap: spacing.xs,
-      marginTop: spacing.sm,
+      justifyContent: "flex-end",
+      gap: spacing.sm,
     },
     input: {
       flex: 1,
@@ -529,21 +552,23 @@ function createStyles(colors: AppColors) {
       paddingVertical: spacing.sm,
     },
     saveBtn: {
-      width: 38,
-      height: 38,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.xs,
       borderRadius: radius.md,
       backgroundColor: colors.primary,
-      alignItems: "center",
-      justifyContent: "center",
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
     },
+    saveBtnText: { ...typography.caption, color: colors.white, fontWeight: "700" },
     cancelBtn: {
-      width: 38,
-      height: 38,
       borderRadius: radius.md,
       backgroundColor: colors.surfaceMuted,
-      alignItems: "center",
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
       justifyContent: "center",
     },
+    cancelBtnText: { ...typography.caption, color: colors.textMuted, fontWeight: "600" },
     addCard: {
       backgroundColor: colors.cardSoft,
       borderRadius: radius.lg,
