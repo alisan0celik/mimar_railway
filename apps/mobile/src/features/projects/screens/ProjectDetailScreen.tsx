@@ -68,6 +68,7 @@ export function ProjectDetailScreen() {
   const styles = useThemedStyles(createStyles);
   const colors = useThemeColors();
   const router = useRouter();
+  const canSeeFinance = useCan(PERMISSIONS.FINANCE_VIEW);
   const params = useLocalSearchParams<{ projectId?: string; tab?: string }>();
   const projectId = params.projectId ?? "";
   const initialTab: TabKey =
@@ -287,7 +288,9 @@ export function ProjectDetailScreen() {
           style={styles.progressLink}
         >
           <MaterialCommunityIcons color={colors.primary} name="chart-timeline-variant" size={18} />
-          <Text style={styles.progressLinkText}>{t("progress.title")}</Text>
+          <Text style={styles.progressLinkText}>
+            {canSeeFinance ? t("progress.title") : t("progress.titleNoFinance")}
+          </Text>
           <MaterialCommunityIcons color={colors.textMuted} name="chevron-right" size={18} />
         </Pressable>
 

@@ -739,6 +739,7 @@ export const en = {
   },
   progress: {
     title: "Work Items and Billing",
+    titleNoFinance: "Work Progress",
     items: "Work Items",
     emptyTitle: "No work items yet",
     emptyDesc: "Start by splitting the contract into your own work items. Enter a name and its contract value below. Star the ones you use often and your next projects will open with them.",
@@ -767,9 +768,10 @@ export const en = {
     payments: "Progress Payments",
     noPayments: "No progress payments issued yet.",
     newPayment: "Issue Payment",
-    newPaymentConfirm: "The net amount will be {amount}. Issue it?",
+    newPaymentConfirm: "The payment for {item} will be {amount}. Issue it?",
     issue: "Issue",
     paymentNumber: "Payment No. {number}",
+    paymentNumberWithItem: "{item} · Payment No. {number}",
     statusTitle: "Status of payment no. {number}",
     paymentStatus: {
       draft: "Draft",

@@ -739,6 +739,7 @@ export const tr = {
   },
   progress: {
     title: "İmalat ve Hakediş",
+    titleNoFinance: "İmalat Takibi",
     items: "İmalat Kalemleri",
     emptyTitle: "Henüz imalat kalemi yok",
     emptyDesc: "Sözleşmeyi kendi imalat kalemlerinize bölerek başlayın. Aşağıdan kalem adını ve sözleşme bedelini girin. Sık kullandığınız kalemleri yıldızlayın; sonraki projeleriniz o kalemlerle açılır.",
@@ -767,9 +768,10 @@ export const tr = {
     payments: "Hakedişler",
     noPayments: "Henüz hakediş düzenlenmedi.",
     newPayment: "Hakediş Düzenle",
-    newPaymentConfirm: "Bu hakedişin net tutarı {amount} olacak. Düzenlensin mi?",
+    newPaymentConfirm: "{item} kalemi için düzenlenecek hakedişin net tutarı {amount} olacak. Onaylıyor musunuz?",
     issue: "Düzenle",
     paymentNumber: "{number} No'lu Hakediş",
+    paymentNumberWithItem: "{item} {number} No'lu Hakediş",
     statusTitle: "{number} No'lu hakedişin durumu",
     paymentStatus: {
       draft: "Taslak",

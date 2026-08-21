@@ -138,6 +138,54 @@ export function subscriptionExpiringNotification(
   };
 }
 
+export function progressPaymentIssuedNotification(
+  locale: NotificationLocale,
+  params: { label: string; projectName: string; amount: string },
+) {
+  if (locale === "en") {
+    return {
+      title: "Progress payment issued",
+      message: `${params.label} for ${params.projectName}: ${params.amount}`,
+    };
+  }
+  return {
+    title: "Hakediş düzenlendi",
+    message: `${params.projectName} · ${params.label}: ${params.amount}`,
+  };
+}
+
+export function progressPaymentPaidNotification(
+  locale: NotificationLocale,
+  params: { label: string; projectName: string; amount: string },
+) {
+  if (locale === "en") {
+    return {
+      title: "Progress payment collected",
+      message: `${params.label} for ${params.projectName} was collected: ${params.amount}`,
+    };
+  }
+  return {
+    title: "Hakediş tahsil edildi",
+    message: `${params.projectName} · ${params.label} tahsil edildi: ${params.amount}`,
+  };
+}
+
+export function projectTaskCompletedNotification(
+  locale: NotificationLocale,
+  params: { userName: string; taskTitle: string; projectName: string },
+) {
+  if (locale === "en") {
+    return {
+      title: "Task completed",
+      message: `${params.userName} completed "${params.taskTitle}" in ${params.projectName}.`,
+    };
+  }
+  return {
+    title: "Görev tamamlandı",
+    message: `${params.userName}, ${params.projectName} projesindeki "${params.taskTitle}" görevini tamamladı.`,
+  };
+}
+
 export function supportTicketRepliedNotification(
   locale: NotificationLocale,
   params: { subject: string },

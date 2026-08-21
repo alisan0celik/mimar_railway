@@ -1,12 +1,14 @@
 import { BadRequestException, NotFoundException } from "@nestjs/common";
 
 import { PrismaService } from "../../common/prisma.service";
+import { NotificationsService } from "../notifications/notifications.service";
 import { ProgressService } from "./progress.service";
 
 describe("ProgressService", () => {
   const prisma = {
     project: {
       findFirst: jest.fn(),
+      findUnique: jest.fn(),
       update: jest.fn(),
     },
     section: {
@@ -32,6 +34,10 @@ describe("ProgressService", () => {
     },
     user: {
       findUnique: jest.fn(),
+      findMany: jest.fn(),
+    },
+    company: {
+      findUnique: jest.fn(),
     },
     companyWorkItem: {
       findMany: jest.fn(),
@@ -41,12 +47,17 @@ describe("ProgressService", () => {
     },
   };
 
-  const service = new ProgressService(prisma as unknown as PrismaService);
+  const notificationsService = { createForUser: jest.fn().mockResolvedValue({}) };
+
+  const service = new ProgressService(
+    prisma as unknown as PrismaService,
+    notificationsService as unknown as NotificationsService,
+  );
 
   const sections = [
-    { id: "s1", amount: 1_500_000, progress: 60 },
-    { id: "s2", amount: 500_000, progress: 100 },
-    { id: "s3", amount: 1_000_000, progress: 0 },
+    { id: "s1", name: "Mimari", amount: 1_500_000, progress: 60 },
+    { id: "s2", name: "Statik", amount: 500_000, progress: 100 },
+    { id: "s3", name: "Mekanik", amount: 1_000_000, progress: 0 },
   ];
 
   beforeEach(() => {
@@ -65,6 +76,9 @@ describe("ProgressService", () => {
     prisma.companyWorkItem.create.mockImplementation(({ data }: any) => Promise.resolve(data));
     prisma.companyWorkItem.deleteMany.mockResolvedValue({ count: 1 });
     prisma.section.createMany.mockResolvedValue({ count: 0 });
+    prisma.user.findMany.mockResolvedValue([]);
+    prisma.company.findUnique.mockResolvedValue({ ownerId: "owner-1" });
+    prisma.project.findUnique.mockResolvedValue({ name: "Blok A" });
   });
 
   it("rejects a project from another company", async () => {
@@ -72,58 +86,94 @@ describe("ProgressService", () => {
     await expect(service.listSections("other", "p1")).rejects.toBeInstanceOf(NotFoundException);
   });
 
-  it("bills the full earned amount on the first progress payment", async () => {
+  it("bills the item's full earned amount on its first progress payment", async () => {
+    prisma.section.findFirst.mockResolvedValue(sections[0]);
     prisma.progressPayment.findMany.mockResolvedValue([]);
 
-    const payment: any = await service.createPayment("c1", "p1", {}, "u1");
+    const payment: any = await service.createPayment("c1", "p1", { sectionId: "s1" }, "u1");
 
     expect(payment.number).toBe(1);
-    expect(payment.cumulativeAmount).toBe(1_400_000);
+    expect(payment.sectionId).toBe("s1");
+    // Mimari: 1.500.000 x %60
+    expect(payment.cumulativeAmount).toBe(900_000);
     expect(payment.previousAmount).toBe(0);
-    expect(payment.amount).toBe(1_400_000);
+    expect(payment.amount).toBe(900_000);
     expect(payment.status).toBe("draft");
   });
 
-  it("bills only the difference since the previous payments", async () => {
+  it("numbers progress payments within the item, not the project", async () => {
+    prisma.section.findFirst.mockResolvedValue(sections[0]);
     prisma.progressPayment.findMany.mockResolvedValue([
-      { amount: 900_000, status: "paid", number: 1 },
+      { amount: 400_000, status: "paid", number: 1 },
       { amount: 200_000, status: "approved", number: 2 },
     ]);
 
-    const payment: any = await service.createPayment("c1", "p1", {}, "u1");
+    const payment: any = await service.createPayment("c1", "p1", { sectionId: "s1" }, "u1");
 
     expect(payment.number).toBe(3);
-    expect(payment.previousAmount).toBe(1_100_000);
+    expect(payment.previousAmount).toBe(600_000);
     expect(payment.amount).toBe(300_000);
   });
 
+  it("only counts the item's own earlier payments", async () => {
+    prisma.section.findFirst.mockResolvedValue(sections[0]);
+    prisma.progressPayment.findMany.mockResolvedValue([]);
+
+    await service.createPayment("c1", "p1", { sectionId: "s1" }, "u1");
+
+    expect(prisma.progressPayment.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { projectId: "p1", sectionId: "s1" } }),
+    );
+  });
+
   it("ignores cancelled payments when working out what is already billed", async () => {
+    prisma.section.findFirst.mockResolvedValue(sections[0]);
     prisma.progressPayment.findMany.mockResolvedValue([
       { amount: 900_000, status: "cancelled", number: 1 },
     ]);
 
-    const payment: any = await service.createPayment("c1", "p1", {}, "u1");
+    const payment: any = await service.createPayment("c1", "p1", { sectionId: "s1" }, "u1");
 
     expect(payment.previousAmount).toBe(0);
-    expect(payment.amount).toBe(1_400_000);
+    expect(payment.amount).toBe(900_000);
   });
 
-  it("refuses to bill when no further work has been earned", async () => {
+  it("refuses to bill when no further work has been earned on the item", async () => {
+    prisma.section.findFirst.mockResolvedValue(sections[0]);
     prisma.progressPayment.findMany.mockResolvedValue([
-      { amount: 1_400_000, status: "approved", number: 1 },
+      { amount: 900_000, status: "approved", number: 1 },
     ]);
 
-    await expect(service.createPayment("c1", "p1", {}, "u1")).rejects.toBeInstanceOf(
-      BadRequestException,
-    );
+    await expect(
+      service.createPayment("c1", "p1", { sectionId: "s1" }, "u1"),
+    ).rejects.toBeInstanceOf(BadRequestException);
   });
 
-  it("refuses to bill a project with no work items", async () => {
-    prisma.section.findMany.mockResolvedValue([]);
-    prisma.progressPayment.findMany.mockResolvedValue([]);
+  it("refuses to bill an item that is not in the project", async () => {
+    prisma.section.findFirst.mockResolvedValue(null);
 
-    await expect(service.createPayment("c1", "p1", {}, "u1")).rejects.toBeInstanceOf(
-      BadRequestException,
+    await expect(
+      service.createPayment("c1", "p1", { sectionId: "nope" }, "u1"),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it("notifies the owner and office managers when a payment is issued", async () => {
+    prisma.section.findFirst.mockResolvedValue(sections[0]);
+    prisma.progressPayment.findMany.mockResolvedValue([]);
+    prisma.user.findMany.mockResolvedValue([{ id: "manager-1" }]);
+    prisma.progressPayment.create.mockResolvedValue({
+      id: "pp1",
+      number: 1,
+      amount: 900_000,
+      section: { name: "Mimari" },
+    });
+
+    await service.createPayment("c1", "p1", { sectionId: "s1" }, "u1");
+
+    const notified = notificationsService.createForUser.mock.calls.map((call: any) => call[0].userId);
+    expect(notified.sort()).toEqual(["manager-1", "owner-1"]);
+    expect(notificationsService.createForUser).toHaveBeenCalledWith(
+      expect.objectContaining({ message: expect.stringContaining("Mimari 1 No'lu Hakediş") }),
     );
   });
 

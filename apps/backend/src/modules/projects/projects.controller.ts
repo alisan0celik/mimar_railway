@@ -144,7 +144,7 @@ export class ProjectsController {
     @Param("taskId") taskId: string,
     @Body() body: UpdateTaskStatusDto,
   ) {
-    return this.projectsService.updateTaskStatus(this.companyId(user), id, taskId, body.status);
+    return this.projectsService.updateTaskStatus(this.companyId(user), id, taskId, body.status, user.sub);
   }
 
   @Delete(":id/tasks/:taskId")

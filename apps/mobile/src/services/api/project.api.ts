@@ -35,6 +35,8 @@ export type ProgressPaymentDTO = {
   status: ProgressPaymentStatus;
   note: string | null;
   projectId: string;
+  sectionId: string | null;
+  section: { id: string; name: string } | null;
   createdAt: string;
   createdBy: { id: string; fullName: string };
 };
@@ -362,7 +364,7 @@ export const projectApi = {
     );
     return data;
   },
-  async createProgressPayment(projectId: string, payload: { note?: string } = {}) {
+  async createProgressPayment(projectId: string, payload: { sectionId: string; note?: string }) {
     const { data } = await apiClient.post<ProgressPaymentDTO>(
       `/projects/${projectId}/progress-payments`,
       payload,

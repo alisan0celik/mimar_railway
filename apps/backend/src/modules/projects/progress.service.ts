@@ -1,6 +1,18 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 
 import { PrismaService } from "../../common/prisma.service";
+import { OFFICE_ROLE_CODE_PREFIX } from "../companies/company-role.constants";
+import {
+  NOTIFICATION_TARGET,
+  PROGRESS_PAYMENT_ACTION,
+  progressPaymentRoute,
+} from "../notifications/notification-events.constants";
+import {
+  progressPaymentIssuedNotification,
+  progressPaymentPaidNotification,
+  resolveNotificationLocale,
+} from "../notifications/notification-templates";
+import { NotificationsService } from "../notifications/notifications.service";
 import { CreateProgressPaymentDto } from "./dto/create-progress-payment.dto";
 import { CreateSectionDto } from "./dto/create-section.dto";
 import { UpdateProgressPaymentDto } from "./dto/update-progress-payment.dto";
@@ -27,13 +39,101 @@ const COLLECTION_TYPE = "collection";
  * birleşik noktalı "i̇" üretiyor ve "Kaba İnşaat" ile "kaba inşaat" farklı
  * görünüyor. Bu yüzden Türkçe yerel ayarıyla küçültülür.
  */
+/**
+ * Hakediş etiketi: "Mimari 1 No'lu Hakediş".
+ * Kalem sonradan silinmişse ad olmadan yazılır.
+ */
+export function paymentLabel(sectionName: string | null | undefined, number: number): string {
+  const suffix = `${number} No'lu Hakediş`;
+  return sectionName ? `${sectionName} ${suffix}` : suffix;
+}
+
+/** Bildirim metni için tutar; sunucuda Intl her zaman mevcut değil diye sade tutuldu. */
+function formatAmount(value: number): string {
+  return `${value.toLocaleString("tr-TR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ₺`;
+}
+
 function normaliseName(value: string): string {
   return value.trim().toLocaleLowerCase("tr").normalize("NFC");
 }
 
 @Injectable()
 export class ProgressService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
+
+  /**
+   * Hakediş bildirimlerini şirket sahibi ve ofis yöneticilerine gönderir.
+   *
+   * Hakediş tutarları finans bilgisidir; sahadaki çalışana gitmemeli. Alıcılar
+   * lisans hatırlatıcısıyla aynı mantıkla bulunur: sahip + ofis yöneticisi
+   * rolündeki onaylı kullanıcılar. Bildirim hatası hakedişi engellemez.
+   */
+  private async notifyManagers(
+    companyId: string,
+    projectId: string,
+    payment: { id: string; number: number; amount: number; section?: { name: string } | null },
+    kind: "issued" | "paid",
+  ) {
+    try {
+      const [company, project, managers] = await Promise.all([
+        this.prisma.company.findUnique({ where: { id: companyId }, select: { ownerId: true } }),
+        this.prisma.project.findUnique({ where: { id: projectId }, select: { name: true } }),
+        this.prisma.user.findMany({
+          where: {
+            companyId,
+            approvalStatus: "approved",
+            roles: {
+              some: {
+                role: {
+                  companyId,
+                  code: { startsWith: OFFICE_ROLE_CODE_PREFIX["office-manager"] },
+                },
+              },
+            },
+          },
+          select: { id: true },
+        }),
+      ]);
+
+      const recipients = Array.from(
+        new Set([...(company?.ownerId ? [company.ownerId] : []), ...managers.map((m) => m.id)]),
+      );
+      if (recipients.length === 0 || !project) return;
+
+      const locale = resolveNotificationLocale(null);
+      const params = {
+        label: paymentLabel(payment.section?.name, payment.number),
+        projectName: project.name,
+        amount: formatAmount(payment.amount),
+      };
+      const copy =
+        kind === "issued"
+          ? progressPaymentIssuedNotification(locale, params)
+          : progressPaymentPaidNotification(locale, params);
+
+      await Promise.all(
+        recipients.map((userId) =>
+          this.notificationsService.createForUser({
+            userId,
+            title: copy.title,
+            message: copy.message,
+            type: "info",
+            targetType: NOTIFICATION_TARGET.PROGRESS_PAYMENT,
+            targetId: payment.id,
+            action:
+              kind === "issued" ? PROGRESS_PAYMENT_ACTION.ISSUED : PROGRESS_PAYMENT_ACTION.PAID,
+            route: progressPaymentRoute(projectId),
+            metadata: { projectId },
+          }),
+        ),
+      );
+    } catch {
+      // Bildirim gönderilemezse hakediş yine de düzenlenmiş sayılır
+    }
+  }
 
   private async assertProject(companyId: string, projectId: string) {
     const project = await this.prisma.project.findFirst({
@@ -258,17 +358,21 @@ export class ProgressService {
     await this.assertProject(companyId, projectId);
     return this.prisma.progressPayment.findMany({
       where: { projectId },
-      orderBy: { number: "desc" },
-      include: { createdBy: { select: { id: true, fullName: true } } },
+      orderBy: [{ createdAt: "desc" }],
+      include: {
+        createdBy: { select: { id: true, fullName: true } },
+        section: { select: { id: true, name: true } },
+      },
     });
   }
 
   /**
-   * Yeni hakediş düzenler.
+   * Belirli bir imalat kalemi için hakediş düzenler.
    *
-   * Tutar istemciden alınmaz: o anki imalat ilerlemesinden hesaplanan hak ediş
-   * toplamından, iptal edilmemiş önceki hakedişler düşülür. Böylece aynı işin
-   * iki kez faturalanması mümkün olmaz.
+   * Tutar istemciden alınmaz: kalemin o anki hak edişinden (bedel × ilerleme)
+   * aynı kalem için daha önce düzenlenmiş, iptal edilmemiş hakedişler düşülür.
+   * Numaralandırma kalem içinde yürür — "Mimari 1", "Mimari 2" — böylece
+   * finans kaydı hangi imalatın hangi hakedişi olduğunu taşır.
    */
   async createPayment(
     companyId: string,
@@ -278,21 +382,17 @@ export class ProgressService {
   ) {
     await this.assertProject(companyId, projectId);
 
-    const [sections, payments] = await Promise.all([
-      this.sectionsOf(projectId),
-      this.prisma.progressPayment.findMany({
-        where: { projectId },
-        select: { amount: true, status: true, number: true },
-      }),
-    ]);
+    const section = await this.prisma.section.findFirst({
+      where: { id: dto.sectionId, projectId },
+    });
+    if (!section) throw new NotFoundException("İmalat kalemi bulunamadı");
 
-    if (sections.length === 0) {
-      throw new BadRequestException(
-        "Hakediş düzenlemek için önce imalat kalemi eklemelisiniz",
-      );
-    }
+    const payments = await this.prisma.progressPayment.findMany({
+      where: { projectId, sectionId: section.id },
+      select: { amount: true, status: true, number: true },
+    });
 
-    const cumulativeAmount = calculateEarnedAmount(sections);
+    const cumulativeAmount = calculateEarnedAmount([section]);
     const previousAmount = payments
       .filter((payment) => payment.status !== "cancelled")
       .reduce((sum, payment) => sum + payment.amount, 0);
@@ -300,28 +400,35 @@ export class ProgressService {
 
     if (amount <= 0) {
       throw new BadRequestException(
-        "Önceki hakedişlerden bu yana yeni hak ediş oluşmadı",
+        `${section.name} kaleminde önceki hakedişlerden bu yana yeni hak ediş oluşmadı`,
       );
     }
 
     const nextNumber = payments.reduce((max, payment) => Math.max(max, payment.number), 0) + 1;
 
-    return this.prisma.progressPayment.create({
+    const created = await this.prisma.progressPayment.create({
       data: {
         projectId,
+        sectionId: section.id,
         companyId,
         number: nextNumber,
         issueDate: dto.issueDate ? new Date(dto.issueDate) : new Date(),
         cumulativeAmount,
         previousAmount: roundCurrency(previousAmount),
         amount,
-        progressPercent: calculateOverallProgress(sections),
+        progressPercent: clampProgress(section.progress),
         status: "draft",
         note: dto.note,
         createdById: userId,
       },
-      include: { createdBy: { select: { id: true, fullName: true } } },
+      include: {
+        createdBy: { select: { id: true, fullName: true } },
+        section: { select: { id: true, name: true } },
+      },
     });
+
+    await this.notifyManagers(companyId, projectId, created, "issued");
+    return created;
   }
 
   /**
@@ -346,6 +453,7 @@ export class ProgressService {
       issueDate: Date;
     },
     nextStatus: string,
+    sectionName: string | null,
   ): Promise<string | null> {
     const wasPaid = payment.status === "paid";
     const willBePaid = nextStatus === "paid";
@@ -357,7 +465,7 @@ export class ProgressService {
         data: {
           type: COLLECTION_TYPE,
           amount: payment.amount,
-          description: `${payment.number} No'lu Hakediş`,
+          description: paymentLabel(sectionName, payment.number),
           category: "progress-payment",
           date: payment.issueDate,
           projectId: payment.projectId,
@@ -390,12 +498,13 @@ export class ProgressService {
 
     const payment = await this.prisma.progressPayment.findFirst({
       where: { id: paymentId, projectId },
+      include: { section: { select: { name: true } } },
     });
     if (!payment) throw new NotFoundException("Hakediş bulunamadı");
 
     const financeRecordId =
       dto.status !== undefined
-        ? await this.syncFinanceRecord(payment, dto.status)
+        ? await this.syncFinanceRecord(payment, dto.status, payment.section?.name ?? null)
         : payment.financeRecordId;
 
     await this.prisma.progressPayment.update({
@@ -407,10 +516,19 @@ export class ProgressService {
       },
     });
 
-    return this.prisma.progressPayment.findFirst({
+    const updated = await this.prisma.progressPayment.findFirst({
       where: { id: paymentId, projectId },
-      include: { createdBy: { select: { id: true, fullName: true } } },
+      include: {
+        createdBy: { select: { id: true, fullName: true } },
+        section: { select: { id: true, name: true } },
+      },
     });
+
+    if (dto.status === "paid" && payment.status !== "paid" && updated) {
+      await this.notifyManagers(companyId, projectId, updated, "paid");
+    }
+
+    return updated;
   }
 
   /**

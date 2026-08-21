@@ -247,6 +247,7 @@ model Section {
   projectId String
   project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   tasks     Task[]
+  progressPayments ProgressPayment[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -470,6 +471,11 @@ model ProgressPayment {
   note             String?
   projectId        String
   project          Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  /// Hakedişin düzenlendiği imalat kalemi. Numaralandırma kalem içinde
+  /// yürür: "Mimari 1 No'lu Hakediş", "Mimari 2 No'lu Hakediş".
+  /// Kalem silinirse hakediş kaydı tarihçe olarak kalır.
+  sectionId        String?
+  section          Section? @relation(fields: [sectionId], references: [id], onDelete: SetNull)
   companyId        String
   company          Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
   createdById      String
@@ -477,7 +483,7 @@ model ProgressPayment {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  @@unique([projectId, number])
+  @@unique([projectId, sectionId, number])
   @@index([companyId])
   @@index([projectId])
 }

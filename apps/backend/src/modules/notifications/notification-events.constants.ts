@@ -3,6 +3,7 @@ export const NOTIFICATION_TARGET = {
   JOIN_REQUEST: "join_request",
   PROJECT: "project",
   PROJECT_TASK: "project_task",
+  PROGRESS_PAYMENT: "progress_payment",
   PROJECT_NOTE: "project_note",
   FINANCE_RECORD: "finance_record",
   CALENDAR_EVENT: "calendar_event",
@@ -21,6 +22,12 @@ export const MEMBERSHIP_ACTION = {
 
 export const PROJECT_TASK_ACTION = {
   CREATED: "created",
+  COMPLETED: "completed",
+} as const;
+
+export const PROGRESS_PAYMENT_ACTION = {
+  ISSUED: "issued",
+  PAID: "paid",
 } as const;
 
 export const PROJECT_NOTE_ACTION = {
@@ -61,6 +68,10 @@ export function projectNoteRoute(projectId: string): string {
 
 export function projectRoute(projectId: string): string {
   return `/(main)/projects/${projectId}`;
+}
+
+export function progressPaymentRoute(projectId: string): string {
+  return `/(main)/projects/${projectId}/progress`;
 }
 
 export function financeRoute(): string {

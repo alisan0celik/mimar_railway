@@ -13,6 +13,7 @@ import {
 import {
   projectCreatedNotification,
   projectNoteCreatedNotification,
+  projectTaskCompletedNotification,
   projectTaskCreatedNotification,
   resolveNotificationLocale,
 } from '../notifications/notification-templates';
@@ -466,11 +467,13 @@ export class ProjectsService {
     projectId: string,
     taskId: string,
     status: string,
+    userId?: string,
   ) {
-    await this.findOne(companyId, projectId);
+    const project = await this.findOne(companyId, projectId);
     const existing = await this.prisma.task.findFirst({ where: { id: taskId, projectId } });
     if (!existing) throw new NotFoundException('Görev bulunamadı');
-    return this.prisma.task.update({
+
+    const task = await this.prisma.task.update({
       where: { id: taskId },
       data: { status },
       include: {
@@ -478,6 +481,80 @@ export class ProjectsService {
         createdBy: { select: { id: true, fullName: true } },
       },
     });
+
+    // Yalnızca tamamlanmaya geçişte bildirilir; zaten tamamlanmış bir görevi
+    // tekrar işaretlemek yeni bildirim üretmemeli.
+    if (status === 'completed' && existing.status !== 'completed' && userId) {
+      await this.notifyCompanyOnTaskCompleted(
+        companyId,
+        userId,
+        projectId,
+        project.name,
+        task.title,
+      );
+    }
+
+    return task;
+  }
+
+  /**
+   * Bir görev tamamlandığında şirketteki herkese bildirir.
+   *
+   * Tamamlanan iş ekibin tamamını ilgilendirdiği için alıcı ayrımı yapılmaz;
+   * yalnızca görevi tamamlayan kişiye ve proje bildirimlerini kapatmış
+   * kullanıcılara gönderilmez.
+   */
+  private async notifyCompanyOnTaskCompleted(
+    companyId: string,
+    actorId: string,
+    projectId: string,
+    projectName: string,
+    taskTitle: string,
+  ) {
+    try {
+      const actor = await this.prisma.user.findUnique({
+        where: { id: actorId },
+        select: { fullName: true },
+      });
+      if (!actor) return;
+
+      const users = await this.prisma.user.findMany({
+        where: { companyId, approvalStatus: 'approved', id: { not: actorId } },
+        select: { id: true, notificationPreferences: true },
+      });
+      if (users.length === 0) return;
+
+      const locale = resolveNotificationLocale(null);
+      const copy = projectTaskCompletedNotification(locale, {
+        userName: actor.fullName,
+        taskTitle,
+        projectName,
+      });
+      const route = projectTaskRoute(projectId);
+
+      await Promise.all(
+        users.map((user: NotificationRecipient) => {
+          const prefs = user.notificationPreferences as Record<string, boolean> | null;
+          if (prefs?.projects === false) return Promise.resolve();
+
+          return this.notificationsService.createForUser({
+            userId: user.id,
+            title: copy.title,
+            message: copy.message,
+            type: 'success',
+            targetType: NOTIFICATION_TARGET.PROJECT_TASK,
+            targetId: projectId,
+            action: PROJECT_TASK_ACTION.COMPLETED,
+            route,
+            metadata: { projectId },
+          });
+        }),
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Task completed notification skipped: ${error instanceof Error ? error.message : error}`,
+      );
+    }
   }
 
   async updateTask(companyId: string, projectId: string, taskId: string, data: any) {
