@@ -1,11 +1,17 @@
 import { Stack } from "expo-router";
 
+import { useThemeColors } from "../../src/shared/theme";
+
 export default function AuthLayout() {
+  const colors = useThemeColors();
+
   return (
     <Stack
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: "#050A18" },
+        // Giriş ekranlarının degradesiyle aynı zemin; sabit bırakılırsa
+        // seçili temadan bağımsız olarak lacivert kalıyor.
+        contentStyle: { backgroundColor: colors.backgroundDeep },
       }}
     >
       <Stack.Screen name="onboarding" />

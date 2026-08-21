@@ -165,7 +165,7 @@ function createStyles(colors: AppColors) {
       width: 100,
       height: 100,
       borderRadius: 50,
-      backgroundColor: "rgba(99,102,241,0.22)",
+      backgroundColor: colors.primarySoft,
       alignItems: "center",
       justifyContent: "center",
     },

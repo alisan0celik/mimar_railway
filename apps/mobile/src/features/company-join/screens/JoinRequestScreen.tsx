@@ -43,7 +43,7 @@ export function JoinRequestScreen() {
 
       <View style={styles.illustrationWrap}>
         <LinearGradient
-          colors={["rgba(124,124,248,0.35)", "rgba(99,102,241,0.08)"]}
+          colors={[`${colors.primaryLight}59`, `${colors.primary}14`]}
           end={{ x: 1, y: 1 }}
           start={{ x: 0, y: 0 }}
           style={styles.illustrationGlow}

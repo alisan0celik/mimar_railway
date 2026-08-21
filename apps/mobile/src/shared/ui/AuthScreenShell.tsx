@@ -11,10 +11,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { componentTokens, radius, spacing } from "../theme";
-
-const AUTH_GRADIENT = ["#050A18", "#0B1120"] as const;
-const AUTH_CARD_BG = "rgba(26,35,50,0.72)";
-const AUTH_CARD_BORDER = "rgba(148,163,184,0.12)";
+import { useThemedStyles, type AppColors } from "../theme";
+import { useThemeColors } from "../theme/ThemeProvider";
 
 type AuthScreenShellProps = {
   children: ReactNode;
@@ -29,6 +27,9 @@ export function AuthScreenShell({
   contentContainerStyle,
   footer,
 }: AuthScreenShellProps) {
+  const styles = useThemedStyles(createStyles);
+  const colors = useThemeColors();
+
   const content = (
     <View style={[styles.inner, contentContainerStyle]}>
       {children}
@@ -36,7 +37,10 @@ export function AuthScreenShell({
   );
 
   return (
-    <LinearGradient colors={[...AUTH_GRADIENT]} style={styles.gradient}>
+    <LinearGradient
+      colors={[colors.backgroundDeep, colors.background]}
+      style={styles.gradient}
+    >
       <SafeAreaView style={styles.safe}>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -66,35 +70,39 @@ type AuthFormCardProps = {
 };
 
 export function AuthFormCard({ children, style }: AuthFormCardProps) {
+  const styles = useThemedStyles(createStyles);
   return <View style={[styles.card, style]}>{children}</View>;
 }
 
-const styles = StyleSheet.create({
-  gradient: {
-    flex: 1,
-  },
-  safe: {
-    flex: 1,
-  },
-  flex: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingBottom: spacing.xxl,
-  },
-  inner: {
-    flex: 1,
-    paddingTop: componentTokens.screen.topPadding,
-    paddingHorizontal: componentTokens.screen.horizontalPadding,
-    paddingBottom: componentTokens.screen.bottomPadding,
-  },
-  card: {
-    backgroundColor: AUTH_CARD_BG,
-    borderWidth: 1,
-    borderColor: AUTH_CARD_BORDER,
-    borderRadius: radius.xl,
-    padding: spacing.xl,
-    gap: spacing.md,
-  },
-});
+function createStyles(colors: AppColors) {
+  return StyleSheet.create({
+    gradient: {
+      flex: 1,
+    },
+    safe: {
+      flex: 1,
+    },
+    flex: {
+      flex: 1,
+    },
+    scrollContent: {
+      flexGrow: 1,
+      paddingBottom: spacing.xxl,
+    },
+    inner: {
+      flex: 1,
+      paddingTop: componentTokens.screen.topPadding,
+      paddingHorizontal: componentTokens.screen.horizontalPadding,
+      paddingBottom: componentTokens.screen.bottomPadding,
+    },
+    card: {
+      // Degradenin üstünde hafif saydam dursun (B8 ≈ %72)
+      backgroundColor: `${colors.card}B8`,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radius.xl,
+      padding: spacing.xl,
+      gap: spacing.md,
+    },
+  });
+}

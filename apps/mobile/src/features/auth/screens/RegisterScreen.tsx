@@ -342,13 +342,13 @@ function createStyles(colors: AppColors) {
       gap: spacing.md,
     },
     passwordRequirements: {
-      backgroundColor: "rgba(15,23,42,0.5)",
+      backgroundColor: colors.surfaceMuted,
       padding: spacing.md,
       borderRadius: radius.md,
       marginTop: -spacing.xs,
       gap: spacing.xs,
       borderWidth: 1,
-      borderColor: "rgba(148,163,184,0.12)",
+      borderColor: colors.border,
     },
     requirementItem: {
       flexDirection: "row",
