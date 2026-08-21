@@ -2,8 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -22,14 +20,9 @@ import { useTranslation, useLocaleCode } from "../../../shared/i18n";
 import { radius, spacing, typography } from "../../../shared/theme";
 import { useThemedStyles, type AppColors } from "../../../shared/theme";
 import { useThemeColors } from "../../../shared/theme/ThemeProvider";
-import { useKeyboardVisible } from "../../../shared/hooks";
+import { useKeyboardOverlap, useKeyboardVisible } from "../../../shared/hooks";
 import { DesignBackHeader, Screen } from "../../../shared/ui";
 import { useAuthStore } from "../../../store/authStore";
-
-// Android'de pencere klavye açılınca yeniden boyutlanmadığı için "height"
-// gerekiyor; iOS'ta dış Screen zaten "padding" uyguluyor, burada tekrar
-// uygulanırsa içerik iki kat yukarı kayar.
-const KEYBOARD_BEHAVIOR = Platform.OS === "android" ? ("height" as const) : undefined;
 
 export function TicketDetailScreen({ ticketId }: { ticketId: string }) {
   const styles = useThemedStyles(createStyles);
@@ -38,6 +31,7 @@ export function TicketDetailScreen({ ticketId }: { ticketId: string }) {
   const locale = useLocaleCode();
   const insets = useSafeAreaInsets();
   const keyboardVisible = useKeyboardVisible();
+  const keyboardOverlap = useKeyboardOverlap();
   const composerBottom = keyboardVisible ? spacing.sm : Math.max(insets.bottom, spacing.sm);
   const userId = useAuthStore((s) => s.user?.id);
 
@@ -144,7 +138,7 @@ export function TicketDetailScreen({ ticketId }: { ticketId: string }) {
         </View>
       </View>
 
-      <KeyboardAvoidingView behavior={KEYBOARD_BEHAVIOR} style={styles.flex}>
+      <View style={[styles.flex, { paddingBottom: keyboardOverlap }]}>
         <FlatList
           contentContainerStyle={styles.messagesContent}
           data={ticket.messages}
@@ -190,7 +184,7 @@ export function TicketDetailScreen({ ticketId }: { ticketId: string }) {
             </Pressable>
           </View>
         )}
-      </KeyboardAvoidingView>
+      </View>
     </Screen>
   );
 }

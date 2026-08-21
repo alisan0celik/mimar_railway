@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Keyboard, Platform } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 /**
  * Klavyenin açık olup olmadığını döndürür.
@@ -28,4 +29,40 @@ export function useKeyboardVisible(): boolean {
   }, []);
 
   return visible;
+}
+
+/**
+ * Klavyenin pencerenin altını kapattığı yüksekliği (dp) döndürür; kapalıyken 0.
+ *
+ * Yalnızca Android için hesaplanır. React Native orada klavye yüksekliğini
+ * `imeInsets.bottom - barInsets.bottom` olarak bildiriyor (ReactRootView),
+ * yani gezinme çubuğu yüksekliği kadar eksik. Edge-to-edge açık olduğu için
+ * pencere ekranın tamamını kaplıyor ve gerçek örtüşme bu ikisinin toplamı;
+ * eksik bırakılırsa yazma kutusu klavyenin altında kalıyor.
+ *
+ * iOS'ta 0 döner: orada örtüşmeyi `Screen` bileşenindeki
+ * `KeyboardAvoidingView behavior="padding"` zaten doğru uyguluyor.
+ */
+export function useKeyboardOverlap(): number {
+  const insets = useSafeAreaInsets();
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  useEffect(() => {
+    if (Platform.OS !== "android") return;
+
+    const showSub = Keyboard.addListener("keyboardDidShow", (event) => {
+      setKeyboardHeight(event.endCoordinates.height);
+    });
+    const hideSub = Keyboard.addListener("keyboardDidHide", () => {
+      setKeyboardHeight(0);
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
+  if (keyboardHeight <= 0) return 0;
+  return keyboardHeight + insets.bottom;
 }

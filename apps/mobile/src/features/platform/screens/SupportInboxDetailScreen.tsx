@@ -3,8 +3,6 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -19,15 +17,10 @@ import { useTranslation, useLocaleCode } from "../../../shared/i18n";
 import { radius, spacing, typography } from "../../../shared/theme";
 import { useThemedStyles, type AppColors } from "../../../shared/theme";
 import { useThemeColors } from "../../../shared/theme/ThemeProvider";
-import { useKeyboardVisible } from "../../../shared/hooks";
+import { useKeyboardOverlap, useKeyboardVisible } from "../../../shared/hooks";
 import { DesignBackHeader, Screen } from "../../../shared/ui";
 
 const STATUS_OPTIONS = ["open", "in_progress", "waiting_user", "resolved", "closed"] as const;
-
-// Android'de pencere klavye açılınca yeniden boyutlanmadığı için "height"
-// gerekiyor; iOS'ta dış Screen zaten "padding" uyguluyor, burada tekrar
-// uygulanırsa içerik iki kat yukarı kayar.
-const KEYBOARD_BEHAVIOR = Platform.OS === "android" ? ("height" as const) : undefined;
 
 export function SupportInboxDetailScreen({ ticketId }: { ticketId: string }) {
   const styles = useThemedStyles(createStyles);
@@ -36,6 +29,7 @@ export function SupportInboxDetailScreen({ ticketId }: { ticketId: string }) {
   const locale = useLocaleCode();
   const insets = useSafeAreaInsets();
   const keyboardVisible = useKeyboardVisible();
+  const keyboardOverlap = useKeyboardOverlap();
   const composerBottom = keyboardVisible ? spacing.sm : Math.max(insets.bottom, spacing.sm);
 
   const [ticket, setTicket] = useState<SupportTicketDetailDTO | null>(null);
@@ -162,7 +156,7 @@ export function SupportInboxDetailScreen({ ticketId }: { ticketId: string }) {
         })}
       </View>
 
-      <KeyboardAvoidingView behavior={KEYBOARD_BEHAVIOR} style={styles.flex}>
+      <View style={[styles.flex, { paddingBottom: keyboardOverlap }]}>
         <FlatList
           contentContainerStyle={styles.messages}
           data={ticket.messages}
@@ -208,7 +202,7 @@ export function SupportInboxDetailScreen({ ticketId }: { ticketId: string }) {
             </Text>
           </Pressable>
         </View>
-      </KeyboardAvoidingView>
+      </View>
     </Screen>
   );
 }
