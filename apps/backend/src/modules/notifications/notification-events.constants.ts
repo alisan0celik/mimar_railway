@@ -40,7 +40,9 @@ export const CALENDAR_EVENT_ACTION = {
 } as const;
 
 export const SUPPORT_TICKET_ACTION = {
+  CREATED: "created",
   REPLIED: "replied",
+  USER_REPLIED: "user_replied",
   STATUS_CHANGED: "status_changed",
 } as const;
 
@@ -75,6 +77,11 @@ export function calendarRoute(): string {
 
 export function supportTicketRoute(ticketId: string): string {
   return `/(main)/settings/support-tickets/${ticketId}`;
+}
+
+/** Platform yöneticisinin gelen kutusundaki talep detayı. */
+export function platformSupportTicketRoute(ticketId: string): string {
+  return `/(main)/platform/support/${ticketId}`;
 }
 
 export const FCM_CHANNEL_DEFAULT = "default";

@@ -11,7 +11,7 @@ import {
   View,
 } from "react-native";
 
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import type { Edge } from "react-native-safe-area-context";
 
 import {
   supportApi,
@@ -25,12 +25,15 @@ import { useThemeColors } from "../../../shared/theme/ThemeProvider";
 import { DesignBackHeader, Screen } from "../../../shared/ui";
 import { useAuthStore } from "../../../store/authStore";
 
+// Yanıt kutusu ekranın en altında duruyor; alt kenar payı olmadan cihazın
+// gezinme çubuğu "Gönder" düğmesinin üstüne biniyor.
+const SCREEN_EDGES: Edge[] = ["top", "bottom"];
+
 export function TicketDetailScreen({ ticketId }: { ticketId: string }) {
   const styles = useThemedStyles(createStyles);
   const colors = useThemeColors();
   const { t } = useTranslation();
   const locale = useLocaleCode();
-  const insets = useSafeAreaInsets();
   const userId = useAuthStore((s) => s.user?.id);
 
   const [ticket, setTicket] = useState<SupportTicketDetailDTO | null>(null);
@@ -104,7 +107,7 @@ export function TicketDetailScreen({ ticketId }: { ticketId: string }) {
 
   if (loading) {
     return (
-      <Screen contentContainerStyle={styles.content}>
+      <Screen contentContainerStyle={styles.content} edges={SCREEN_EDGES}>
         <DesignBackHeader title={t("support.ticketDetail")} />
         <ActivityIndicator color={colors.primary} size="large" style={styles.loader} />
       </Screen>
@@ -113,7 +116,7 @@ export function TicketDetailScreen({ ticketId }: { ticketId: string }) {
 
   if (error || !ticket) {
     return (
-      <Screen contentContainerStyle={styles.content}>
+      <Screen contentContainerStyle={styles.content} edges={SCREEN_EDGES}>
         <DesignBackHeader title={t("support.ticketDetail")} />
         <Text style={styles.errorText}>{t("support.loadTicketFailed")}</Text>
       </Screen>
@@ -121,7 +124,7 @@ export function TicketDetailScreen({ ticketId }: { ticketId: string }) {
   }
 
   return (
-    <Screen contentContainerStyle={styles.content}>
+    <Screen contentContainerStyle={styles.content} edges={SCREEN_EDGES}>
       <DesignBackHeader title={t("support.ticketDetail")} />
 
       <View style={styles.headerCard}>
@@ -165,7 +168,7 @@ export function TicketDetailScreen({ ticketId }: { ticketId: string }) {
         {isClosed ? (
           <Text style={styles.closedHint}>{t("support.ticketClosedHint")}</Text>
         ) : (
-          <View style={[styles.composer, { paddingBottom: Math.max(insets.bottom, spacing.sm) }]}>
+          <View style={styles.composer}>
             <TextInput
               multiline
               onChangeText={setMessage}

@@ -1,19 +1,24 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
 } from "@nestjs/common";
 import { PrismaService } from "../../common/prisma.service";
+import { getPlatformAdminEmails } from "../../common/subscription.util";
 import { NotificationsService } from "../notifications/notifications.service";
 import {
   NOTIFICATION_TARGET,
   SUPPORT_TICKET_ACTION,
+  platformSupportTicketRoute,
   supportTicketRoute,
 } from "../notifications/notification-events.constants";
 import {
   resolveNotificationLocale,
+  supportTicketCreatedForAdminNotification,
   supportTicketRepliedNotification,
   supportTicketStatusNotification,
+  supportTicketUserRepliedForAdminNotification,
 } from "../notifications/notification-templates";
 import { CLOSED_SUPPORT_STATUSES } from "./support.constants";
 
@@ -30,10 +35,87 @@ const ticketInclude = {
 
 @Injectable()
 export class SupportService {
+  private readonly logger = new Logger(SupportService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
   ) {}
+
+  /**
+   * Gelen talepleri platform yöneticilerine bildirir.
+   *
+   * Yöneticiler PLATFORM_ADMIN_EMAILS ile tanımlı; e-postalar veritabanında
+   * farklı büyük/küçük harfle kayıtlı olabildiği için karşılaştırma
+   * duyarsız yapılır. Talebi açan kişi yöneticinin kendisiyse kendine
+   * bildirim gitmez. Bildirim hatası talebin oluşmasını engellemez.
+   */
+  private async notifyPlatformAdmins(input: {
+    ticketId: string;
+    subject: string;
+    authorId: string;
+    authorName: string;
+    companyName?: string | null;
+    kind: "created" | "user_replied";
+  }) {
+    try {
+      const emails = getPlatformAdminEmails();
+      if (emails.length === 0) return;
+
+      const admins = await this.prisma.user.findMany({
+        where: {
+          OR: emails.map((email) => ({
+            email: { equals: email, mode: "insensitive" as const },
+          })),
+        },
+        select: { id: true },
+      });
+
+      const recipients = admins
+        .map((admin) => admin.id)
+        .filter((id) => id !== input.authorId);
+      if (recipients.length === 0) return;
+
+      const locale = resolveNotificationLocale(null);
+      const copy =
+        input.kind === "created"
+          ? supportTicketCreatedForAdminNotification(locale, {
+              subject: input.subject,
+              userName: input.authorName,
+              companyName: input.companyName,
+            })
+          : supportTicketUserRepliedForAdminNotification(locale, {
+              subject: input.subject,
+              userName: input.authorName,
+            });
+
+      const action =
+        input.kind === "created"
+          ? SUPPORT_TICKET_ACTION.CREATED
+          : SUPPORT_TICKET_ACTION.USER_REPLIED;
+
+      await Promise.all(
+        recipients.map((userId) =>
+          this.notificationsService.createForUser({
+            userId,
+            title: copy.title,
+            message: copy.message,
+            type: "info",
+            targetType: NOTIFICATION_TARGET.SUPPORT_TICKET,
+            targetId: input.ticketId,
+            action,
+            route: platformSupportTicketRoute(input.ticketId),
+            metadata: { ticketId: input.ticketId },
+          }),
+        ),
+      );
+    } catch (error) {
+      this.logger.error(
+        `Platform yöneticisi bildirimi gönderilemedi (ticket ${input.ticketId})`,
+        error instanceof Error ? error.stack : String(error),
+      );
+    }
+  }
 
   async getTickets(userId: string) {
     const tickets = await this.prisma.supportTicket.findMany({
@@ -84,6 +166,15 @@ export class SupportService {
       include: ticketInclude,
     });
 
+    await this.notifyPlatformAdmins({
+      ticketId: ticket.id,
+      subject: ticket.subject,
+      authorId: userId,
+      authorName: ticket.user?.fullName ?? "Kullanıcı",
+      companyName: ticket.company?.name,
+      kind: "created",
+    });
+
     return this.mapTicketDetail(ticket);
   }
 
@@ -116,6 +207,15 @@ export class SupportService {
         },
       },
       include: ticketInclude,
+    });
+
+    await this.notifyPlatformAdmins({
+      ticketId: updated.id,
+      subject: updated.subject,
+      authorId: userId,
+      authorName: updated.user?.fullName ?? "Kullanıcı",
+      companyName: updated.company?.name,
+      kind: "user_replied",
     });
 
     return this.mapTicketDetail(updated);

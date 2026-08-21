@@ -17,6 +17,9 @@ describe("SupportService", () => {
       update: jest.fn(),
       count: jest.fn(),
     },
+    user: {
+      findMany: jest.fn(),
+    },
   };
 
   const notificationsService = {
@@ -28,8 +31,20 @@ describe("SupportService", () => {
     notificationsService as unknown as NotificationsService,
   );
 
+  const originalAdminEmails = process.env.PLATFORM_ADMIN_EMAILS;
+
   beforeEach(() => {
     jest.clearAllMocks();
+    process.env.PLATFORM_ADMIN_EMAILS = "admin@planova.com";
+    prisma.user.findMany.mockResolvedValue([{ id: "admin-1" }]);
+  });
+
+  afterAll(() => {
+    if (originalAdminEmails === undefined) {
+      delete process.env.PLATFORM_ADMIN_EMAILS;
+    } else {
+      process.env.PLATFORM_ADMIN_EMAILS = originalAdminEmails;
+    }
   });
 
   it("creates a ticket with an initial message", async () => {
@@ -75,6 +90,43 @@ describe("SupportService", () => {
       }),
     );
     expect(result.messages).toHaveLength(1);
+    expect(notificationsService.createForUser).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: "admin-1",
+        targetType: NOTIFICATION_TARGET.SUPPORT_TICKET,
+        targetId: "ticket-1",
+        action: SUPPORT_TICKET_ACTION.CREATED,
+        route: "/(main)/platform/support/ticket-1",
+      }),
+    );
+  });
+
+  it("does not notify the platform admin about their own ticket", async () => {
+    const now = new Date("2026-06-13T10:00:00.000Z");
+    prisma.user.findMany.mockResolvedValue([{ id: "admin-1" }]);
+    prisma.supportTicket.create.mockResolvedValue({
+      id: "ticket-2",
+      userId: "admin-1",
+      companyId: "company-1",
+      subject: "Internal note",
+      category: "technical",
+      priority: "normal",
+      status: "open",
+      lastMessageAt: now,
+      createdAt: now,
+      updatedAt: now,
+      user: { id: "admin-1", fullName: "Admin", email: "admin@planova.com" },
+      company: { id: "company-1", name: "Office" },
+      messages: [],
+    });
+
+    await service.createTicket("admin-1", "company-1", {
+      subject: "Internal note",
+      category: "technical",
+      message: "Check this",
+    });
+
+    expect(notificationsService.createForUser).not.toHaveBeenCalled();
   });
 
   it("rejects messages on closed tickets", async () => {

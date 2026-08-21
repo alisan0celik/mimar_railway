@@ -154,6 +154,44 @@ export function supportTicketRepliedNotification(
   };
 }
 
+/** Platform yöneticisine: yeni talep açıldı. */
+export function supportTicketCreatedForAdminNotification(
+  locale: NotificationLocale,
+  params: { subject: string; userName: string; companyName?: string | null },
+) {
+  const from = params.companyName
+    ? `${params.userName} · ${params.companyName}`
+    : params.userName;
+
+  if (locale === "en") {
+    return {
+      title: "New support request",
+      message: `${from}: "${params.subject}"`,
+    };
+  }
+  return {
+    title: "Yeni destek talebi",
+    message: `${from}: "${params.subject}"`,
+  };
+}
+
+/** Platform yöneticisine: kullanıcı mevcut talebe yanıt yazdı. */
+export function supportTicketUserRepliedForAdminNotification(
+  locale: NotificationLocale,
+  params: { subject: string; userName: string },
+) {
+  if (locale === "en") {
+    return {
+      title: "New reply on a request",
+      message: `${params.userName} replied to "${params.subject}".`,
+    };
+  }
+  return {
+    title: "Talebe yeni yanıt",
+    message: `${params.userName}, "${params.subject}" talebine yanıt yazdı.`,
+  };
+}
+
 export function supportTicketStatusNotification(
   locale: NotificationLocale,
   params: { subject: string; status: string },
