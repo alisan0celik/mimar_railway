@@ -81,6 +81,7 @@ export const tr = {
     member: "Üye",
   },
   dashboard: {
+    motto: "Her işin sırrı inanç ve çalışmaktır.",
     greeting: "Merhaba, {name} 👋",
     activeProjects: "Aktif Proje",
     pendingApprovals: "Bekleyen Onay",
@@ -214,6 +215,7 @@ export const tr = {
       loadFailed: "Ofis çalışanları yüklenemedi",
     },
     errors: {
+      offlineEmpty: "Çevrimdışı — önbellekte proje bulunamadı",
       loadFailed: "Projeler yüklenemedi",
       createFailed: "Proje oluşturulamadı.",
       updateFailed: "Proje güncellenemedi",
@@ -327,7 +329,7 @@ export const tr = {
     rejecting: "Reddediliyor...",
     fields: {
       company: "Şirket",
-      title: "Unvan",
+      message: "Mesaj",
       status: "Durum",
       applicationDate: "Başvuru Tarihi",
       requestInfo: "Talep Bilgileri",
@@ -557,6 +559,7 @@ export const tr = {
     noAccount: "Hesabınız yok mu?",
     hasAccount: "Zaten hesabınız var mı?",
     errors: {
+      emailTaken: "Bu e-posta adresi zaten kayıtlı",
       invalidEmail: "Lütfen geçerli bir e-posta adresi girin.",
       passwordMinLength: "Şifre en az 6 karakter olmalıdır.",
       invalidCredentials: "Geçersiz e-posta veya şifre girdiniz.",

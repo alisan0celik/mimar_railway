@@ -79,7 +79,7 @@ export function RegisterScreen() {
       try {
         const response = await authApi.checkEmail(trimmedEmail);
         if (response.data.exists) {
-          setEmailError("Bu e-posta adresi zaten kayıtlı");
+          setEmailError(t("auth.errors.emailTaken"));
         } else {
           setEmailError(undefined);
         }
@@ -283,7 +283,8 @@ export function RegisterScreen() {
               router.replace(getPostAuthRoute(user));
             } catch (error: any) {
               const responseMsg = error?.response?.data?.message;
-              if (responseMsg === "Bu e-posta adresi zaten kayıtlı") {
+              // Sunucu bu mesajı Türkçe döndürüyor; karşılaştırma sabit metinle yapılır.
+      if (responseMsg === "Bu e-posta adresi zaten kayıtlı") {
                 setEmailError(responseMsg);
               } else {
                 let msg = t("auth.errors.registerFailed");

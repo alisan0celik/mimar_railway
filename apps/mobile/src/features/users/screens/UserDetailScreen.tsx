@@ -139,7 +139,7 @@ export function UserDetailScreen({ userId }: UserDetailScreenProps) {
       <Text style={styles.sectionTitle}>{t("users.fields.requestInfo")}</Text>
       <View style={styles.infoCard}>
         <InfoBlock label={t("users.fields.company")} value={user.companyName || t("common.none")} />
-        <InfoBlock label={t("users.fields.title")} value={user.title || t("common.none")} />
+        <InfoBlock label={t("users.fields.message")} value={user.title || t("common.none")} />
         <InfoBlock label={t("users.fields.status")} value={approvalStatusLabel(user.approvalStatus, t)} />
         <InfoBlock label={t("users.fields.applicationDate")} value={formatDate(user.createdAt)} />
       </View>

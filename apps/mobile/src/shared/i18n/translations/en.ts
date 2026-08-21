@@ -81,6 +81,7 @@ export const en = {
     member: "Member",
   },
   dashboard: {
+    motto: "Belief and hard work are the secret to everything.",
     greeting: "Hello, {name} 👋",
     activeProjects: "Active Projects",
     pendingApprovals: "Pending Approvals",
@@ -214,6 +215,7 @@ export const en = {
       loadFailed: "Could not load office employees",
     },
     errors: {
+      offlineEmpty: "Offline — no cached projects",
       loadFailed: "Could not load projects",
       createFailed: "Could not create project.",
       updateFailed: "Could not update project",
@@ -327,7 +329,7 @@ export const en = {
     rejecting: "Rejecting...",
     fields: {
       company: "Company",
-      title: "Title",
+      message: "Message",
       status: "Status",
       applicationDate: "Application Date",
       requestInfo: "Request Details",
@@ -557,6 +559,7 @@ export const en = {
     noAccount: "Don't have an account?",
     hasAccount: "Already have an account?",
     errors: {
+      emailTaken: "This email address is already registered",
       invalidEmail: "Please enter a valid email address.",
       passwordMinLength: "Password must be at least 6 characters.",
       invalidCredentials: "Invalid email or password.",

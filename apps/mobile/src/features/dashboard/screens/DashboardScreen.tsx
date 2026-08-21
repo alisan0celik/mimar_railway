@@ -156,9 +156,7 @@ export function DashboardScreen() {
             );
           })}
         </View>
-        <Text style={styles.quickMotto}>
-          Her işin sırrı inanç ve çalışmaktır.
-        </Text>
+        <Text style={styles.quickMotto}>{t("dashboard.motto")}</Text>
       </Screen>
     </View>
   );

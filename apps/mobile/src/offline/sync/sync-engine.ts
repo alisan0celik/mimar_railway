@@ -1,4 +1,5 @@
 import { syncApi } from "../../services/api/sync.api";
+import { tKey } from "../../shared/i18n";
 import { projectApi, type ProjectMessageDTO, type ProjectNoteDTO, type ProjectTaskDTO } from "../../services/api/project.api";
 import { useAuthStore } from "../../store/authStore";
 import { useOfflineStore } from "../../store/offlineStore";
@@ -177,11 +178,11 @@ export async function fetchProjectsWithCache(): Promise<void> {
       useProjectStore.getState().setProjects(projects);
     } catch {
       if (cached.length === 0) {
-        throw new Error("Projeler yüklenemedi");
+        throw new Error(tKey("projects.errors.loadFailed"));
       }
     }
   } else if (cached.length === 0) {
-    throw new Error("Çevrimdışı — önbellekte proje bulunamadı");
+    throw new Error(tKey("projects.errors.offlineEmpty"));
   }
 }
 
