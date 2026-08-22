@@ -55,9 +55,9 @@ describe("ProgressService", () => {
   );
 
   const sections = [
-    { id: "s1", name: "Mimari", amount: 1_500_000, progress: 60 },
-    { id: "s2", name: "Statik", amount: 500_000, progress: 100 },
-    { id: "s3", name: "Mekanik", amount: 1_000_000, progress: 0 },
+    { id: "s1", name: "Mimari", amount: 1_500_000, costAmount: 1_000_000, progress: 60 },
+    { id: "s2", name: "Statik", amount: 500_000, costAmount: 300_000, progress: 100 },
+    { id: "s3", name: "Mekanik", amount: 1_000_000, costAmount: 700_000, progress: 0 },
   ];
 
   beforeEach(() => {
@@ -115,14 +115,16 @@ describe("ProgressService", () => {
     expect(payment.amount).toBe(300_000);
   });
 
-  it("only counts the item's own earlier payments", async () => {
+  it("only counts the item's own earlier payments in the same direction", async () => {
     prisma.section.findFirst.mockResolvedValue(sections[0]);
     prisma.progressPayment.findMany.mockResolvedValue([]);
 
     await service.createPayment("c1", "p1", { sectionId: "s1" }, "u1");
 
     expect(prisma.progressPayment.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { projectId: "p1", sectionId: "s1" } }),
+      expect.objectContaining({
+        where: { projectId: "p1", sectionId: "s1", direction: "incoming" },
+      }),
     );
   });
 
@@ -357,5 +359,81 @@ describe("ProgressService", () => {
     await service.applyFavourites("c1", "p1", "u1");
 
     expect(prisma.section.createMany).not.toHaveBeenCalled();
+  });
+
+  it("bills the subcontractor from the item's cost, not its sale price", async () => {
+    prisma.section.findFirst.mockResolvedValue(sections[0]);
+    prisma.progressPayment.findMany.mockResolvedValue([]);
+
+    const payment: any = await service.createPayment(
+      "c1",
+      "p1",
+      { sectionId: "s1", direction: "outgoing" },
+      "u1",
+    );
+
+    // Mimari maliyeti 1.000.000 x %60
+    expect(payment.amount).toBe(600_000);
+    expect(payment.direction).toBe("outgoing");
+    expect(payment.number).toBe(1);
+  });
+
+  it("numbers each direction separately on the same item", async () => {
+    prisma.section.findFirst.mockResolvedValue(sections[0]);
+    // Taşeron tarafında yalnızca outgoing kayıtlar sorgulanır
+    prisma.progressPayment.findMany.mockResolvedValue([
+      { amount: 200_000, status: "paid", number: 1 },
+    ]);
+
+    const payment: any = await service.createPayment(
+      "c1",
+      "p1",
+      { sectionId: "s1", direction: "outgoing" },
+      "u1",
+    );
+
+    expect(payment.number).toBe(2);
+    expect(payment.previousAmount).toBe(200_000);
+    expect(payment.amount).toBe(400_000);
+  });
+
+  it("records an expense when a subcontractor payment is marked paid", async () => {
+    prisma.progressPayment.findFirst.mockResolvedValue({
+      id: "pp1",
+      number: 1,
+      amount: 600_000,
+      status: "draft",
+      direction: "outgoing",
+      financeRecordId: null,
+      projectId: "p1",
+      companyId: "c1",
+      createdById: "u1",
+      issueDate: new Date("2026-08-23T00:00:00.000Z"),
+      section: { name: "Mimari" },
+    });
+
+    await service.updatePayment("c1", "p1", "pp1", { status: "paid" });
+
+    expect(prisma.financeRecord.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          type: "expense",
+          amount: 600_000,
+          description: "Mimari 1 No'lu Taşeron Hakedişi",
+        }),
+      }),
+    );
+  });
+
+  it("reports the margin between what is earned and what it costs", async () => {
+    prisma.progressPayment.findMany.mockResolvedValue([]);
+
+    const summary = await service.getSummary("c1", "p1");
+
+    // Hak edilen 1.400.000, doğmuş maliyet 900.000
+    expect(summary.earnedAmount).toBe(1_400_000);
+    expect(summary.earnedCost).toBe(900_000);
+    expect(summary.marginAmount).toBe(500_000);
+    expect(summary.costTotal).toBe(2_000_000);
   });
 });

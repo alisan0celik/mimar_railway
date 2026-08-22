@@ -8,8 +8,10 @@ export type ProjectSectionDTO = {
   content: string | null;
   updatedBy: string | null;
   projectId: string;
-  /** Sözleşme bedelindeki payı. Finans yetkisi yoksa sunucu bu alanı göndermez. */
+  /** İşverene satış bedeli. Finans yetkisi yoksa sunucu bu alanı göndermez. */
   amount?: number;
+  /** Taşerona maliyeti. Finans yetkisi yoksa gönderilmez. */
+  costAmount?: number;
   /** Tamamlanma yüzdesi (0-100). */
   progress: number;
   createdAt: string;
@@ -24,6 +26,9 @@ export type CompanyWorkItemDTO = {
 
 export type ProgressPaymentStatus = "draft" | "paid" | "cancelled";
 
+/** "incoming" işverenden alınan, "outgoing" taşerona ödenen hakediş. */
+export type ProgressPaymentDirection = "incoming" | "outgoing";
+
 export type ProgressPaymentDTO = {
   id: string;
   number: number;
@@ -33,6 +38,7 @@ export type ProgressPaymentDTO = {
   amount: number;
   progressPercent: number;
   status: ProgressPaymentStatus;
+  direction: ProgressPaymentDirection;
   note: string | null;
   projectId: string;
   sectionId: string | null;
@@ -49,6 +55,11 @@ export type ProgressSummaryDTO = {
   billableAmount: number;
   collectedAmount: number;
   outstandingAmount: number;
+  costTotal: number;
+  earnedCost: number;
+  costBilledAmount: number;
+  costBillableAmount: number;
+  marginAmount: number;
   itemCount: number;
 };
 
@@ -309,7 +320,7 @@ export const projectApi = {
   },
   async createSection(
     projectId: string,
-    payload: { name: string; amount?: number; progress?: number },
+    payload: { name: string; amount?: number; costAmount?: number; progress?: number },
   ) {
     const { data } = await apiClient.post<ProjectSectionDTO>(
       `/projects/${projectId}/sections`,
@@ -320,7 +331,13 @@ export const projectApi = {
   async updateSection(
     projectId: string,
     sectionId: string,
-    payload: { name?: string; amount?: number; progress?: number; status?: string },
+    payload: {
+      name?: string;
+      amount?: number;
+      costAmount?: number;
+      progress?: number;
+      status?: string;
+    },
   ) {
     const { data } = await apiClient.patch<ProjectSectionDTO>(
       `/projects/${projectId}/sections/${sectionId}`,
@@ -364,7 +381,10 @@ export const projectApi = {
     );
     return data;
   },
-  async createProgressPayment(projectId: string, payload: { sectionId: string; note?: string }) {
+  async createProgressPayment(
+    projectId: string,
+    payload: { sectionId: string; direction?: ProgressPaymentDirection; note?: string },
+  ) {
     const { data } = await apiClient.post<ProgressPaymentDTO>(
       `/projects/${projectId}/progress-payments`,
       payload,

@@ -48,7 +48,7 @@ export class ProgressController {
   async listSections(@CurrentUser() user: JwtPayload, @Param("id") id: string) {
     const sections = await this.progressService.listSections(this.companyId(user), id);
     if (await this.canSeeAmounts(user)) return sections;
-    return sections.map(({ amount: _amount, ...rest }) => rest);
+    return sections.map(({ amount: _amount, costAmount: _cost, ...rest }) => rest);
   }
 
   @Post(":id/sections")

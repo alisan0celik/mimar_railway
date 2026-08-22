@@ -9,13 +9,21 @@
  */
 
 export type ProgressItem = {
+  /** İşverene satış bedeli. */
   amount: number;
+  /** Taşerona maliyeti. Girilmemişse 0 kabul edilir. */
+  costAmount?: number;
   progress: number;
 };
+
+/** Hakediş yönü: işverenden alınan / taşerona ödenen. */
+export const PAYMENT_DIRECTIONS = ["incoming", "outgoing"] as const;
+export type PaymentDirection = (typeof PAYMENT_DIRECTIONS)[number];
 
 export type ProgressPaymentLike = {
   amount: number;
   status: string;
+  direction?: string;
 };
 
 /** İptal edilmemiş, tutarı sayılan hakediş durumları. */
@@ -46,6 +54,19 @@ export function calculateEarnedAmount(items: ProgressItem[]): number {
   return roundCurrency(total);
 }
 
+/** İlerlemeye göre taşerona doğmuş maliyet. */
+export function calculateEarnedCost(items: ProgressItem[]): number {
+  const total = items.reduce(
+    (sum, item) => sum + toFiniteNumber(item.costAmount) * (clampProgress(item.progress) / 100),
+    0,
+  );
+  return roundCurrency(total);
+}
+
+export function calculateCostTotal(items: ProgressItem[]): number {
+  return roundCurrency(items.reduce((sum, item) => sum + toFiniteNumber(item.costAmount), 0));
+}
+
 export function calculateContractTotal(items: ProgressItem[]): number {
   return roundCurrency(items.reduce((sum, item) => sum + toFiniteNumber(item.amount), 0));
 }
@@ -71,10 +92,23 @@ export function calculateOverallProgress(items: ProgressItem[]): number {
   return Math.round((earned / contractTotal) * 10000) / 100;
 }
 
-export function calculateBilledAmount(payments: ProgressPaymentLike[]): number {
+/**
+ * Belirli yöndeki, iptal edilmemiş hakedişlerin toplamı.
+ *
+ * Yön verilmezse "incoming" varsayılır: yön alanı eklenmeden önce düzenlenmiş
+ * kayıtlarda bu alan yok ve hepsi işverenden alınan hakedişti.
+ */
+export function calculateBilledAmount(
+  payments: ProgressPaymentLike[],
+  direction: PaymentDirection = "incoming",
+): number {
   const total = payments
-    .filter((payment) =>
-      BILLABLE_PAYMENT_STATUSES.includes(payment.status as (typeof BILLABLE_PAYMENT_STATUSES)[number]),
+    .filter(
+      (payment) =>
+        (payment.direction ?? "incoming") === direction &&
+        BILLABLE_PAYMENT_STATUSES.includes(
+          payment.status as (typeof BILLABLE_PAYMENT_STATUSES)[number],
+        ),
     )
     .reduce((sum, payment) => sum + toFiniteNumber(payment.amount), 0);
   return roundCurrency(total);
@@ -90,6 +124,16 @@ export type ProgressSummary = {
   collectedAmount: number;
   /** Düzenlenmiş hakedişlerden henüz tahsil edilmemiş tutar. */
   outstandingAmount: number;
+  /** Kalemlerin taşerona toplam maliyeti. */
+  costTotal: number;
+  /** İlerlemeye göre taşerona doğmuş maliyet. */
+  earnedCost: number;
+  /** Taşerona düzenlenmiş hakediş toplamı. */
+  costBilledAmount: number;
+  /** Doğmuş ama taşeron hakedişine bağlanmamış maliyet. */
+  costBillableAmount: number;
+  /** Bu ana kadarki kâr: hak edilen − doğmuş maliyet. */
+  marginAmount: number;
   itemCount: number;
 };
 
@@ -100,8 +144,12 @@ export function calculateProgressSummary(input: {
 }): ProgressSummary {
   const contractTotal = calculateContractTotal(input.items);
   const earnedAmount = calculateEarnedAmount(input.items);
-  const billedAmount = calculateBilledAmount(input.payments);
+  const billedAmount = calculateBilledAmount(input.payments, "incoming");
   const collectedAmount = roundCurrency(input.collectedAmount);
+
+  const costTotal = calculateCostTotal(input.items);
+  const earnedCost = calculateEarnedCost(input.items);
+  const costBilledAmount = calculateBilledAmount(input.payments, "outgoing");
 
   return {
     contractTotal,
@@ -112,6 +160,12 @@ export function calculateProgressSummary(input: {
     billableAmount: Math.max(roundCurrency(earnedAmount - billedAmount), 0),
     collectedAmount,
     outstandingAmount: Math.max(roundCurrency(billedAmount - collectedAmount), 0),
+    costTotal,
+    earnedCost,
+    costBilledAmount,
+    costBillableAmount: Math.max(roundCurrency(earnedCost - costBilledAmount), 0),
+    // Kâr negatif olabilir; zararı gizlemek yanlış olur.
+    marginAmount: roundCurrency(earnedAmount - earnedCost),
     itemCount: input.items.length,
   };
 }

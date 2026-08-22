@@ -756,7 +756,13 @@ export const en = {
     addItem: "Add Item",
     itemNamePlaceholder: "Item name (e.g. Structural Works)",
     amountPlaceholder: "Contract value",
-    amountLabel: "Contract value",
+    amountLabel: "Sale value",
+    costLabel: "Subcontractor cost",
+    itemCostMeta: "Cost {cost} · Margin {margin}",
+    earnedCost: "Incurred Cost",
+    margin: "Margin",
+    newCostPayment: "Subcontractor Payment",
+    newCostPaymentConfirm: "The subcontractor payment for {item} will be {amount}. Issue it?",
     progressLabel: "Progress (%)",
     itemNameLabel: "Item name",
     progressPlaceholder: "Progress %",
@@ -883,7 +889,7 @@ export const en = {
         },
         progress: {
           title: "Work Items and Billing",
-          steps: "Open the Work Items and Billing link at the top of the project detail.|The first project starts empty; split the contract into your own work items and give each one its value.|Star the ones you use often; the list is saved for your company and later projects open with them.|Update each item's progress as the work advances; the earned amount is calculated for you.|Issue Payment creates a new progress payment from the earned total minus what earlier payments already billed.|When a payment is collected, set it to Paid; a collection is recorded in finance automatically.|Anyone with project rights can update progress, but only finance rights reveal the amounts."
+          steps: "Open the Work Items and Billing link at the top of the project detail.|The first project starts empty; split the contract into your own work items and give each one its value.|Star the ones you use often; the list is saved for your company and later projects open with them.|Update each item's progress as the work advances; the earned amount is calculated for you.|Issue Payment creates a new progress payment from the earned total minus what earlier payments already billed.|Enter the subcontractor cost too and you can issue subcontractor payments and see the margin per item.|When a payment is settled, set it to Paid; employer payments are recorded as collections and subcontractor payments as expenses.|Anyone with project rights can update progress, but only finance rights reveal the amounts."
         },
         finance: {
           title: "Finance",

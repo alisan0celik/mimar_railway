@@ -13,6 +13,7 @@ import {
 import {
   projectApi,
   type CompanyWorkItemDTO,
+  type ProgressPaymentDirection,
   type ProgressPaymentDTO,
   type ProgressPaymentStatus,
   type ProgressSummaryDTO,
@@ -61,6 +62,7 @@ export function ProgressPaymentScreen({ projectId }: { projectId: string }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draftAmount, setDraftAmount] = useState("");
   const [draftProgress, setDraftProgress] = useState("");
+  const [draftCost, setDraftCost] = useState("");
   // Yerli Alert kutuları uygulamanın dışından gelmiş gibi duruyordu;
   // onaylar uygulamanın kendi diyaloguyla soruluyor.
   const [confirm, setConfirm] = useState<{
@@ -177,6 +179,7 @@ export function ProgressPaymentScreen({ projectId }: { projectId: string }) {
   const startEditing = (section: ProjectSectionDTO) => {
     setEditingId(section.id);
     setDraftAmount(section.amount != null ? String(section.amount) : "");
+    setDraftCost(section.costAmount != null ? String(section.costAmount) : "");
     setDraftProgress(String(section.progress ?? 0));
   };
 
@@ -190,7 +193,9 @@ export function ProgressPaymentScreen({ projectId }: { projectId: string }) {
     try {
       await projectApi.updateSection(projectId, sectionId, {
         progress,
-        ...(canSeeFinance ? { amount: parseAmount(draftAmount) } : {}),
+        ...(canSeeFinance
+          ? { amount: parseAmount(draftAmount), costAmount: parseAmount(draftCost) }
+          : {}),
       });
       setEditingId(null);
       await load();
@@ -214,28 +219,42 @@ export function ProgressPaymentScreen({ projectId }: { projectId: string }) {
     });
   };
 
-  /** Kalemin hak edilmiş ama henüz hakedişe bağlanmamış tutarı. */
+  /**
+   * Kalemin ilgili yönde hak edilmiş ama henüz hakedişe bağlanmamış tutarı.
+   * İşveren tarafı satış bedelinden, taşeron tarafı maliyetten hesaplanır.
+   */
   const billableOf = useCallback(
-    (section: ProjectSectionDTO) => {
-      const earned = (section.amount ?? 0) * ((section.progress ?? 0) / 100);
+    (section: ProjectSectionDTO, direction: ProgressPaymentDirection) => {
+      const base = direction === "outgoing" ? (section.costAmount ?? 0) : (section.amount ?? 0);
+      const earned = base * ((section.progress ?? 0) / 100);
       const billed = payments
-        .filter((payment) => payment.sectionId === section.id && payment.status !== "cancelled")
+        .filter(
+          (payment) =>
+            payment.sectionId === section.id &&
+            payment.direction === direction &&
+            payment.status !== "cancelled",
+        )
         .reduce((sum, payment) => sum + payment.amount, 0);
       return Math.max(Math.round((earned - billed) * 100) / 100, 0);
     },
     [payments],
   );
 
-  const handleCreatePayment = (section: ProjectSectionDTO) => {
+  const handleCreatePayment = (
+    section: ProjectSectionDTO,
+    direction: ProgressPaymentDirection,
+  ) => {
     setConfirm({
-      title: t("progress.newPayment"),
-      message: t("progress.newPaymentConfirm", {
-        item: section.name,
-        amount: formatCurrency(billableOf(section)),
-      }),
+      title: direction === "outgoing" ? t("progress.newCostPayment") : t("progress.newPayment"),
+      message: t(
+        direction === "outgoing"
+          ? "progress.newCostPaymentConfirm"
+          : "progress.newPaymentConfirm",
+        { item: section.name, amount: formatCurrency(billableOf(section, direction)) },
+      ),
       confirmLabel: t("progress.issue"),
       onConfirm: async () => {
-        await projectApi.createProgressPayment(projectId, { sectionId: section.id });
+        await projectApi.createProgressPayment(projectId, { sectionId: section.id, direction });
         await load();
       },
     });
@@ -313,6 +332,27 @@ export function ProgressPaymentScreen({ projectId }: { projectId: string }) {
                 {formatCurrency(summary.outstandingAmount)}
               </Text>
             </View>
+            {summary.costTotal > 0 ? (
+              <>
+                <View style={styles.summaryCell}>
+                  <Text style={styles.cellLabel}>{t("progress.earnedCost")}</Text>
+                  <Text style={[styles.cellValue, { color: colors.info }]}>
+                    {formatCurrency(summary.earnedCost)}
+                  </Text>
+                </View>
+                <View style={styles.summaryCell}>
+                  <Text style={styles.cellLabel}>{t("progress.margin")}</Text>
+                  <Text
+                    style={[
+                      styles.cellValue,
+                      { color: summary.marginAmount < 0 ? colors.danger : colors.success },
+                    ]}
+                  >
+                    {formatCurrency(summary.marginAmount)}
+                  </Text>
+                </View>
+              </>
+            ) : null}
           </View>
         </View>
       ) : null}
@@ -378,9 +418,19 @@ export function ProgressPaymentScreen({ projectId }: { projectId: string }) {
               </View>
 
               {canSeeFinance ? (
-                <Text style={styles.itemMeta}>
-                  {`${formatCurrency(earned)} / ${formatCurrency(section.amount ?? 0)}`}
-                </Text>
+                <>
+                  <Text style={styles.itemMeta}>
+                    {`${formatCurrency(earned)} / ${formatCurrency(section.amount ?? 0)}`}
+                  </Text>
+                  {(section.costAmount ?? 0) > 0 ? (
+                    <Text style={styles.itemMeta}>
+                      {t("progress.itemCostMeta", {
+                        cost: formatCurrency(section.costAmount ?? 0),
+                        margin: formatCurrency((section.amount ?? 0) - (section.costAmount ?? 0)),
+                      })}
+                    </Text>
+                  ) : null}
+                </>
               ) : null}
 
               {editing ? (
@@ -396,6 +446,19 @@ export function ProgressPaymentScreen({ projectId }: { projectId: string }) {
                           placeholderTextColor={colors.textMuted}
                           style={styles.input}
                           value={draftAmount}
+                        />
+                      </View>
+                    ) : null}
+                    {canSeeFinance ? (
+                      <View style={styles.editField}>
+                        <Text style={styles.fieldLabel}>{t("progress.costLabel")}</Text>
+                        <TextInput
+                          keyboardType="numeric"
+                          onChangeText={setDraftCost}
+                          placeholder="0"
+                          placeholderTextColor={colors.textMuted}
+                          style={styles.input}
+                          value={draftCost}
                         />
                       </View>
                     ) : null}
@@ -442,10 +505,10 @@ export function ProgressPaymentScreen({ projectId }: { projectId: string }) {
                       </Pressable>
                     </>
                   ) : null}
-                  {canBill && billableOf(section) > 0 ? (
+                  {canBill && billableOf(section, "incoming") > 0 ? (
                     <Pressable
                       disabled={busy}
-                      onPress={() => handleCreatePayment(section)}
+                      onPress={() => handleCreatePayment(section, "incoming")}
                       style={styles.linkBtn}
                     >
                       <MaterialCommunityIcons
@@ -455,6 +518,22 @@ export function ProgressPaymentScreen({ projectId }: { projectId: string }) {
                       />
                       <Text style={[styles.linkText, { color: colors.warning }]}>
                         {t("progress.newPayment")}
+                      </Text>
+                    </Pressable>
+                  ) : null}
+                  {canBill && billableOf(section, "outgoing") > 0 ? (
+                    <Pressable
+                      disabled={busy}
+                      onPress={() => handleCreatePayment(section, "outgoing")}
+                      style={styles.linkBtn}
+                    >
+                      <MaterialCommunityIcons
+                        color={colors.info}
+                        name="account-hard-hat-outline"
+                        size={16}
+                      />
+                      <Text style={[styles.linkText, { color: colors.info }]}>
+                        {t("progress.newCostPayment")}
                       </Text>
                     </Pressable>
                   ) : null}
@@ -504,7 +583,12 @@ export function ProgressPaymentScreen({ projectId }: { projectId: string }) {
             payments.map((payment) => (
               <View key={payment.id} style={styles.paymentCard}>
                 <View style={styles.paymentTop}>
-                  <Text style={styles.paymentNumber}>
+                  <Text
+                    style={[
+                      styles.paymentNumber,
+                      payment.direction === "outgoing" && { color: colors.info },
+                    ]}
+                  >
                     {payment.section
                       ? t("progress.paymentNumberWithItem", {
                           item: payment.section.name,

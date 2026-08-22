@@ -239,8 +239,10 @@ model Section {
   order     Int      @default(0)
   status    String   @default("not-started") // "not-started", "in-progress", "review", "approved"
   content   String?
-  /// Bu imalat kaleminin sözleşme bedelindeki payı (TL).
+  /// Bu imalat kaleminin işverene satış bedeli (TL).
   amount    Float    @default(0)
+  /// Kalemin taşerona maliyeti (TL). İkisi arasındaki fark kalemin kârı.
+  costAmount Float   @default(0)
   /// Kalemin tamamlanma yüzdesi (0-100). Hakediş bu iki alandan hesaplanır.
   progress  Float    @default(0)
   updatedBy String?
@@ -458,7 +460,10 @@ model SyncMutation {
 /// (kümülatif yöntem), böylece dönemler arası fark otomatik doğrular.
 model ProgressPayment {
   id               String   @id @default(cuid())
-  /// Proje içindeki sıra numarası — "3 No'lu Hakediş".
+  /// Yön: "incoming" işverenden alınan, "outgoing" taşerona ödenen hakediş.
+  /// İkisi aynı kalem üzerinde ayrı seriler olarak yürür.
+  direction        String   @default("incoming")
+  /// Kalem ve yön içindeki sıra numarası — "3 No'lu Hakediş".
   number           Int
   issueDate        DateTime @default(now())
   /// Düzenlendiği andaki toplam hak ediş.
@@ -488,7 +493,7 @@ model ProgressPayment {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  @@unique([projectId, sectionId, number])
+  @@unique([projectId, sectionId, direction, number])
   @@index([companyId])
   @@index([projectId])
 }

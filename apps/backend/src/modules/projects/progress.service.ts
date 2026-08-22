@@ -19,6 +19,8 @@ import { UpdateProgressPaymentDto } from "./dto/update-progress-payment.dto";
 import { UpdateSectionDto } from "./dto/update-section.dto";
 import {
   calculateEarnedAmount,
+  calculateEarnedCost,
+  type PaymentDirection,
   calculateOverallProgress,
   calculateProgressSummary,
   clampProgress,
@@ -30,15 +32,21 @@ import {
 const PAYMENT_STATUSES = ["draft", "paid", "cancelled"] as const;
 type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
 
-/** Tahsilat sayılan finans kayıt türü — gider tarafı hakedişi ilgilendirmez. */
+/** Hakediş tahsil edildiğinde yazılan finans kayıt türleri. */
 const COLLECTION_TYPE = "collection";
+const EXPENSE_TYPE = "expense";
 
 /**
  * Hakediş etiketi: "Mimari 1 No'lu Hakediş".
  * Kalem sonradan silinmişse ad olmadan yazılır.
  */
-export function paymentLabel(sectionName: string | null | undefined, number: number): string {
-  const suffix = `${number} No'lu Hakediş`;
+export function paymentLabel(
+  sectionName: string | null | undefined,
+  number: number,
+  direction: PaymentDirection = "incoming",
+): string {
+  const kind = direction === "outgoing" ? "Taşeron Hakedişi" : "Hakediş";
+  const suffix = `${number} No'lu ${kind}`;
   return sectionName ? `${sectionName} ${suffix}` : suffix;
 }
 
@@ -75,7 +83,13 @@ export class ProgressService {
   private async notifyManagers(
     companyId: string,
     projectId: string,
-    payment: { id: string; number: number; amount: number; section?: { name: string } | null },
+    payment: {
+      id: string;
+      number: number;
+      amount: number;
+      direction?: string;
+      section?: { name: string } | null;
+    },
     kind: "issued" | "paid",
   ) {
     try {
@@ -106,7 +120,11 @@ export class ProgressService {
 
       const locale = resolveNotificationLocale(null);
       const params = {
-        label: paymentLabel(payment.section?.name, payment.number),
+        label: paymentLabel(
+          payment.section?.name,
+          payment.number,
+          payment.direction === "outgoing" ? "outgoing" : "incoming",
+        ),
         projectName: project.name,
         amount: formatAmount(payment.amount),
       };
@@ -191,6 +209,7 @@ export class ProgressService {
         name: dto.name,
         order: dto.order ?? (last?.order ?? 0) + 1,
         amount: roundCurrency(dto.amount ?? 0),
+        costAmount: roundCurrency(dto.costAmount ?? 0),
         progress: clampProgress(dto.progress ?? 0),
         status: dto.status ?? "not-started",
         updatedBy: user?.fullName ?? "Sistem",
@@ -223,6 +242,7 @@ export class ProgressService {
         ...(dto.status !== undefined ? { status: dto.status } : {}),
         ...(dto.content !== undefined ? { content: dto.content } : {}),
         ...(dto.amount !== undefined ? { amount: roundCurrency(dto.amount) } : {}),
+        ...(dto.costAmount !== undefined ? { costAmount: roundCurrency(dto.costAmount) } : {}),
         ...(dto.progress !== undefined ? { progress: clampProgress(dto.progress) } : {}),
         updatedBy: user?.fullName ?? "Sistem",
       },
@@ -383,17 +403,22 @@ export class ProgressService {
   ) {
     await this.assertProject(companyId, projectId);
 
+    const direction: PaymentDirection = dto.direction === "outgoing" ? "outgoing" : "incoming";
+
     const section = await this.prisma.section.findFirst({
       where: { id: dto.sectionId, projectId },
     });
     if (!section) throw new NotFoundException("İmalat kalemi bulunamadı");
 
+    // Her yön kendi serisini yürütür: işveren hakedişi taşeron hakedişini
+    // etkilemez, numaralandırma da ayrı ilerler.
     const payments = await this.prisma.progressPayment.findMany({
-      where: { projectId, sectionId: section.id },
+      where: { projectId, sectionId: section.id, direction },
       select: { amount: true, status: true, number: true },
     });
 
-    const cumulativeAmount = calculateEarnedAmount([section]);
+    const cumulativeAmount =
+      direction === "outgoing" ? calculateEarnedCost([section]) : calculateEarnedAmount([section]);
     const previousAmount = payments
       .filter((payment) => payment.status !== "cancelled")
       .reduce((sum, payment) => sum + payment.amount, 0);
@@ -401,7 +426,9 @@ export class ProgressService {
 
     if (amount <= 0) {
       throw new BadRequestException(
-        `${section.name} kaleminde önceki hakedişlerden bu yana yeni hak ediş oluşmadı`,
+        direction === "outgoing"
+          ? `${section.name} kaleminde taşerona ödenecek yeni tutar oluşmadı`
+          : `${section.name} kaleminde önceki hakedişlerden bu yana yeni hak ediş oluşmadı`,
       );
     }
 
@@ -412,6 +439,7 @@ export class ProgressService {
         projectId,
         sectionId: section.id,
         companyId,
+        direction,
         number: nextNumber,
         issueDate: dto.issueDate ? new Date(dto.issueDate) : new Date(),
         cumulativeAmount,
@@ -452,6 +480,7 @@ export class ProgressService {
       companyId: string;
       createdById: string;
       issueDate: Date;
+      direction?: string;
     },
     nextStatus: string,
     sectionName: string | null,
@@ -462,11 +491,15 @@ export class ProgressService {
     if (wasPaid === willBePaid) return payment.financeRecordId;
 
     if (willBePaid) {
+      const direction: PaymentDirection =
+        payment.direction === "outgoing" ? "outgoing" : "incoming";
+
       const record = await this.prisma.financeRecord.create({
         data: {
-          type: COLLECTION_TYPE,
+          // İşverenden gelen tahsilat, taşerona ödenen gider yazılır.
+          type: direction === "outgoing" ? EXPENSE_TYPE : COLLECTION_TYPE,
           amount: payment.amount,
-          description: paymentLabel(sectionName, payment.number),
+          description: paymentLabel(sectionName, payment.number, direction),
           category: "progress-payment",
           date: payment.issueDate,
           projectId: payment.projectId,

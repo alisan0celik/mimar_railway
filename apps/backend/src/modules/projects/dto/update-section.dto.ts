@@ -20,11 +20,17 @@ export class UpdateSectionDto {
   @IsString()
   content?: string;
 
-  /** Sözleşme bedelindeki payı (TL). */
+  /** İşverene satış bedeli (TL). */
   @IsOptional()
   @IsNumber()
   @Min(0)
   amount?: number;
+
+  /** Taşerona maliyeti (TL). */
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  costAmount?: number;
 
   /** Tamamlanma yüzdesi. */
   @IsOptional()

@@ -756,7 +756,13 @@ export const tr = {
     addItem: "Kalem Ekle",
     itemNamePlaceholder: "Kalem adı (ör. Kaba İnşaat)",
     amountPlaceholder: "Sözleşme bedeli",
-    amountLabel: "Sözleşme bedeli (₺)",
+    amountLabel: "Satış bedeli (₺)",
+    costLabel: "Taşeron bedeli (₺)",
+    itemCostMeta: "Maliyet {cost} · Kâr {margin}",
+    earnedCost: "Doğan Maliyet",
+    margin: "Kâr",
+    newCostPayment: "Taşeron Hakedişi",
+    newCostPaymentConfirm: "{item} kalemi için taşerona düzenlenecek hakedişin net tutarı {amount} olacak. Onaylıyor musunuz?",
     progressLabel: "İlerleme (%)",
     itemNameLabel: "Kalem adı",
     progressPlaceholder: "İlerleme %",
@@ -883,7 +889,7 @@ export const tr = {
         },
         progress: {
           title: "İmalat ve Hakediş",
-          steps: "Proje detayının üstündeki İmalat ve Hakediş bağlantısına girin.|İlk projede liste boş gelir; sözleşmeyi kendi imalat kalemlerinize bölün ve her kaleme bedelini yazın.|Sık kullandığınız kalemleri yıldızlayın; bu liste şirketinize kaydolur ve sonraki projeleriniz o kalemlerle açılır.|İş ilerledikçe kalemin ilerleme yüzdesini güncelleyin; hak edilen tutar kendiliğinden hesaplanır.|Hakediş Düzenle ile o ana kadar hak edilen tutardan önceki hakedişler düşülerek yeni hakediş oluşturulur.|Hakediş tahsil edildiğinde durumunu Ödendi yapın; finans ekranına tahsilat kaydı otomatik düşer.|İlerlemeyi proje yetkisi olan herkes güncelleyebilir, tutarları yalnızca finans yetkisi olanlar görür."
+          steps: "Proje detayının üstündeki İmalat ve Hakediş bağlantısına girin.|İlk projede liste boş gelir; sözleşmeyi kendi imalat kalemlerinize bölün ve her kaleme bedelini yazın.|Sık kullandığınız kalemleri yıldızlayın; bu liste şirketinize kaydolur ve sonraki projeleriniz o kalemlerle açılır.|İş ilerledikçe kalemin ilerleme yüzdesini güncelleyin; hak edilen tutar kendiliğinden hesaplanır.|Hakediş Düzenle ile o ana kadar hak edilen tutardan önceki hakedişler düşülerek yeni hakediş oluşturulur.|Kaleme taşeron bedelini de girerseniz Taşeron Hakedişi düzenleyebilir, kalem başına kârı görebilirsiniz.|Hakediş tahsil edildiğinde durumunu Ödendi yapın; işveren hakedişi tahsilat, taşeron hakedişi gider olarak finansa düşer.|İlerlemeyi proje yetkisi olan herkes güncelleyebilir, tutarları yalnızca finans yetkisi olanlar görür."
         },
         finance: {
           title: "Finans",
