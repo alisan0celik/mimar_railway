@@ -19,7 +19,7 @@ export type ProgressPaymentLike = {
 };
 
 /** İptal edilmemiş, tutarı sayılan hakediş durumları. */
-export const BILLABLE_PAYMENT_STATUSES = ["draft", "approved", "paid"] as const;
+export const BILLABLE_PAYMENT_STATUSES = ["draft", "paid"] as const;
 
 function toFiniteNumber(value: number | null | undefined): number {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;

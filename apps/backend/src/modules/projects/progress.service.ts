@@ -26,19 +26,13 @@ import {
   type ProgressSummary,
 } from "./progress-payment.utils";
 
-const PAYMENT_STATUSES = ["draft", "approved", "paid", "cancelled"] as const;
+// Onay adımı kaldırıldı: taslak hakediş ya tahsil edilir ya iptal olur.
+const PAYMENT_STATUSES = ["draft", "paid", "cancelled"] as const;
 type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
 
 /** Tahsilat sayılan finans kayıt türü — gider tarafı hakedişi ilgilendirmez. */
 const COLLECTION_TYPE = "collection";
 
-/**
- * Kalem adlarını karşılaştırmak için normalleştirir.
- *
- * Düz `toLowerCase()` Türkçe'de yanlış sonuç veriyor: "İ" harfi "i" yerine
- * birleşik noktalı "i̇" üretiyor ve "Kaba İnşaat" ile "kaba inşaat" farklı
- * görünüyor. Bu yüzden Türkçe yerel ayarıyla küçültülür.
- */
 /**
  * Hakediş etiketi: "Mimari 1 No'lu Hakediş".
  * Kalem sonradan silinmişse ad olmadan yazılır.
@@ -53,6 +47,13 @@ function formatAmount(value: number): string {
   return `${value.toLocaleString("tr-TR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ₺`;
 }
 
+/**
+ * Kalem adlarını karşılaştırmak için normalleştirir.
+ *
+ * Düz `toLowerCase()` Türkçe'de yanlış sonuç veriyor: "İ" harfi "i" yerine
+ * birleşik noktalı "i̇" üretiyor ve "Kaba İnşaat" ile "kaba inşaat" farklı
+ * görünüyor. Bu yüzden Türkçe yerel ayarıyla küçültülür.
+ */
 function normaliseName(value: string): string {
   return value.trim().toLocaleLowerCase("tr").normalize("NFC");
 }

@@ -105,6 +105,21 @@ export async function setSelectedCalendarId(calendarId: string): Promise<void> {
   await writeMap({});
 }
 
+/**
+ * Cihazın saat dilimi.
+ *
+ * expo-calendar'da `timeZone` zorunlu bir alan; boş bırakılınca Android
+ * etkinlik oluşturmayı reddediyor ve hata yutulduğu için senkron sessizce
+ * hiçbir şey yapmıyordu.
+ */
+function deviceTimeZone(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+  } catch {
+    return "UTC";
+  }
+}
+
 function windowOf(event: CalendarEventDTO): { start: Date; end: Date } {
   const start = new Date(event.startsAt ?? event.date);
   const end = event.endsAt ? new Date(event.endsAt) : new Date(start.getTime() + 60 * 60_000);
@@ -125,12 +140,14 @@ export async function upsertDeviceEvent(event: CalendarEventDTO): Promise<void> 
   if (!calendarId) return;
 
   const { start, end } = windowOf(event);
+  const timeZone = deviceTimeZone();
   const details = {
     title: event.title,
     startDate: start,
     endDate: end,
     notes: event.projectName,
-    timeZone: undefined,
+    timeZone,
+    endTimeZone: timeZone,
   };
 
   const map = await readMap();
@@ -167,17 +184,33 @@ export async function removeDeviceEvent(eventId: string): Promise<void> {
   await writeMap(map);
 }
 
-/** Görünen tüm etkinlikleri cihaz takvimiyle eşitler. */
-export async function syncDeviceEvents(events: CalendarEventDTO[]): Promise<void> {
-  if (!(await isDeviceSyncEnabled())) return;
+export type SyncResult = { written: number; failed: number; error?: string };
+
+/**
+ * Görünen tüm etkinlikleri cihaz takvimiyle eşitler.
+ *
+ * Tek bir etkinlik yazılamazsa diğerleri denenmeye devam eder, ancak sonuç
+ * geri döner: hatayı tamamen yutmak, senkronun neden çalışmadığını
+ * görünmez kılıyordu.
+ */
+export async function syncDeviceEvents(events: CalendarEventDTO[]): Promise<SyncResult> {
+  if (!(await isDeviceSyncEnabled())) return { written: 0, failed: 0 };
+
+  let written = 0;
+  let failed = 0;
+  let error: string | undefined;
 
   for (const event of events) {
     try {
       await upsertDeviceEvent(event);
-    } catch {
-      // Tek bir etkinlik yazılamazsa diğerleri denenmeye devam etsin
+      written += 1;
+    } catch (e) {
+      failed += 1;
+      if (!error) error = e instanceof Error ? e.message : String(e);
     }
   }
+
+  return { written, failed, error };
 }
 
 /** Senkron kapatılınca uygulamanın yazdığı etkinlikleri temizler. */

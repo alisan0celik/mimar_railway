@@ -48,7 +48,7 @@ describe("progress payment utils", () => {
     expect(
       calculateBilledAmount([
         { amount: 400_000, status: "paid" },
-        { amount: 300_000, status: "approved" },
+        { amount: 300_000, status: "draft" },
         { amount: 100_000, status: "draft" },
         { amount: 900_000, status: "cancelled" },
       ]),
@@ -60,7 +60,7 @@ describe("progress payment utils", () => {
       items,
       payments: [
         { amount: 900_000, status: "paid" },
-        { amount: 200_000, status: "approved" },
+        { amount: 200_000, status: "draft" },
       ],
       collectedAmount: 900_000,
     });
@@ -74,7 +74,7 @@ describe("progress payment utils", () => {
   it("never reports a negative balance when over-billed", () => {
     const summary = calculateProgressSummary({
       items: [{ amount: 100_000, progress: 50 }],
-      payments: [{ amount: 80_000, status: "approved" }],
+      payments: [{ amount: 80_000, status: "draft" }],
       collectedAmount: 95_000,
     });
 

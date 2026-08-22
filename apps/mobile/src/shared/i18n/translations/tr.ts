@@ -778,7 +778,6 @@ export const tr = {
     statusTitle: "{number} No'lu hakedişin durumu",
     paymentStatus: {
       draft: "Taslak",
-      approved: "Onaylandı",
       paid: "Ödendi",
       cancelled: "İptal",
     },
@@ -1054,6 +1053,7 @@ export const tr = {
       title: "Telefon takvimiyle senkronla",
       description: "Etkinlikler telefonunuzun takvimine yazılır. Telefonda Google hesabınız ekliyse Google Takvim'de de görünür. Aktarım tek yönlüdür: Google'da yaptığınız değişiklik uygulamaya yansımaz.",
       permissionDenied: "Takvim izni verilmediği için senkron açılamadı. İzni telefon ayarlarından verebilirsiniz.",
+      syncFailed: "Etkinlikler telefon takvimine yazılamadı. {error}",
       targetLabel: "Yazılacak takvim",
       targetAuto: "Otomatik seçilecek",
       targetHint: "Giriş yönteminize göre otomatik seçilir: Google ile girdiyseniz Google takviminiz, Apple ile girdiyseniz iCloud. Başka bir hesaba yazmak isterseniz buradan değiştirin.",

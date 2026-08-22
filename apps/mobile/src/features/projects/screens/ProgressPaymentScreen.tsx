@@ -23,10 +23,10 @@ import { PERMISSIONS, useCan } from "../../../shared/permissions";
 import { radius, spacing, typography } from "../../../shared/theme";
 import { useThemedStyles, type AppColors } from "../../../shared/theme";
 import { useThemeColors } from "../../../shared/theme/ThemeProvider";
-import { DesignBackHeader, Screen } from "../../../shared/ui";
+import { ConfirmDialog, DesignBackHeader, Screen } from "../../../shared/ui";
 import { formatCurrency } from "../../../shared/utils";
 
-const PAYMENT_STATUSES: ProgressPaymentStatus[] = ["draft", "approved", "paid", "cancelled"];
+const PAYMENT_STATUSES: ProgressPaymentStatus[] = ["draft", "paid", "cancelled"];
 
 /** Türkçe "İ" düz toLowerCase ile bozulduğu için ad karşılaştırması yerel ayarla yapılır. */
 function normaliseName(value: string): string {
@@ -61,6 +61,15 @@ export function ProgressPaymentScreen({ projectId }: { projectId: string }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draftAmount, setDraftAmount] = useState("");
   const [draftProgress, setDraftProgress] = useState("");
+  // Yerli Alert kutuları uygulamanın dışından gelmiş gibi duruyordu;
+  // onaylar uygulamanın kendi diyaloguyla soruluyor.
+  const [confirm, setConfirm] = useState<{
+    title: string;
+    message: string;
+    confirmLabel: string;
+    destructive?: boolean;
+    onConfirm: () => Promise<void>;
+  } | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -101,8 +110,6 @@ export function ProgressPaymentScreen({ projectId }: { projectId: string }) {
   const statusColor = useCallback(
     (status: string) => {
       switch (status) {
-        case "approved":
-          return colors.info;
         case "paid":
           return colors.success;
         case "cancelled":
@@ -195,24 +202,16 @@ export function ProgressPaymentScreen({ projectId }: { projectId: string }) {
   };
 
   const handleDeleteItem = (section: ProjectSectionDTO) => {
-    Alert.alert(t("progress.deleteItemTitle"), t("progress.deleteItemMessage", { name: section.name }), [
-      { text: t("common.cancel"), style: "cancel" },
-      {
-        text: t("common.delete"),
-        style: "destructive",
-        onPress: async () => {
-          setBusy(true);
-          try {
-            await projectApi.deleteSection(projectId, section.id);
-            await load();
-          } catch {
-            Alert.alert(t("common.error"), t("progress.saveFailed"));
-          } finally {
-            setBusy(false);
-          }
-        },
+    setConfirm({
+      title: t("progress.deleteItemTitle"),
+      message: t("progress.deleteItemMessage", { name: section.name }),
+      confirmLabel: t("common.delete"),
+      destructive: true,
+      onConfirm: async () => {
+        await projectApi.deleteSection(projectId, section.id);
+        await load();
       },
-    ]);
+    });
   };
 
   /** Kalemin hak edilmiş ama henüz hakedişe bağlanmamış tutarı. */
@@ -228,55 +227,34 @@ export function ProgressPaymentScreen({ projectId }: { projectId: string }) {
   );
 
   const handleCreatePayment = (section: ProjectSectionDTO) => {
-    const amount = billableOf(section);
-    Alert.alert(
-      t("progress.newPayment"),
-      t("progress.newPaymentConfirm", {
+    setConfirm({
+      title: t("progress.newPayment"),
+      message: t("progress.newPaymentConfirm", {
         item: section.name,
-        amount: formatCurrency(amount),
+        amount: formatCurrency(billableOf(section)),
       }),
-      [
-        { text: t("common.cancel"), style: "cancel" },
-        {
-          text: t("progress.issue"),
-          onPress: async () => {
-            setBusy(true);
-            try {
-              await projectApi.createProgressPayment(projectId, { sectionId: section.id });
-              await load();
-            } catch (e: any) {
-              Alert.alert(t("common.error"), e?.response?.data?.message || t("progress.saveFailed"));
-            } finally {
-              setBusy(false);
-            }
-          },
-        },
-      ],
-    );
+      confirmLabel: t("progress.issue"),
+      onConfirm: async () => {
+        await projectApi.createProgressPayment(projectId, { sectionId: section.id });
+        await load();
+      },
+    });
   };
 
-  const handleChangePaymentStatus = (payment: ProgressPaymentDTO) => {
-    Alert.alert(
-      t("progress.statusTitle", { number: payment.number }),
-      undefined,
-      [
-        ...PAYMENT_STATUSES.filter((status) => status !== payment.status).map((status) => ({
-          text: statusLabel(status),
-          onPress: async () => {
-            setBusy(true);
-            try {
-              await projectApi.updateProgressPayment(projectId, payment.id, { status });
-              await load();
-            } catch {
-              Alert.alert(t("common.error"), t("progress.saveFailed"));
-            } finally {
-              setBusy(false);
-            }
-          },
-        })),
-        { text: t("common.cancel"), style: "cancel" as const },
-      ],
-    );
+  const handleChangePaymentStatus = async (
+    payment: ProgressPaymentDTO,
+    status: ProgressPaymentStatus,
+  ) => {
+    if (payment.status === status) return;
+    setBusy(true);
+    try {
+      await projectApi.updateProgressPayment(projectId, payment.id, { status });
+      await load();
+    } catch {
+      Alert.alert(t("common.error"), t("progress.saveFailed"));
+    } finally {
+      setBusy(false);
+    }
   };
 
   const itemsTotal = useMemo(
@@ -524,12 +502,7 @@ export function ProgressPaymentScreen({ projectId }: { projectId: string }) {
             <Text style={styles.empty}>{t("progress.noPayments")}</Text>
           ) : (
             payments.map((payment) => (
-              <Pressable
-                key={payment.id}
-                disabled={!canBill}
-                onPress={() => handleChangePaymentStatus(payment)}
-                style={styles.paymentCard}
-              >
+              <View key={payment.id} style={styles.paymentCard}>
                 <View style={styles.paymentTop}>
                   <Text style={styles.paymentNumber}>
                     {payment.section
@@ -539,23 +512,76 @@ export function ProgressPaymentScreen({ projectId }: { projectId: string }) {
                         })
                       : t("progress.paymentNumber", { number: payment.number })}
                   </Text>
-                  <View
-                    style={[styles.badge, { backgroundColor: `${statusColor(payment.status)}22` }]}
-                  >
-                    <Text style={[styles.badgeText, { color: statusColor(payment.status) }]}>
-                      {statusLabel(payment.status)}
-                    </Text>
-                  </View>
+                  {!canBill ? (
+                    <View
+                      style={[styles.badge, { backgroundColor: `${statusColor(payment.status)}22` }]}
+                    >
+                      <Text style={[styles.badgeText, { color: statusColor(payment.status) }]}>
+                        {statusLabel(payment.status)}
+                      </Text>
+                    </View>
+                  ) : null}
                 </View>
                 <Text style={styles.paymentAmount}>{formatCurrency(payment.amount)}</Text>
                 <Text style={styles.paymentMeta}>
                   {`${new Date(payment.issueDate).toLocaleDateString(locale)} · %${payment.progressPercent.toFixed(1)} · ${payment.createdBy.fullName}`}
                 </Text>
-              </Pressable>
+
+                {canBill ? (
+                  <View style={styles.statusRow}>
+                    {PAYMENT_STATUSES.map((status) => {
+                      const active = payment.status === status;
+                      return (
+                        <Pressable
+                          key={status}
+                          disabled={busy}
+                          onPress={() => handleChangePaymentStatus(payment, status)}
+                          style={[
+                            styles.statusChip,
+                            active && {
+                              backgroundColor: statusColor(status),
+                              borderColor: statusColor(status),
+                            },
+                          ]}
+                        >
+                          <Text
+                            style={[styles.statusChipText, active && styles.statusChipTextActive]}
+                          >
+                            {statusLabel(status)}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                ) : null}
+              </View>
             ))
           )}
         </>
       ) : null}
+
+      <ConfirmDialog
+        confirmDestructive={confirm?.destructive}
+        confirmLabel={confirm?.confirmLabel}
+        loading={busy}
+        message={confirm?.message ?? ""}
+        onCancel={() => setConfirm(null)}
+        onConfirm={async () => {
+          const action = confirm?.onConfirm;
+          setConfirm(null);
+          if (!action) return;
+          setBusy(true);
+          try {
+            await action();
+          } catch (e: any) {
+            Alert.alert(t("common.error"), e?.response?.data?.message || t("progress.saveFailed"));
+          } finally {
+            setBusy(false);
+          }
+        }}
+        title={confirm?.title ?? ""}
+        visible={confirm !== null}
+      />
     </Screen>
   );
 }
@@ -757,6 +783,22 @@ function createStyles(colors: AppColors) {
       padding: spacing.md,
       marginBottom: spacing.sm,
     },
+    statusRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: spacing.xs,
+      marginTop: spacing.sm,
+    },
+    statusChip: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+      borderRadius: radius.full,
+      backgroundColor: colors.surfaceMuted,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    statusChipText: { ...typography.caption, color: colors.textMuted, fontWeight: "600" },
+    statusChipTextActive: { color: colors.white },
     paymentTop: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
     paymentNumber: { ...typography.bodySmall, color: colors.text, fontWeight: "700" },
     badge: { paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: radius.full },

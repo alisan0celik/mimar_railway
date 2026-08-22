@@ -105,7 +105,7 @@ describe("ProgressService", () => {
     prisma.section.findFirst.mockResolvedValue(sections[0]);
     prisma.progressPayment.findMany.mockResolvedValue([
       { amount: 400_000, status: "paid", number: 1 },
-      { amount: 200_000, status: "approved", number: 2 },
+      { amount: 200_000, status: "draft", number: 2 },
     ]);
 
     const payment: any = await service.createPayment("c1", "p1", { sectionId: "s1" }, "u1");
@@ -141,7 +141,7 @@ describe("ProgressService", () => {
   it("refuses to bill when no further work has been earned on the item", async () => {
     prisma.section.findFirst.mockResolvedValue(sections[0]);
     prisma.progressPayment.findMany.mockResolvedValue([
-      { amount: 900_000, status: "approved", number: 1 },
+      { amount: 900_000, status: "draft", number: 1 },
     ]);
 
     await expect(
@@ -222,7 +222,7 @@ describe("ProgressService", () => {
 
   it("subtracts collections from the billed total in the summary", async () => {
     prisma.progressPayment.findMany.mockResolvedValue([
-      { amount: 1_100_000, status: "approved" },
+      { amount: 1_100_000, status: "draft" },
     ]);
     prisma.financeRecord.aggregate.mockResolvedValue({ _sum: { amount: 400_000 } });
 
@@ -240,7 +240,7 @@ describe("ProgressService", () => {
       id: "pp1",
       number: 1,
       amount: 1_400_000,
-      status: "approved",
+      status: "draft",
       financeRecordId: null,
       projectId: "p1",
       companyId: "c1",
@@ -267,7 +267,7 @@ describe("ProgressService", () => {
     );
   });
 
-  it("removes the collection when a paid payment is reverted", async () => {
+  it("removes the collection when a paid payment goes back to draft", async () => {
     prisma.progressPayment.findFirst.mockResolvedValue({
       id: "pp1",
       number: 1,
@@ -280,12 +280,12 @@ describe("ProgressService", () => {
       issueDate: new Date(),
     });
 
-    await service.updatePayment("c1", "p1", "pp1", { status: "approved" });
+    await service.updatePayment("c1", "p1", "pp1", { status: "draft" });
 
     expect(prisma.financeRecord.deleteMany).toHaveBeenCalledWith({ where: { id: "fr1" } });
     expect(prisma.progressPayment.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ status: "approved", financeRecordId: null }),
+        data: expect.objectContaining({ status: "draft", financeRecordId: null }),
       }),
     );
   });

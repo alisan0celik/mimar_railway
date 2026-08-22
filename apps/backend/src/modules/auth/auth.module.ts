@@ -4,6 +4,7 @@ import { PassportModule } from "@nestjs/passport";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import type { Provider } from "@nestjs/common";
 import { AuthController } from "./auth.controller";
+import { PasswordResetPageController } from "./password-reset-page.controller";
 import { AuthService } from "./auth.service";
 import { PasswordResetEmailService } from "./password-reset-email.service";
 import { JwtStrategy } from "./strategies/jwt.strategy";
@@ -51,7 +52,7 @@ function getOptionalSocialStrategyProviders(): Provider[] {
       },
     }),
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, PasswordResetPageController],
   providers: [
     AuthService,
     PasswordResetEmailService,

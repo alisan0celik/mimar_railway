@@ -136,8 +136,17 @@ export function CalendarScreen() {
 
     await setDeviceSyncEnabled(true);
     setDeviceSync(true);
-    await syncDeviceEvents(events);
     await refreshCalendars();
+
+    // Sessizce başarısız olması, kullanıcının neden hiçbir şey görmediğini
+    // anlamasını imkânsız kılıyordu; sonucu bildir.
+    const result = await syncDeviceEvents(events);
+    if (result.failed > 0 && result.written === 0) {
+      Alert.alert(
+        t("calendar.deviceSync.title"),
+        t("calendar.deviceSync.syncFailed", { error: result.error ?? "" }),
+      );
+    }
   };
 
   const handlePickCalendar = async (calendarId: string) => {

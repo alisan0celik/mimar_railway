@@ -22,7 +22,7 @@ export type CompanyWorkItemDTO = {
   order: number;
 };
 
-export type ProgressPaymentStatus = "draft" | "approved" | "paid" | "cancelled";
+export type ProgressPaymentStatus = "draft" | "paid" | "cancelled";
 
 export type ProgressPaymentDTO = {
   id: string;

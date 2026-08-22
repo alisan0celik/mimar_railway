@@ -2,7 +2,7 @@ import { IsIn, IsISO8601, IsOptional, IsString, MaxLength } from "class-validato
 
 export class UpdateProgressPaymentDto {
   @IsOptional()
-  @IsIn(["draft", "approved", "paid", "cancelled"])
+  @IsIn(["draft", "paid", "cancelled"])
   status?: string;
 
   @IsOptional()

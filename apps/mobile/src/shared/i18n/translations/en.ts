@@ -778,7 +778,6 @@ export const en = {
     statusTitle: "Status of payment no. {number}",
     paymentStatus: {
       draft: "Draft",
-      approved: "Approved",
       paid: "Paid",
       cancelled: "Cancelled",
     },
@@ -1054,6 +1053,7 @@ export const en = {
       title: "Sync with phone calendar",
       description: "Events are written to your phone's calendar. If your Google account is on the phone they also appear in Google Calendar. This is one-way: changes made in Google do not come back to the app.",
       permissionDenied: "Calendar permission was declined, so sync stays off. You can grant it in your phone settings.",
+      syncFailed: "Events could not be written to the phone calendar. {error}",
       targetLabel: "Target calendar",
       targetAuto: "Chosen automatically",
       targetHint: "Chosen from how you signed in: your Google calendar for a Google account, iCloud for an Apple one. Change it here to write somewhere else.",

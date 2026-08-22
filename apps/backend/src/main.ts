@@ -11,7 +11,9 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const logger = new Logger("Bootstrap");
 
-  app.setGlobalPrefix("api");
+  // Şifre sıfırlama sayfası e-postadaki bağlantıdan açılıyor; insanlara giden
+  // bir adres olduğu için /api önekinin dışında tutulur.
+  app.setGlobalPrefix("api", { exclude: ["reset-password"] });
   app.useWebSocketAdapter(new IoAdapter(app));
   app.useStaticAssets(process.env.UPLOAD_DIR || join(process.cwd(), "uploads"), {
     prefix: "/api/uploads/",
