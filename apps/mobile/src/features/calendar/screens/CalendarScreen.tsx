@@ -14,6 +14,7 @@ import {
   CalendarEventDTO,
 } from "../../../services/api/calendar.api";
 import { fetchWithReadCache } from "../../../offline/cache/read-cache";
+import { TimePickerSheet } from "../components/TimePickerSheet";
 import {
   clearDeviceEvents,
   getSelectedCalendarId,
@@ -65,6 +66,7 @@ export function CalendarScreen() {
   const [events, setEvents] = useState<CalendarEventDTO[]>([]);
   const [title, setTitle] = useState("");
   const [time, setTime] = useState("");
+  const [timePickerOpen, setTimePickerOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deviceSync, setDeviceSync] = useState(false);
@@ -336,13 +338,14 @@ export function CalendarScreen() {
               placeholder={t("calendar.form.eventTitlePlaceholder")}
               value={title}
             />
-            <AppInput
-              autoCapitalize="none"
-              label={t("calendar.form.time")}
-              onChangeText={setTime}
-              placeholder={t("calendar.form.timePlaceholder")}
-              value={time}
-            />
+            <Text style={styles.fieldLabel}>{t("calendar.form.time")}</Text>
+            <Pressable onPress={() => setTimePickerOpen(true)} style={styles.timeField}>
+              <MaterialCommunityIcons color={colors.primary} name="clock-outline" size={20} />
+              <Text style={[styles.timeValue, !time && styles.timePlaceholder]}>
+                {time || t("calendar.form.timePlaceholder")}
+              </Text>
+              <MaterialCommunityIcons color={colors.textMuted} name="chevron-down" size={20} />
+            </Pressable>
             <View style={styles.formActions}>
               <AppButton
                 loading={saving}
@@ -387,6 +390,15 @@ export function CalendarScreen() {
           );
         })}
       </View>
+      <TimePickerSheet
+        onCancel={() => setTimePickerOpen(false)}
+        onConfirm={(value) => {
+          setTime(value);
+          setTimePickerOpen(false);
+        }}
+        value={time}
+        visible={timePickerOpen}
+      />
     </Screen>
   );
 }
@@ -501,6 +513,20 @@ function createStyles(colors: AppColors) {
     gap: spacing.md,
     padding: spacing.md,
   },
+  fieldLabel: { ...typography.caption, color: colors.textMuted, marginBottom: 6 },
+  timeField: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    backgroundColor: colors.input,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.inputBorder,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+  },
+  timeValue: { ...typography.body, color: colors.text, flex: 1 },
+  timePlaceholder: { color: colors.textMuted },
   formActions: {
     flexDirection: "row",
     gap: spacing.sm,

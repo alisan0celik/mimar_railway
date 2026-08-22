@@ -141,11 +141,10 @@ export class UsersService {
     await this.companyScope.findUserInCompany(id, scopedCompanyId);
 
     if (status === "rejected") {
-      await this.prisma.user.update({
-        where: { id },
-        data: { companyId: null, approvalStatus: "rejected" },
-      });
-      return { message: "Kullanıcı reddedildi" };
+      // Reddetme burada kendi içinde yapılıyordu ve kullanıcıya hiçbir
+      // bildirim gitmiyordu; talebinin reddedildiğini öğrenemiyordu.
+      // Onayla aynı yoldan geçirilir, o yol bildirimi de gönderiyor.
+      return this.companiesService.rejectMember(scopedCompanyId, id);
     }
 
     if (status === "approved") {

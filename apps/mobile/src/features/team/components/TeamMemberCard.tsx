@@ -11,11 +11,20 @@ import { initials } from "../../../shared/utils/initials";
 type TeamMemberCardProps = {
   user: UserDTO;
   canRemove?: boolean;
+  canChangeRole?: boolean;
   removing?: boolean;
   onRemove?: () => void;
+  onChangeRole?: () => void;
 };
 
-export function TeamMemberCard({ user, canRemove, removing, onRemove }: TeamMemberCardProps) {
+export function TeamMemberCard({
+  user,
+  canRemove,
+  canChangeRole,
+  removing,
+  onRemove,
+  onChangeRole,
+}: TeamMemberCardProps) {
   const styles = useThemedStyles(createStyles);
   const colors = useThemeColors();
   const { t } = useTranslation();
@@ -33,6 +42,23 @@ export function TeamMemberCard({ user, canRemove, removing, onRemove }: TeamMemb
           <Text style={styles.roleText}>{roleLabel}</Text>
         </View>
       </View>
+      {canChangeRole ? (
+        <Pressable
+          accessibilityLabel={t("team.changeRoleLabel")}
+          accessibilityRole="button"
+          disabled={removing}
+          onPress={onChangeRole}
+          style={({ pressed }) => [styles.roleAction, pressed && styles.removePressed]}
+        >
+          <MaterialCommunityIcons
+            color={colors.primary}
+            name="shield-account-outline"
+            size={22}
+          />
+          <Text style={styles.roleActionText}>{t("team.changeRole")}</Text>
+        </Pressable>
+      ) : null}
+
       {canRemove ? (
         <Pressable
           accessibilityLabel={t("team.removeFromTeamLabel")}
@@ -89,6 +115,18 @@ function createStyles(colors: AppColors) {
       backgroundColor: colors.primarySoft,
     },
     roleText: { ...typography.caption, color: colors.primary, fontWeight: "600" },
+    roleAction: {
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: spacing.sm,
+      gap: 2,
+    },
+    roleActionText: {
+      ...typography.caption,
+      color: colors.primary,
+      fontWeight: "600",
+      textAlign: "center",
+    },
     removeAction: {
       alignItems: "center",
       justifyContent: "center",

@@ -1,9 +1,18 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, StyleSheet, TextInput, View } from "react-native";
+import {
+  ActivityIndicator,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 
 import { TeamMemberCard } from "../components/TeamMemberCard";
-import { usersApi, type UserDTO } from "../../../services/api";
+import { rolesApi, usersApi, type UserDTO } from "../../../services/api";
 import { fetchWithReadCache } from "../../../offline/cache/read-cache";
 import { useAuthStore } from "../../../store/authStore";
 import { useTranslation } from "../../../shared/i18n";
@@ -42,6 +51,27 @@ function canRemoveMember(
   return true;
 }
 
+/**
+ * Rol değiştirme, çıkarmayla aynı sınırlara tabidir: sahibin rolü
+ * değiştirilemez, yöneticinin rolünü yalnızca sahip değiştirebilir ve
+ * kimse kendi rolünü düşüremez.
+ */
+function canChangeMemberRole(
+  member: UserDTO,
+  currentUser: UserDTO | null,
+  hasAssignPermission: boolean,
+): boolean {
+  if (!hasAssignPermission || !currentUser) return false;
+  if (member.id === currentUser.id) return false;
+  if (member.roles.some((r) => isOwnerRole(r.code))) return false;
+
+  const memberIsManager = member.roles.some((r) => isManagerRole(r.code));
+  const currentUserIsOwner = currentUser.roles.some((r) => isOwnerRole(r.code));
+  if (memberIsManager && !currentUserIsOwner) return false;
+
+  return true;
+}
+
 type PendingRemoval = {
   member: UserDTO;
 };
@@ -60,6 +90,9 @@ export function OfficeTeamScreen() {
   const [pendingRemoval, setPendingRemoval] = useState<PendingRemoval | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [roleTarget, setRoleTarget] = useState<UserDTO | null>(null);
+  const [roles, setRoles] = useState<Array<{ id: string; name: string }>>([]);
+  const [savingRoleId, setSavingRoleId] = useState<string | null>(null);
 
   const fetchMembers = useCallback(() => {
     setLoading(true);
@@ -106,6 +139,39 @@ export function OfficeTeamScreen() {
       setPendingRemoval({ member });
     },
     [canRemove, currentUser],
+  );
+
+  const handleChangeRole = useCallback(async (member: UserDTO) => {
+    setRoleTarget(member);
+    try {
+      const { data } = await rolesApi.getAll();
+      // Sahip rolü atanamaz; şirketin tek sahibi vardır.
+      setRoles(data.filter((role) => !isOwnerRole(role.code)).map((r) => ({ id: r.id, name: r.name })));
+    } catch {
+      setRoles([]);
+    }
+  }, []);
+
+  const applyRole = useCallback(
+    async (roleId: string) => {
+      if (!roleTarget) return;
+      setSavingRoleId(roleId);
+      try {
+        await usersApi.replaceRole(roleTarget.id, roleId);
+        setRoleTarget(null);
+        fetchMembers();
+        setSuccessMessage(t("team.roleUpdated"));
+      } catch (error: unknown) {
+        const msg =
+          (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+          t("team.roleUpdateError");
+        setRoleTarget(null);
+        setErrorMessage(msg);
+      } finally {
+        setSavingRoleId(null);
+      }
+    },
+    [roleTarget, fetchMembers, t],
   );
 
   const confirmRemoveMember = useCallback(async () => {
@@ -169,7 +235,9 @@ export function OfficeTeamScreen() {
           {filteredMembers.map((member) => (
             <TeamMemberCard
               key={member.id}
+              canChangeRole={canChangeMemberRole(member, currentUser, canManageTeam)}
               canRemove={canRemoveMember(member, currentUser, canRemove)}
+              onChangeRole={() => handleChangeRole(member)}
               onRemove={() => handleRemoveMember(member)}
               removing={removingUserId === member.id}
               user={member}
@@ -177,6 +245,50 @@ export function OfficeTeamScreen() {
           ))}
         </View>
       )}
+
+      <Modal
+        animationType="fade"
+        onRequestClose={() => setRoleTarget(null)}
+        transparent
+        visible={roleTarget !== null}
+      >
+        <Pressable onPress={() => setRoleTarget(null)} style={styles.roleBackdrop}>
+          <Pressable onPress={(event) => event.stopPropagation()} style={styles.roleSheet}>
+            <Text style={styles.roleSheetTitle}>{t("team.changeRole")}</Text>
+            <Text style={styles.roleSheetSubtitle}>{roleTarget?.fullName ?? ""}</Text>
+
+            {roles.length === 0 ? (
+              <ActivityIndicator color={colors.primary} style={styles.roleLoading} />
+            ) : (
+              roles.map((role) => {
+                const active = roleTarget?.roles.some((r) => r.id === role.id) ?? false;
+                return (
+                  <Pressable
+                    key={role.id}
+                    disabled={savingRoleId !== null}
+                    onPress={() => applyRole(role.id)}
+                    style={[styles.roleOption, active && styles.roleOptionActive]}
+                  >
+                    <MaterialCommunityIcons
+                      color={active ? colors.primary : colors.textDisabled}
+                      name={active ? "radiobox-marked" : "radiobox-blank"}
+                      size={20}
+                    />
+                    <Text style={styles.roleOptionText}>{role.name}</Text>
+                    {savingRoleId === role.id ? (
+                      <ActivityIndicator color={colors.primary} size="small" />
+                    ) : null}
+                  </Pressable>
+                );
+              })
+            )}
+
+            <Pressable onPress={() => setRoleTarget(null)} style={styles.roleCancel}>
+              <Text style={styles.roleCancelText}>{t("common.cancel")}</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       <ConfirmDialog
         cancelLabel={t("common.no")}
@@ -220,6 +332,39 @@ export function OfficeTeamScreen() {
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
     content: { paddingBottom: spacing.xxl },
+    roleBackdrop: {
+      flex: 1,
+      backgroundColor: colors.overlay,
+      justifyContent: "flex-end",
+    },
+    roleSheet: {
+      backgroundColor: colors.card,
+      borderTopLeftRadius: radius.xl,
+      borderTopRightRadius: radius.xl,
+      padding: spacing.xl,
+      gap: spacing.sm,
+    },
+    roleSheetTitle: { ...typography.body, color: colors.text, fontWeight: "700" },
+    roleSheetSubtitle: {
+      ...typography.bodySmall,
+      color: colors.textMuted,
+      marginBottom: spacing.sm,
+    },
+    roleLoading: { marginVertical: spacing.lg },
+    roleOption: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.md,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.md,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    roleOptionActive: { borderColor: colors.primary, backgroundColor: colors.primarySoft },
+    roleOptionText: { ...typography.bodySmall, color: colors.text, flex: 1 },
+    roleCancel: { alignItems: "center", paddingVertical: spacing.md, marginTop: spacing.xs },
+    roleCancelText: { ...typography.bodySmall, color: colors.textMuted, fontWeight: "600" },
     searchInput: {
       ...typography.body,
       color: colors.text,

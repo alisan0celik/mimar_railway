@@ -9,16 +9,20 @@ import { useThemeColors } from "../../../shared/theme/ThemeProvider";
 import { useThemedStyles } from "../../../shared/theme/useThemedStyles";
 import { DesignBackHeader, Screen } from "../../../shared/ui";
 
-const options: Array<{ lang: Language; icon: string; titleKey: string; descKey: string }> = [
+/**
+ * Bayrak emojisi, ikon yerine dili tek bakışta tanıtıyor. Emoji kullanmak
+ * görsel varlık eklemeye göre hem daha hafif hem de her yoğunlukta net.
+ */
+const options: Array<{ lang: Language; flag: string; titleKey: string; descKey: string }> = [
   {
     lang: "tr",
-    icon: "translate",
+    flag: "🇹🇷",
     titleKey: "language.turkish",
     descKey: "language.turkishDesc",
   },
   {
     lang: "en",
-    icon: "alphabet-latin",
+    flag: "🇬🇧",
     titleKey: "language.english",
     descKey: "language.englishDesc",
   },
@@ -49,11 +53,7 @@ export function LanguageScreen() {
               ]}
             >
               <View style={[styles.iconWrap, selected && styles.iconWrapSelected]}>
-                <MaterialCommunityIcons
-                  color={selected ? colors.white : colors.textMuted}
-                  name={option.icon as "translate"}
-                  size={24}
-                />
+                <Text style={styles.flag}>{option.flag}</Text>
               </View>
               <View style={styles.optionBody}>
                 <Text style={styles.optionTitle}>{t(option.titleKey)}</Text>
@@ -104,6 +104,7 @@ function createStyles(colors: AppColors) {
       alignItems: "center",
       justifyContent: "center",
     },
+    flag: { fontSize: 26, lineHeight: 32 },
     iconWrapSelected: {
       backgroundColor: colors.primary,
     },
