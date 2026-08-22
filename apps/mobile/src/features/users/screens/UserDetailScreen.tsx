@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { router } from "expo-router";
 
 import { usersApi, companiesApi, rolesApi, type RoleDTO, type UserDTO } from "../../../services/api";
@@ -9,7 +9,7 @@ import { PERMISSIONS, useCan } from "../../../shared/permissions";
 import { radius, spacing, typography } from "../../../shared/theme";
 import { useThemedStyles, type AppColors } from "../../../shared/theme";
 import { useThemeColors } from "../../../shared/theme/ThemeProvider";
-import { AppButton, DesignBackHeader, NoPermissionState, Screen } from "../../../shared/ui";
+import { AppButton, DesignBackHeader, NoPermissionState, Screen, showAppAlert } from "../../../shared/ui";
 import { initials } from "../../../shared/utils/initials";
 
 type UserDetailScreenProps = {
@@ -77,10 +77,10 @@ export function UserDetailScreen({ userId }: UserDetailScreenProps) {
     setActionLoading(true);
     try {
       await companiesApi.rejectMember(companyId, userId);
-      Alert.alert(t("users.alerts.rejectedTitle"), t("users.alerts.rejectSuccess", { name: user.fullName }));
+      showAppAlert(t("users.alerts.rejectedTitle"), t("users.alerts.rejectSuccess", { name: user.fullName }));
       router.back();
     } catch {
-      Alert.alert(t("common.error"), t("users.alerts.rejectError"));
+      showAppAlert(t("common.error"), t("users.alerts.rejectError"));
     } finally {
       setActionLoading(false);
     }

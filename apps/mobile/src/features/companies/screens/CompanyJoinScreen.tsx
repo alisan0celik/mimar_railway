@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
-import { Alert, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import { getPostAuthRoute } from "../../auth/utils/post-auth-route";
 import { companiesApi } from "../../../services/api/companies.api";
@@ -11,7 +11,7 @@ import { radius, spacing, typography } from "../../../shared/theme";
 import { useThemedStyles, type AppColors } from "../../../shared/theme";
 import { useThemeColors } from "../../../shared/theme/ThemeProvider";
 import { useAuthStore } from "../../../store/authStore";
-import { AppButton, AppInput, Screen, ScreenHeader } from "../../../shared/ui";
+import { AppButton, AppInput, Screen, ScreenHeader, showAppAlert } from "../../../shared/ui";
 
 export function CompanyJoinScreen() {
   const styles = useThemedStyles(createStyles);
@@ -28,7 +28,7 @@ export function CompanyJoinScreen() {
 
   const submitJoinRequest = async () => {
     if (!companyId) {
-      Alert.alert(t("common.error"), t("companies.alerts.notSelected"));
+      showAppAlert(t("common.error"), t("companies.alerts.notSelected"));
       return;
     }
 
@@ -49,7 +49,7 @@ export function CompanyJoinScreen() {
       router.replace("/(main)/companies/pending");
     } catch (error: any) {
       const msg = error?.response?.data?.message || t("companies.alerts.joinFailed");
-      Alert.alert(t("common.error"), msg);
+      showAppAlert(t("common.error"), msg);
     } finally {
       setLoading(false);
     }
@@ -84,7 +84,7 @@ export function CompanyJoinScreen() {
           <AppButton
             fullWidth
             disabled
-            onPress={() => Alert.alert(t("common.soon"), t("companies.joinForm.inviteSoon"))}
+            onPress={() => showAppAlert(t("common.soon"), t("companies.joinForm.inviteSoon"))}
             title={t("companies.joinForm.joinWithCode")}
             style={styles.formBtn}
           />

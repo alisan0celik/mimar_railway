@@ -1,13 +1,6 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  Alert,
-  Pressable,
-  StyleSheet,
-  Switch,
-  Text,
-  View,
-} from "react-native";
+import { Pressable, StyleSheet, Switch, Text, View } from "react-native";
 
 import {
   calendarApi,
@@ -31,7 +24,7 @@ import { useTranslation } from "../../../shared/i18n";
 import { radius, spacing, typography } from "../../../shared/theme";
 import { useThemedStyles, type AppColors } from "../../../shared/theme";
 import { useThemeColors } from "../../../shared/theme/ThemeProvider";
-import { AppButton, AppInput, DesignBackHeader, Screen } from "../../../shared/ui";
+import { AppButton, AppInput, DesignBackHeader, Screen, showAppAlert } from "../../../shared/ui";
 
 const WEEKDAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 const MONTH_KEYS = [
@@ -132,7 +125,7 @@ export function CalendarScreen() {
 
     const granted = await requestCalendarPermission();
     if (!granted) {
-      Alert.alert(t("calendar.deviceSync.title"), t("calendar.deviceSync.permissionDenied"));
+      showAppAlert(t("calendar.deviceSync.title"), t("calendar.deviceSync.permissionDenied"));
       return;
     }
 
@@ -144,7 +137,7 @@ export function CalendarScreen() {
     // anlamasını imkânsız kılıyordu; sonucu bildir.
     const result = await syncDeviceEvents(events);
     if (result.failed > 0 && result.written === 0) {
-      Alert.alert(
+      showAppAlert(
         t("calendar.deviceSync.title"),
         t("calendar.deviceSync.syncFailed", { error: result.error ?? "" }),
       );
@@ -163,7 +156,7 @@ export function CalendarScreen() {
     const trimmedTime = time.trim();
 
     if (!trimmedTitle || !trimmedTime) {
-      Alert.alert(t("calendar.form.missingTitle"), t("calendar.form.missingMessage"));
+      showAppAlert(t("calendar.form.missingTitle"), t("calendar.form.missingMessage"));
       return;
     }
 
@@ -180,7 +173,7 @@ export function CalendarScreen() {
       setTime("");
       setIsFormOpen(false);
     } catch (e) {
-      Alert.alert(t("common.error"), t("calendar.form.saveError"));
+      showAppAlert(t("common.error"), t("calendar.form.saveError"));
     } finally {
       setSaving(false);
     }

@@ -1,6 +1,6 @@
 import { useRouter, useFocusEffect } from "expo-router";
 import { useMemo, useState, useCallback } from "react";
-import { Alert, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import { ProjectActionMenu } from "../components/ProjectActionMenu";
 import { ProjectCard } from "../components/ProjectCard";
@@ -11,7 +11,7 @@ import { type ProjectStatus } from "../../../shared/types/project.types";
 import { useProjectStore } from "../../../store/projectStore";
 import { spacing, typography } from "../../../shared/theme";
 import { useThemedStyles, type AppColors } from "../../../shared/theme";
-import { DesignEqualFilterBar, EmptyState, Screen, SearchInput } from "../../../shared/ui";
+import { DesignEqualFilterBar, EmptyState, Screen, SearchInput, showAppAlert } from "../../../shared/ui";
 
 type FilterKey = "all" | "active" | "completed";
 
@@ -71,7 +71,7 @@ export function ProjectsScreen() {
       await updateProject(menuProject.id, { status: "completed" });
       setMenuProject(null);
     } catch {
-      Alert.alert(t("states.error"), t("projects.markCompletedError"));
+      showAppAlert(t("states.error"), t("projects.markCompletedError"));
     } finally {
       setCompleting(false);
     }

@@ -433,6 +433,7 @@ export class ProgressService {
     }
 
     const nextNumber = payments.reduce((max, payment) => Math.max(max, payment.number), 0) + 1;
+    const settled = dto.status !== "draft";
 
     const created = await this.prisma.progressPayment.create({
       data: {
@@ -446,7 +447,7 @@ export class ProgressService {
         previousAmount: roundCurrency(previousAmount),
         amount,
         progressPercent: clampProgress(section.progress),
-        status: "draft",
+        status: settled ? "paid" : "draft",
         note: dto.note,
         createdById: userId,
       },
@@ -456,7 +457,17 @@ export class ProgressService {
       },
     });
 
-    await this.notifyManagers(companyId, projectId, created, "issued");
+    // Tek dokunuşta ödeme yapıldığında finans kaydı da aynı anda oluşur;
+    // ara bir taslak adımı bırakmak iki listeyi ayrıştırıyordu.
+    if (settled) {
+      const financeRecordId = await this.createFinanceRecord(created, section.name);
+      await this.prisma.progressPayment.update({
+        where: { id: created.id },
+        data: { financeRecordId },
+      });
+    }
+
+    await this.notifyManagers(companyId, projectId, created, settled ? "paid" : "issued");
     return created;
   }
 
@@ -469,6 +480,39 @@ export class ProgressService {
    * hareketi doğar. Kullanıcının aynı tutarı bir de finans ekranından elle
    * girmesini beklemek iki listenin ayrışmasına yol açıyordu.
    */
+  /** Tahsil edilen hakediş için finans kaydı yazar ve kimliğini döndürür. */
+  private async createFinanceRecord(
+    payment: {
+      number: number;
+      amount: number;
+      projectId: string;
+      companyId: string;
+      createdById: string;
+      issueDate: Date;
+      direction?: string;
+    },
+    sectionName: string | null,
+  ): Promise<string> {
+    const direction: PaymentDirection = payment.direction === "outgoing" ? "outgoing" : "incoming";
+
+    const record = await this.prisma.financeRecord.create({
+      data: {
+        // İşverenden gelen tahsilat, taşerona ödenen gider yazılır.
+        type: direction === "outgoing" ? EXPENSE_TYPE : COLLECTION_TYPE,
+        amount: payment.amount,
+        description: paymentLabel(sectionName, payment.number, direction),
+        category: "progress-payment",
+        date: payment.issueDate,
+        projectId: payment.projectId,
+        companyId: payment.companyId,
+        createdById: payment.createdById,
+      },
+      select: { id: true },
+    });
+
+    return record.id;
+  }
+
   private async syncFinanceRecord(
     payment: {
       id: string;
@@ -491,24 +535,7 @@ export class ProgressService {
     if (wasPaid === willBePaid) return payment.financeRecordId;
 
     if (willBePaid) {
-      const direction: PaymentDirection =
-        payment.direction === "outgoing" ? "outgoing" : "incoming";
-
-      const record = await this.prisma.financeRecord.create({
-        data: {
-          // İşverenden gelen tahsilat, taşerona ödenen gider yazılır.
-          type: direction === "outgoing" ? EXPENSE_TYPE : COLLECTION_TYPE,
-          amount: payment.amount,
-          description: paymentLabel(sectionName, payment.number, direction),
-          category: "progress-payment",
-          date: payment.issueDate,
-          projectId: payment.projectId,
-          companyId: payment.companyId,
-          createdById: payment.createdById,
-        },
-        select: { id: true },
-      });
-      return record.id;
+      return this.createFinanceRecord(payment, sectionName);
     }
 
     if (payment.financeRecordId) {

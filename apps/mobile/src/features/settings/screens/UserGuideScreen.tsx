@@ -1,6 +1,6 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useMemo } from "react";
-import { Alert, Linking, Pressable, StyleSheet, Text, View } from "react-native";
+import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { USER_GUIDE_VIDEO_URL } from "../constants/support.constants";
 import { USER_GUIDE_SECTION_IDS } from "../data/faqContent";
@@ -8,7 +8,7 @@ import { useTranslation } from "../../../shared/i18n";
 import { radius, spacing, typography } from "../../../shared/theme";
 import { useThemedStyles, type AppColors } from "../../../shared/theme";
 import { useThemeColors } from "../../../shared/theme/ThemeProvider";
-import { DesignBackHeader, Screen } from "../../../shared/ui";
+import { DesignBackHeader, Screen, showAppAlert } from "../../../shared/ui";
 
 export function UserGuideScreen() {
   const styles = useThemedStyles(createStyles);
@@ -29,7 +29,7 @@ export function UserGuideScreen() {
     try {
       await Linking.openURL(USER_GUIDE_VIDEO_URL);
     } catch {
-      Alert.alert(t("support.guide.videoTitle"), USER_GUIDE_VIDEO_URL);
+      showAppAlert(t("support.guide.videoTitle"), USER_GUIDE_VIDEO_URL);
     }
   };
 

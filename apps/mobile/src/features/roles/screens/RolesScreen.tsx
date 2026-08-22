@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 
 import {
   companiesApi,
@@ -17,7 +17,7 @@ import { PERMISSIONS, useCan } from "../../../shared/permissions";
 import { radius, spacing, typography } from "../../../shared/theme";
 import { useThemedStyles, type AppColors } from "../../../shared/theme";
 import { useThemeColors } from "../../../shared/theme/ThemeProvider";
-import { AppButton, ConfirmDialog, DesignBackHeader, EmptyState, NoPermissionState, Screen } from "../../../shared/ui";
+import { AppButton, ConfirmDialog, DesignBackHeader, EmptyState, NoPermissionState, Screen, showAppAlert } from "../../../shared/ui";
 import { initials } from "../../../shared/utils/initials";
 
 type RolesScreenProps = {
@@ -115,7 +115,7 @@ export function RolesScreen({ pendingUserId }: RolesScreenProps) {
       await companiesApi.approveMember(companyId, pendingUserId, { roleId: confirmRole.id });
       router.replace("/(main)/users/approval-success");
     } catch {
-      Alert.alert(t("common.error"), t("users.alerts.approveError"));
+      showAppAlert(t("common.error"), t("users.alerts.approveError"));
     } finally {
       setApproving(false);
       setConfirmRole(null);

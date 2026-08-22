@@ -98,7 +98,8 @@ describe("ProgressService", () => {
     expect(payment.cumulativeAmount).toBe(900_000);
     expect(payment.previousAmount).toBe(0);
     expect(payment.amount).toBe(900_000);
-    expect(payment.status).toBe("draft");
+    // Uygulama tek dokunuşla ödediği için varsayılan doğrudan tahsil edilmiş.
+    expect(payment.status).toBe("paid");
   });
 
   it("numbers progress payments within the item, not the project", async () => {
@@ -435,5 +436,46 @@ describe("ProgressService", () => {
     expect(summary.earnedCost).toBe(900_000);
     expect(summary.marginAmount).toBe(500_000);
     expect(summary.costTotal).toBe(2_000_000);
+  });
+
+  it("writes the finance entry as the payment is created", async () => {
+    prisma.section.findFirst.mockResolvedValue(sections[0]);
+    prisma.progressPayment.findMany.mockResolvedValue([]);
+    prisma.progressPayment.create.mockResolvedValue({
+      id: "pp1",
+      number: 1,
+      amount: 900_000,
+      projectId: "p1",
+      companyId: "c1",
+      createdById: "u1",
+      issueDate: new Date("2026-08-23T00:00:00.000Z"),
+      section: { name: "Mimari" },
+    });
+
+    await service.createPayment("c1", "p1", { sectionId: "s1" }, "u1");
+
+    expect(prisma.financeRecord.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ type: "collection", amount: 900_000 }),
+      }),
+    );
+    expect(prisma.progressPayment.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { financeRecordId: "fr1" } }),
+    );
+  });
+
+  it("leaves a draft payment out of finance", async () => {
+    prisma.section.findFirst.mockResolvedValue(sections[0]);
+    prisma.progressPayment.findMany.mockResolvedValue([]);
+
+    const payment: any = await service.createPayment(
+      "c1",
+      "p1",
+      { sectionId: "s1", status: "draft" },
+      "u1",
+    );
+
+    expect(payment.status).toBe("draft");
+    expect(prisma.financeRecord.create).not.toHaveBeenCalled();
   });
 });

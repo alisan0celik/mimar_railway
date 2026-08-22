@@ -2,7 +2,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Alert, Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { getApiErrorMessage, type CompanyLogoAsset } from "../utils/company-form";
 import { getPostAuthRoute } from "../../auth/utils/post-auth-route";
@@ -11,7 +11,7 @@ import { useTranslation } from "../../../shared/i18n";
 import { radius, spacing, typography } from "../../../shared/theme";
 import { useThemedStyles, type AppColors } from "../../../shared/theme";
 import { useThemeColors } from "../../../shared/theme/ThemeProvider";
-import { AppButton, AppInput, Screen, ScreenHeader } from "../../../shared/ui";
+import { AppButton, AppInput, Screen, ScreenHeader, showAppAlert } from "../../../shared/ui";
 import { useAuthStore } from "../../../store/authStore";
 
 const BUSINESS_TYPES: BusinessType[] = ["architecture", "contractor", "both"];
@@ -34,7 +34,7 @@ export function CreateCompanyScreen() {
   const handlePhotoSelect = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert(t("companies.alerts.permissionRequired"), t("companies.alerts.galleryPermission"));
+      showAppAlert(t("companies.alerts.permissionRequired"), t("companies.alerts.galleryPermission"));
       return;
     }
 
@@ -49,7 +49,7 @@ export function CreateCompanyScreen() {
 
     const asset = result.assets[0];
     if (asset.fileSize && asset.fileSize > 5 * 1024 * 1024) {
-      Alert.alert(t("companies.alerts.fileTooLarge"), t("companies.alerts.logoMaxSize"));
+      showAppAlert(t("companies.alerts.fileTooLarge"), t("companies.alerts.logoMaxSize"));
       return;
     }
 
@@ -62,7 +62,7 @@ export function CreateCompanyScreen() {
 
   const handleCreate = async () => {
     if (!companyName.trim()) {
-      Alert.alert(t("common.error"), t("companies.alerts.nameRequired"));
+      showAppAlert(t("common.error"), t("companies.alerts.nameRequired"));
       return;
     }
 
@@ -81,7 +81,7 @@ export function CreateCompanyScreen() {
         try {
           await companiesApi.uploadLogo(data.id, logoAsset);
         } catch {
-          Alert.alert(
+          showAppAlert(
             t("companies.alerts.logoUploadFailed"),
             t("companies.alerts.logoUploadFailedDesc"),
           );
@@ -95,7 +95,7 @@ export function CreateCompanyScreen() {
       await completeAuthSession(data.user, data.accessToken, data.refreshToken);
       router.replace(getPostAuthRoute(data.user));
     } catch (error) {
-      Alert.alert(t("common.error"), getApiErrorMessage(error, t("companies.alerts.createFailed")));
+      showAppAlert(t("common.error"), getApiErrorMessage(error, t("companies.alerts.createFailed")));
     } finally {
       setSaving(false);
     }

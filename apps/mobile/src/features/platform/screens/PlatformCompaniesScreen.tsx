@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 
 import {
   companiesApi,
@@ -13,7 +13,7 @@ import { useTranslation } from "../../../shared/i18n";
 import { radius, spacing, typography } from "../../../shared/theme";
 import { useThemedStyles, type AppColors } from "../../../shared/theme";
 import { useThemeColors } from "../../../shared/theme/ThemeProvider";
-import { DesignBackHeader, EmptyState, Screen } from "../../../shared/ui";
+import { DesignBackHeader, EmptyState, Screen, showAppAlert } from "../../../shared/ui";
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
@@ -67,7 +67,7 @@ export function PlatformCompaniesScreen() {
       const response = await companiesApi.getPlatformLicenses();
       setCompanies(response.data);
     } catch {
-      Alert.alert(t("common.error"), t("platformCompanies.loadError"));
+      showAppAlert(t("common.error"), t("platformCompanies.loadError"));
     } finally {
       setLoading(false);
     }
@@ -100,7 +100,7 @@ export function PlatformCompaniesScreen() {
         items.map((item) => (item.id === company.id ? response.data : item)),
       );
     } catch {
-      Alert.alert(t("common.error"), t("platformCompanies.updateError"));
+      showAppAlert(t("common.error"), t("platformCompanies.updateError"));
     } finally {
       setUpdatingId(null);
     }

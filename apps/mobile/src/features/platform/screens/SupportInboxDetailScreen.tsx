@@ -1,14 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -18,7 +9,7 @@ import { radius, spacing, typography } from "../../../shared/theme";
 import { useThemedStyles, type AppColors } from "../../../shared/theme";
 import { useThemeColors } from "../../../shared/theme/ThemeProvider";
 import { useKeyboardOverlap, useKeyboardVisible } from "../../../shared/hooks";
-import { DesignBackHeader, Screen } from "../../../shared/ui";
+import { DesignBackHeader, Screen, showAppAlert } from "../../../shared/ui";
 
 const STATUS_OPTIONS = ["open", "in_progress", "waiting_user", "resolved", "closed"] as const;
 
@@ -85,7 +76,7 @@ export function SupportInboxDetailScreen({ ticketId }: { ticketId: string }) {
       setTicket(await supportApi.replyInbox(ticket.id, body));
       setReply("");
     } catch (e: any) {
-      Alert.alert(t("common.error"), e?.response?.data?.message || t("support.sendFailed"));
+      showAppAlert(t("common.error"), e?.response?.data?.message || t("support.sendFailed"));
     } finally {
       setSending(false);
     }
@@ -97,7 +88,7 @@ export function SupportInboxDetailScreen({ ticketId }: { ticketId: string }) {
     try {
       setTicket(await supportApi.updateInboxStatus(ticket.id, status));
     } catch (e: any) {
-      Alert.alert(t("common.error"), e?.response?.data?.message || t("support.sendFailed"));
+      showAppAlert(t("common.error"), e?.response?.data?.message || t("support.sendFailed"));
     } finally {
       setUpdatingStatus(false);
     }

@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState, useEffect } from "react";
-import { Pressable, StyleSheet, Text, View, Platform, Alert } from "react-native";
+import { Pressable, StyleSheet, Text, View, Platform } from "react-native";
 import * as AppleAuthentication from "expo-apple-authentication";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 
@@ -17,6 +17,7 @@ import {
   AuthBrandHeader,
   AuthFormCard,
   AuthScreenShell,
+  showAppAlert,
 } from "../../../shared/ui";
 
 const SUBSCRIPTION_BLOCK_CODES = new Set([
@@ -79,7 +80,7 @@ export function LoginScreen() {
       if (typeof window !== "undefined" && window.alert) {
         window.alert(t("auth.social.appleMobileOnly"));
       } else {
-        Alert.alert(t("common.info"), t("auth.social.appleMobileOnly"));
+        showAppAlert(t("common.info"), t("auth.social.appleMobileOnly"));
       }
       return;
     }
@@ -87,7 +88,7 @@ export function LoginScreen() {
       setLoading(true);
       const isAvailable = await AppleAuthentication.isAvailableAsync();
       if (!isAvailable) {
-        Alert.alert(t("common.info"), t("auth.social.appleMobileOnly"));
+        showAppAlert(t("common.info"), t("auth.social.appleMobileOnly"));
         return;
       }
       const credential = await AppleAuthentication.signInAsync({
@@ -104,11 +105,11 @@ export function LoginScreen() {
     } catch (e: any) {
       if (e?.code === "ERR_REQUEST_CANCELED") return;
       if (isApiError(e)) {
-        Alert.alert(t("common.error"), getLoginErrorMessage(e, t));
+        showAppAlert(t("common.error"), getLoginErrorMessage(e, t));
         return;
       }
       console.error(e);
-      Alert.alert(t("common.error"), e?.message || t("auth.errors.socialLoginFailed"));
+      showAppAlert(t("common.error"), e?.message || t("auth.errors.socialLoginFailed"));
     } finally {
       setLoading(false);
     }
@@ -119,7 +120,7 @@ export function LoginScreen() {
       if (typeof window !== "undefined" && window.alert) {
         window.alert(t("auth.social.googleMobileOnly"));
       } else {
-        Alert.alert(t("common.info"), t("auth.social.googleMobileOnly"));
+        showAppAlert(t("common.info"), t("auth.social.googleMobileOnly"));
       }
       return;
     }
@@ -143,7 +144,7 @@ export function LoginScreen() {
         router.replace(getPostAuthRoute(user));
       } else if (userInfo?.type !== "cancelled") {
         // idToken yok: genelde EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID boş/yanlış demektir
-        Alert.alert(
+        showAppAlert(
           t("common.error"),
           `Google idToken alınamadı. Web Client ID eksik olabilir.\nwebClientId: "${process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || "(boş)"}"`,
         );
@@ -153,11 +154,11 @@ export function LoginScreen() {
       if (e?.code === "SIGN_IN_CANCELLED" || e?.code === "-5") return;
       if (isApiError(e)) {
         // Backend reddetti (ör. şirket lisansı dolmuş) — anlaşılır mesaj göster
-        Alert.alert(t("common.error"), getLoginErrorMessage(e, t));
+        showAppAlert(t("common.error"), getLoginErrorMessage(e, t));
         return;
       }
       console.error(e);
-      Alert.alert(
+      showAppAlert(
         t("common.error"),
         `Google giriş hatası\ncode: ${e?.code ?? "?"}\nmessage: ${e?.message ?? String(e)}`,
       );

@@ -4,7 +4,7 @@ import DateTimePicker, {
 } from "@react-native-community/datetimepicker";
 import { useRouter } from "expo-router";
 import { useMemo, useState, useEffect } from "react";
-import { ActivityIndicator, Alert, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
 import type { FinanceTransactionDTO } from "../../../services/api/finance.api";
 import { FINANCE_MAX_AMOUNT, financeApi } from "../../../services/api/finance.api";
@@ -19,6 +19,7 @@ import {
   AppInput,
   DesignBackHeader,
   Screen,
+  showAppAlert,
 } from "../../../shared/ui";
 
 type AddPaymentScreenProps = {
@@ -124,17 +125,17 @@ export function AddPaymentScreen({ projectId, transactionId, editingTransaction 
 
   const handleSave = async () => {
     if (!amount.trim()) {
-      Alert.alert(t("finance.validation.missingInfo"), t("finance.validation.amountRequired"));
+      showAppAlert(t("finance.validation.missingInfo"), t("finance.validation.amountRequired"));
       return;
     }
 
     const parsedAmount = parseFloat(amount);
     if (Number.isNaN(parsedAmount) || parsedAmount < 0) {
-      Alert.alert(t("finance.validation.invalidAmount"), t("finance.validation.amountInvalid"));
+      showAppAlert(t("finance.validation.invalidAmount"), t("finance.validation.amountInvalid"));
       return;
     }
     if (parsedAmount > FINANCE_MAX_AMOUNT) {
-      Alert.alert(
+      showAppAlert(
         t("finance.validation.invalidAmount"),
         t("finance.validation.amountMax", {
           max: FINANCE_MAX_AMOUNT.toLocaleString(locale),
@@ -174,7 +175,7 @@ export function AddPaymentScreen({ projectId, transactionId, editingTransaction 
         },
       });
     } catch (err) {
-      Alert.alert(t("common.error"), t("finance.validation.saveError"));
+      showAppAlert(t("common.error"), t("finance.validation.saveError"));
     } finally {
       setLoading(false);
     }

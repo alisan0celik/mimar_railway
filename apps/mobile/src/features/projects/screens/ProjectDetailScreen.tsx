@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { NoteComposer, type NoteComposerPayload } from "../components/NoteComposer";
@@ -23,6 +23,7 @@ import {
   DesignBackHeader,
   ErrorState,
   Screen,
+  showAppAlert,
 } from "../../../shared/ui";
 import { useTranslation, useLocaleCode } from "../../../shared/i18n";
 import { PERMISSIONS, useCan } from "../../../shared/permissions";
@@ -212,7 +213,7 @@ export function ProjectDetailScreen() {
       setNotes((items) => [created, ...items.filter((item) => item.id !== created.id)]);
     } catch (error) {
       logMutationError("note", error);
-      Alert.alert(t("common.error"), `${t("projects.notes.addError")}${mutationErrorDetail(error)}`);
+      showAppAlert(t("common.error"), `${t("projects.notes.addError")}${mutationErrorDetail(error)}`);
     }
   };
 
@@ -226,7 +227,7 @@ export function ProjectDetailScreen() {
       setTodos((items) => [created, ...items.filter((item) => item.id !== created.id)]);
     } catch (error) {
       logMutationError("task", error);
-      Alert.alert(t("common.error"), `${t("projects.todos.addError")}${mutationErrorDetail(error)}`);
+      showAppAlert(t("common.error"), `${t("projects.todos.addError")}${mutationErrorDetail(error)}`);
     }
   };
 

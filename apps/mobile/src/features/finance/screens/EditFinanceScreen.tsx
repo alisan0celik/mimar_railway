@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { useState, useEffect } from "react";
-import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { financeApi } from "../../../services/api/finance.api";
 import { useTranslation } from "../../../shared/i18n";
@@ -9,7 +9,7 @@ import { useProjectStore } from "../../../store/projectStore";
 import { syncFinanceSummaries } from "../utils/syncFinanceSummaries";
 import { radius, spacing, typography } from "../../../shared/theme";
 import { useThemedStyles, type AppColors } from "../../../shared/theme";
-import { AppButton, AppInput, DesignBackHeader, Screen } from "../../../shared/ui";
+import { AppButton, AppInput, DesignBackHeader, Screen, showAppAlert } from "../../../shared/ui";
 
 type EditFinanceScreenProps = {
   projectId?: string;
@@ -62,7 +62,7 @@ export function EditFinanceScreen({ projectId }: EditFinanceScreenProps) {
         },
       });
     } catch (error) {
-      Alert.alert(t("common.error"), t("finance.edit.updateError"));
+      showAppAlert(t("common.error"), t("finance.edit.updateError"));
     } finally {
       setLoading(false);
     }

@@ -2,7 +2,7 @@ import Constants from "expo-constants";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useCallback, useMemo } from "react";
-import { Alert, Linking, Pressable, StyleSheet, Text, View } from "react-native";
+import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { SUPPORT_CONTACT_EMAIL, SUPPORT_WEBSITE_URL } from "../constants/support.constants";
 
@@ -12,7 +12,7 @@ import { useTranslation } from "../../../shared/i18n";
 import { radius, spacing, typography } from "../../../shared/theme";
 import { useThemedStyles, type AppColors } from "../../../shared/theme";
 import { useThemeColors } from "../../../shared/theme/ThemeProvider";
-import { DesignBackHeader, Screen } from "../../../shared/ui";
+import { DesignBackHeader, Screen, showAppAlert } from "../../../shared/ui";
 
 export function SupportScreen() {
   const styles = useThemedStyles(createStyles);
@@ -77,14 +77,14 @@ export function SupportScreen() {
       await Linking.openURL(url);
       return;
     }
-    Alert.alert(t("support.contact"), SUPPORT_CONTACT_EMAIL);
+    showAppAlert(t("support.contact"), SUPPORT_CONTACT_EMAIL);
   };
 
   const openWebsite = async () => {
     try {
       await Linking.openURL(SUPPORT_WEBSITE_URL);
     } catch {
-      Alert.alert(t("support.website"), SUPPORT_WEBSITE_LABEL);
+      showAppAlert(t("support.website"), SUPPORT_WEBSITE_LABEL);
     }
   };
 

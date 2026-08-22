@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 import type { FinanceTransactionDTO } from "../../../services/api/finance.api";
 import { financeApi } from "../../../services/api/finance.api";
@@ -13,9 +13,11 @@ import { useThemedStyles, type AppColors } from "../../../shared/theme";
 import { useThemeColors } from "../../../shared/theme/ThemeProvider";
 import { useFinanceStore, useProjectFinanceSummary } from "../../../store/financeStore";
 import {
+  ConfirmDialog,
   DesignBackHeader,
   NoPermissionState,
   Screen,
+  showAppAlert,
 } from "../../../shared/ui";
 import { TransactionCard } from "../components/TransactionCard";
 import { syncFinanceSummaries } from "../utils/syncFinanceSummaries";
@@ -48,6 +50,7 @@ export function FinanceDetailScreen({ projectId }: FinanceDetailScreenProps) {
     });
   }, []);
 
+  const [pendingDelete, setPendingDelete] = useState<string | null>(null);
   const [localTransactions, setLocalTransactions] = useState<FinanceTransactionDTO[]>(
     () => sortTransactions(finance?.transactions || []),
   );
@@ -76,32 +79,24 @@ export function FinanceDetailScreen({ projectId }: FinanceDetailScreenProps) {
       params: { projectId: finance?.projectId || projectId },
     });
 
-  const handleDeleteTransaction = useCallback(
-    (transactionId: string) => {
-      Alert.alert(
-        t("finance.delete.title"),
-        t("finance.delete.message"),
-        [
-          { text: t("common.cancel"), style: "cancel" },
-          {
-            text: t("common.delete"),
-            style: "destructive",
-            onPress: async () => {
-              try {
-                setLocalTransactions((prev) => prev.filter((txn) => txn.id !== transactionId));
-                const { data } = await financeApi.deleteTransaction(transactionId);
-                await syncFinanceSummaries(data.summary);
-              } catch {
-                await fetchSummaries({ silent: true });
-                Alert.alert(t("common.error"), t("finance.delete.error"));
-              }
-            },
-          },
-        ],
-      );
-    },
-    [fetchSummaries, t],
-  );
+  const handleDeleteTransaction = useCallback((transactionId: string) => {
+    setPendingDelete(transactionId);
+  }, []);
+
+  const confirmDelete = useCallback(async () => {
+    const transactionId = pendingDelete;
+    setPendingDelete(null);
+    if (!transactionId) return;
+
+    try {
+      setLocalTransactions((prev) => prev.filter((txn) => txn.id !== transactionId));
+      const { data } = await financeApi.deleteTransaction(transactionId);
+      await syncFinanceSummaries(data.summary);
+    } catch {
+      await fetchSummaries({ silent: true });
+      showAppAlert(t("common.error"), t("finance.delete.error"));
+    }
+  }, [pendingDelete, fetchSummaries, t]);
 
   const handleEditTransaction = useCallback(
     (transaction: FinanceTransactionDTO) => {
@@ -243,6 +238,16 @@ export function FinanceDetailScreen({ projectId }: FinanceDetailScreenProps) {
           ))
         )}
       </Screen>
+
+      <ConfirmDialog
+        confirmDestructive
+        confirmLabel={t("common.delete")}
+        message={t("finance.delete.message")}
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={confirmDelete}
+        title={t("finance.delete.title")}
+        visible={pendingDelete !== null}
+      />
 
       {/* FAB */}
       {canCreate && (

@@ -1,6 +1,6 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { router } from "expo-router";
 
 import { rolesApi, companiesApi } from "../../../services/api";
@@ -16,7 +16,7 @@ import { useTranslation } from "../../../shared/i18n";
 import { radius, spacing, typography } from "../../../shared/theme";
 import { useThemedStyles, type AppColors } from "../../../shared/theme";
 import { useThemeColors } from "../../../shared/theme/ThemeProvider";
-import { AppButton, AppInput, DesignBackHeader, NoPermissionState, Screen } from "../../../shared/ui";
+import { AppButton, AppInput, DesignBackHeader, NoPermissionState, Screen, showAppAlert } from "../../../shared/ui";
 
 type CreateRoleScreenProps = {
   roleId?: string;
@@ -72,7 +72,7 @@ export function CreateRoleScreen({ roleId, pendingUserId }: CreateRoleScreenProp
       setSelected(res.data.permissions as PermissionCode[]);
       setLoading(false);
     }).catch(() => {
-      Alert.alert(t("common.error"), t("roles.alerts.loadError"));
+      showAppAlert(t("common.error"), t("roles.alerts.loadError"));
       setLoading(false);
     });
   }, [roleId, t]);
@@ -85,7 +85,7 @@ export function CreateRoleScreen({ roleId, pendingUserId }: CreateRoleScreenProp
 
   const handleSave = async () => {
     if (!name.trim()) {
-      Alert.alert(t("common.error"), t("roles.alerts.nameRequired"));
+      showAppAlert(t("common.error"), t("roles.alerts.nameRequired"));
       return;
     }
 
@@ -117,7 +117,7 @@ export function CreateRoleScreen({ roleId, pendingUserId }: CreateRoleScreenProp
       router.back();
     } catch (error: any) {
       const msg = error?.response?.data?.message || t("roles.alerts.saveError");
-      Alert.alert(t("common.error"), msg);
+      showAppAlert(t("common.error"), msg);
     } finally {
       setSaving(false);
     }

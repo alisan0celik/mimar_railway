@@ -17,6 +17,15 @@ export class CreateProgressPaymentDto {
   @IsIn(["incoming", "outgoing"])
   direction?: string;
 
+  /**
+   * "paid" gönderilirse hakediş doğrudan tahsil edilmiş sayılır ve finans
+   * kaydı aynı anda oluşur. Uygulama tek dokunuşla ödeme yaptığı için
+   * varsayılan da budur; taslak akışı isteyen "draft" gönderir.
+   */
+  @IsOptional()
+  @IsIn(["draft", "paid"])
+  status?: string;
+
   @IsOptional()
   @IsISO8601()
   issueDate?: string;

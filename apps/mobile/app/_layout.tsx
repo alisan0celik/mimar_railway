@@ -6,6 +6,7 @@ import { hydrateAppPreferences } from "../src/store/appStore";
 import { useAuthStore } from "../src/store/authStore";
 import { onAuthSessionExpired } from "../src/services/auth/auth-session";
 import { OfflineBanner } from "../src/components/OfflineBanner";
+import { AppAlertHost } from "../src/shared/ui";
 import { initSyncEngine } from "../src/offline/sync/sync-engine";
 import { initSyncNotificationListener } from "../src/offline/sync/sync-listener";
 import { registerBackgroundSyncAsync } from "../src/offline/sync/background-sync";
@@ -61,6 +62,7 @@ function RootShell() {
     <View style={[styles.root, isWeb && styles.rootWeb]}>
       <View style={[styles.mobileShell, isWeb && styles.mobileShellWeb]}>
         <OfflineBanner />
+        <AppAlertHost />
         <PushBootstrap />
         <Stack screenOptions={{ headerShown: false, contentStyle: styles.stackContent }} />
       </View>

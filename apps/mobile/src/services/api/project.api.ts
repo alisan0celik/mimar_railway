@@ -383,7 +383,13 @@ export const projectApi = {
   },
   async createProgressPayment(
     projectId: string,
-    payload: { sectionId: string; direction?: ProgressPaymentDirection; note?: string },
+    payload: {
+      sectionId: string;
+      direction?: ProgressPaymentDirection;
+      /** "paid" gönderilirse hakediş doğrudan tahsil edilmiş oluşturulur. */
+      status?: "draft" | "paid";
+      note?: string;
+    },
   ) {
     const { data } = await apiClient.post<ProgressPaymentDTO>(
       `/projects/${projectId}/progress-payments`,

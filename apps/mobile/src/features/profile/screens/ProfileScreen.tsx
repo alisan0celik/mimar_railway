@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter, type Href } from "expo-router";
 import { useMemo, useState } from "react";
-import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { usersApi } from "../../../services/api/users.api";
 import { useTranslation } from "../../../shared/i18n";
@@ -11,7 +11,12 @@ import { useAppStore } from "../../../store/appStore";
 import { radius, spacing, typography } from "../../../shared/theme";
 import { useThemedStyles, type AppColors } from "../../../shared/theme";
 import { useThemeColors } from "../../../shared/theme/ThemeProvider";
-import { DesignBackHeader, Screen } from "../../../shared/ui";
+import {
+  ConfirmDialog,
+  DesignBackHeader,
+  Screen,
+  showAppAlert,
+} from "../../../shared/ui";
 import { initials } from "../../../shared/utils/initials";
 
 type MenuItem = {
@@ -38,42 +43,29 @@ export function ProfileScreen() {
   const canEditCompany = useCan(PERMISSIONS.COMPANY_UPDATE);
   const [deleting, setDeleting] = useState(false);
 
-  const handleDeleteAccount = () => {
-    Alert.alert(t("profile.deleteAccount.title"), t("profile.deleteAccount.warning"), [
-      { text: t("common.cancel"), style: "cancel" },
-      {
-        text: t("profile.deleteAccount.confirmButton"),
-        style: "destructive",
-        onPress: () => {
-          // İkinci onay — kalıcı silme öncesi son kontrol
-          Alert.alert(
-            t("profile.deleteAccount.finalTitle"),
-            t("profile.deleteAccount.finalWarning"),
-            [
-              { text: t("common.cancel"), style: "cancel" },
-              {
-                text: t("profile.deleteAccount.finalButton"),
-                style: "destructive",
-                onPress: async () => {
-                  setDeleting(true);
-                  try {
-                    await usersApi.deleteAccount();
-                    await logout();
-                    router.replace("/(auth)/login");
-                  } catch (error: any) {
-                    const message =
-                      error?.response?.data?.message || t("profile.deleteAccount.error");
-                    Alert.alert(t("common.error"), message);
-                  } finally {
-                    setDeleting(false);
-                  }
-                },
-              },
-            ],
-          );
-        },
-      },
-    ]);
+  /**
+   * Hesap silme iki aşamalı onaydan geçer: işlem geri alınamıyor ve
+   * kullanıcının verisinin tamamı siliniyor.
+   */
+  const [deleteStep, setDeleteStep] = useState<0 | 1 | 2>(0);
+
+  const handleDeleteAccount = () => setDeleteStep(1);
+
+  const confirmDeleteAccount = async () => {
+    setDeleteStep(0);
+    setDeleting(true);
+    try {
+      await usersApi.deleteAccount();
+      await logout();
+      router.replace("/(auth)/login");
+    } catch (error: any) {
+      showAppAlert(
+        t("common.error"),
+        error?.response?.data?.message || t("profile.deleteAccount.error"),
+      );
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const menuItems = useMemo((): MenuItem[] => {
@@ -252,6 +244,27 @@ export function ProfileScreen() {
           {deleting ? t("profile.deleteAccount.deleting") : t("profile.deleteAccount.button")}
         </Text>
       </Pressable>
+
+      <ConfirmDialog
+        confirmDestructive
+        confirmLabel={t("profile.deleteAccount.confirmButton")}
+        message={t("profile.deleteAccount.warning")}
+        onCancel={() => setDeleteStep(0)}
+        onConfirm={() => setDeleteStep(2)}
+        title={t("profile.deleteAccount.title")}
+        visible={deleteStep === 1}
+      />
+
+      <ConfirmDialog
+        confirmDestructive
+        confirmLabel={t("profile.deleteAccount.finalButton")}
+        loading={deleting}
+        message={t("profile.deleteAccount.finalWarning")}
+        onCancel={() => setDeleteStep(0)}
+        onConfirm={confirmDeleteAccount}
+        title={t("profile.deleteAccount.finalTitle")}
+        visible={deleteStep === 2}
+      />
     </Screen>
   );
 }

@@ -2,13 +2,13 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
-import { Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { useTranslation } from "../../../shared/i18n";
 import { radius, spacing, typography } from "../../../shared/theme";
 import { useThemedStyles, type AppColors } from "../../../shared/theme";
 import { useThemeColors } from "../../../shared/theme/ThemeProvider";
-import { AppButton, Screen } from "../../../shared/ui";
+import { AppButton, Screen, showAppAlert } from "../../../shared/ui";
 import { companiesApi } from "../../../services/api";
 import { setTokens } from "../../../services/auth/token-storage";
 import { useAuthStore } from "../../../store/authStore";
@@ -98,7 +98,7 @@ export function JoinRequestScreen() {
               params: { companyName, submittedAt: new Date().toISOString() },
             });
           } catch {
-            Alert.alert(t("common.error"), t("companies.alerts.requestFailed"));
+            showAppAlert(t("common.error"), t("companies.alerts.requestFailed"));
           } finally {
             setSending(false);
           }
