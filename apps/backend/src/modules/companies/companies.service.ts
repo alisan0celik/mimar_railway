@@ -13,7 +13,7 @@ import { CreateCompanyDto } from "./dto/create-company.dto";
 import { UpdateCompanyDto } from "./dto/update-company.dto";
 import { UpdateCompanySubscriptionDto } from "./dto/update-company-subscription.dto";
 import { JoinRequestDto } from "./dto/join-request.dto";
-import { saveCompanyLogo } from "./company-logo.storage";
+import { deleteCompanyLogoFile, saveCompanyLogo } from "./company-logo.storage";
 import {
   MEMBERSHIP_ACTION,
   MEMBERSHIP_ROUTES,
@@ -335,7 +335,7 @@ export class CompaniesService {
     const company = await this.prisma.company.findUnique({ where: { id: companyId } });
     if (!company) throw new NotFoundException("Şirket bulunamadı");
 
-    const logoUrl = await saveCompanyLogo(companyId, file);
+    const logoUrl = await saveCompanyLogo(companyId, file, company.logoUrl);
 
     const updated = await this.prisma.company.update({
       where: { id: companyId },
@@ -357,6 +357,10 @@ export class CompaniesService {
       where: { id: companyId },
       data: { logoUrl: null },
     });
+
+    // Kayıt temizlendikten sonra dosya da silinir; aksi halde uploads
+    // klasöründe erişilemeyen görseller birikiyordu.
+    await deleteCompanyLogoFile(company.logoUrl);
 
     return {
       id: updated.id,

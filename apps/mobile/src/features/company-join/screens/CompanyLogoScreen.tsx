@@ -2,7 +2,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useCallback, useState } from "react";
 import { useFocusEffect } from "expo-router";
-import { ActivityIndicator, Alert, Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { getApiErrorMessage, type CompanyLogoAsset } from "../utils/company-form";
 import { companiesApi } from "../../../services/api";
@@ -11,7 +11,13 @@ import { radius, spacing, typography } from "../../../shared/theme";
 import { useThemedStyles, type AppColors } from "../../../shared/theme";
 import { useThemeColors } from "../../../shared/theme/ThemeProvider";
 import { resolveApiAssetUrl } from "../../../shared/utils";
-import { AppButton, DesignBackHeader, NoPermissionState, Screen } from "../../../shared/ui";
+import {
+  AppButton,
+  ConfirmDialog,
+  DesignBackHeader,
+  NoPermissionState,
+  Screen,
+} from "../../../shared/ui";
 import { PERMISSIONS, useCan } from "../../../shared/permissions";
 import { useAuthStore } from "../../../store/authStore";
 
@@ -27,6 +33,10 @@ export function CompanyLogoScreen() {
   const [initials, setInitials] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  // Yerli Alert kutuları uygulamanın dışından gelmiş gibi duruyordu;
+  // bilgilendirme ve onaylar uygulamanın kendi diyaloguyla veriliyor.
+  const [notice, setNotice] = useState<{ title: string; message: string } | null>(null);
+  const [removeOpen, setRemoveOpen] = useState(false);
 
   const loadCompany = useCallback(async () => {
     if (!companyId) {
@@ -55,7 +65,10 @@ export function CompanyLogoScreen() {
 
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert(t("companies.alerts.permissionRequired"), t("companies.alerts.galleryPermission"));
+      setNotice({
+        title: t("companies.alerts.permissionRequired"),
+        message: t("companies.alerts.galleryPermission"),
+      });
       return;
     }
 
@@ -69,7 +82,10 @@ export function CompanyLogoScreen() {
 
     const asset = result.assets[0];
     if (asset.fileSize && asset.fileSize > 5 * 1024 * 1024) {
-      Alert.alert(t("companies.alerts.fileTooLarge"), t("companies.alerts.logoMaxSize"));
+      setNotice({
+        title: t("companies.alerts.fileTooLarge"),
+        message: t("companies.alerts.logoMaxSize"),
+      });
       return;
     }
 
@@ -83,12 +99,12 @@ export function CompanyLogoScreen() {
     try {
       const { data } = await companiesApi.uploadLogo(companyId, logoAsset);
       setLogoUrl(data.logoUrl ?? null);
-      Alert.alert(t("common.success"), t("companies.logo.updated"));
+      setNotice({ title: t("common.success"), message: t("companies.logo.updated") });
     } catch (error) {
-      Alert.alert(
-        t("companies.alerts.logoUploadFailed"),
-        getApiErrorMessage(error, t("companies.alerts.logoUploadFailedDesc")),
-      );
+      setNotice({
+        title: t("companies.alerts.logoUploadFailed"),
+        message: getApiErrorMessage(error, t("companies.alerts.logoUploadFailedDesc")),
+      });
     } finally {
       setUploading(false);
     }
@@ -96,28 +112,25 @@ export function CompanyLogoScreen() {
 
   const confirmRemove = () => {
     if (!companyId) return;
-    Alert.alert(t("companies.logo.removeTitle"), t("companies.logo.removeConfirm"), [
-      { text: t("common.cancel"), style: "cancel" },
-      {
-        text: t("common.delete"),
-        style: "destructive",
-        onPress: async () => {
-          setUploading(true);
-          try {
-            await companiesApi.removeLogo(companyId);
-            setLogoUrl(null);
-            Alert.alert(t("common.success"), t("companies.logo.removed"));
-          } catch (error) {
-            Alert.alert(
-              t("common.error"),
-              getApiErrorMessage(error, t("companies.alerts.logoUploadFailedDesc")),
-            );
-          } finally {
-            setUploading(false);
-          }
-        },
-      },
-    ]);
+    setRemoveOpen(true);
+  };
+
+  const handleRemove = async () => {
+    if (!companyId) return;
+    setRemoveOpen(false);
+    setUploading(true);
+    try {
+      await companiesApi.removeLogo(companyId);
+      setLogoUrl(null);
+      setNotice({ title: t("common.success"), message: t("companies.logo.removed") });
+    } catch (error) {
+      setNotice({
+        title: t("common.error"),
+        message: getApiErrorMessage(error, t("companies.alerts.logoUploadFailedDesc")),
+      });
+    } finally {
+      setUploading(false);
+    }
   };
 
   if (!canEditCompany) {
@@ -181,6 +194,27 @@ export function CompanyLogoScreen() {
           </>
         )}
       </View>
+
+      <ConfirmDialog
+        confirmDestructive
+        confirmLabel={t("common.delete")}
+        loading={uploading}
+        message={t("companies.logo.removeConfirm")}
+        onCancel={() => setRemoveOpen(false)}
+        onConfirm={handleRemove}
+        title={t("companies.logo.removeTitle")}
+        visible={removeOpen}
+      />
+
+      <ConfirmDialog
+        confirmLabel={t("common.ok")}
+        message={notice?.message ?? ""}
+        onCancel={() => setNotice(null)}
+        onConfirm={() => setNotice(null)}
+        singleAction
+        title={notice?.title ?? ""}
+        visible={notice !== null}
+      />
     </Screen>
   );
 }
