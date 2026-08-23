@@ -15,6 +15,14 @@ export type ProjectFinanceSummary = {
   projectName: string;
   customerName: string;
   agreedAmount: number;
+  /**
+   * Anlaşma tutarı imalat kalemlerinden mi türetildi?
+   *
+   * Türetildiyse projenin `budget` alanını yazmak ekranda hiçbir şeyi
+   * değiştirmez; uygulama bu işarete bakıp düzenlemeyi kapatır ve kullanıcıyı
+   * kalemlerin bulunduğu hakediş ekranına yönlendirir.
+   */
+  agreedAmountFromSections: boolean;
   receivedAmount: number;
   expenseAmount: number;
   remainingAmount: number;
@@ -89,6 +97,7 @@ export function calculateProjectFinanceSummary(input: {
     projectName: input.projectName,
     customerName: input.customerName,
     agreedAmount,
+    agreedAmountFromSections: sectionTotal > 0,
     receivedAmount,
     expenseAmount,
     remainingAmount,

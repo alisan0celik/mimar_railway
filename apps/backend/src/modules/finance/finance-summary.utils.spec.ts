@@ -137,6 +137,8 @@ describe("calculateGlobalFinanceSummary", () => {
 
     expect(summary.agreedAmount).toBe(1_200_000);
     expect(summary.remainingAmount).toBe(1_200_000);
+    // Uygulama bu işarete bakıp anlaşma tutarı düzenlemesini kapatıyor.
+    expect(summary.agreedAmountFromSections).toBe(true);
   });
 
   it("falls back to the entered budget when no item is priced", () => {
@@ -150,5 +152,7 @@ describe("calculateGlobalFinanceSummary", () => {
     });
 
     expect(summary.agreedAmount).toBe(500_000);
+    // Kalem bedeli yok; tutar elle düzenlenebilir kalmalı.
+    expect(summary.agreedAmountFromSections).toBe(false);
   });
 });

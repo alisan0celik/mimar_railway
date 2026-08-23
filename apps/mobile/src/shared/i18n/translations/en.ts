@@ -271,6 +271,10 @@ export const en = {
       selectProjectPlaceholder: "Select a project...",
       agreedAmountLabel: "Total Agreement Amount (₺)",
       updateError: "Could not update project budget.",
+      lockedTitle: "This amount comes from the work items",
+      lockedBody:
+        "The agreement amount for this project is the sum of its work item values. To change it, edit those values on the Work Items and Progress Payments screen.",
+      lockedAction: "Go to Work Items and Progress Payments",
     },
     addPaymentForm: {
       editTitle: "Edit Payment",

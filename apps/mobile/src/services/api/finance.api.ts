@@ -19,6 +19,8 @@ export interface FinanceSummaryDTO {
   projectName: string;
   customerName: string;
   agreedAmount: number;
+  /** Tutar imalat kalemlerinden türetildiyse finans ekranından düzenlenemez. */
+  agreedAmountFromSections?: boolean;
   receivedAmount: number;
   expenseAmount: number;
   remainingAmount: number;

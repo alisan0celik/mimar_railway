@@ -39,6 +39,17 @@ export function EditFinanceScreen({ projectId }: EditFinanceScreenProps) {
   const selectedProject = projects.find((p) => p.id === selectedProjectId);
   const isValid = selectedProjectId.trim().length > 0 && agreedAmount.trim().length > 0;
 
+  /*
+   * Kalem bedeli girilmiş projelerde anlaşma tutarı kalemlerden hesaplanıyor
+   * ve projenin `budget` alanı ekrana hiç yansımıyor. Alan açık bırakılırsa
+   * kayıt başarıyla geçiyor ama görünen tutar değişmiyor; o yüzden burada
+   * düzenlemeyi kapatıp kullanıcıyı kalemlerin olduğu ekrana yönlendiriyoruz.
+   * Seçili projeye bakılıyor, açılıştaki projeye değil: listeden başka bir
+   * proje seçilince uyarı da ona göre değişmeli.
+   */
+  const selectedSummary = summaries.find((r) => r.projectId === selectedProjectId);
+  const isDerivedFromSections = selectedSummary?.agreedAmountFromSections === true;
+
   const handleSave = async () => {
     if (!selectedProjectId || !agreedAmount.trim()) return;
 
@@ -110,21 +121,38 @@ export function EditFinanceScreen({ projectId }: EditFinanceScreenProps) {
           </View>
         )}
 
-        <AppInput
-          keyboardType="numeric"
-          label={t("finance.edit.agreedAmountLabel")}
-          onChangeText={setAgreedAmount}
-          placeholder="0"
-          value={agreedAmount}
-        />
+        {isDerivedFromSections ? (
+          <View style={styles.notice}>
+            <Text style={styles.noticeTitle}>{t("finance.edit.lockedTitle")}</Text>
+            <Text style={styles.noticeBody}>{t("finance.edit.lockedBody")}</Text>
+            <AppButton
+              fullWidth
+              onPress={() =>
+                router.push(`/(main)/projects/${selectedProjectId}/progress`)
+              }
+              title={t("finance.edit.lockedAction")}
+              variant="secondary"
+            />
+          </View>
+        ) : (
+          <>
+            <AppInput
+              keyboardType="numeric"
+              label={t("finance.edit.agreedAmountLabel")}
+              onChangeText={setAgreedAmount}
+              placeholder="0"
+              value={agreedAmount}
+            />
 
-        <AppButton
-          disabled={!isValid || loading}
-          fullWidth
-          onPress={handleSave}
-          title={isEditing ? t("common.update") : t("common.save")}
-          loading={loading}
-        />
+            <AppButton
+              disabled={!isValid || loading}
+              fullWidth
+              onPress={handleSave}
+              title={isEditing ? t("common.update") : t("common.save")}
+              loading={loading}
+            />
+          </>
+        )}
       </View>
     </Screen>
   );
@@ -134,6 +162,25 @@ function createStyles(colors: AppColors) {
   return StyleSheet.create({
   content: { paddingBottom: 100 },
   form: { gap: spacing.md },
+  notice: {
+    gap: spacing.sm,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    padding: spacing.md,
+  },
+  noticeTitle: {
+    ...typography.body,
+    color: colors.text,
+    fontWeight: "700",
+  },
+  noticeBody: {
+    ...typography.caption,
+    color: colors.textMuted,
+    lineHeight: 18,
+    marginBottom: spacing.xs,
+  },
   fieldLabel: {
     ...typography.caption,
     color: colors.textMuted,

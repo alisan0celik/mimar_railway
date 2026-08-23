@@ -271,6 +271,10 @@ export const tr = {
       selectProjectPlaceholder: "Bir proje seçin...",
       agreedAmountLabel: "Toplam Anlaşma Tutarı (₺)",
       updateError: "Proje bütçesi güncellenemedi.",
+      lockedTitle: "Bu tutar kalemlerden geliyor",
+      lockedBody:
+        "Bu projenin anlaşma tutarı, imalat kalemlerinin bedelleri toplanarak hesaplanıyor. Değiştirmek için kalem bedellerini İmalat ve Hakediş ekranından düzenleyin.",
+      lockedAction: "İmalat ve Hakediş'e git",
     },
     addPaymentForm: {
       editTitle: "Ödeme Düzenle",
