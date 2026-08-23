@@ -31,8 +31,5 @@
   },
   "overrides": {
     "react-native-svg": "15.15.3"
-  },
-  "dependencies": {
-    "react-native-svg": "15.15.3"
   }
 }
