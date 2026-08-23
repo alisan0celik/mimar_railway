@@ -564,7 +564,7 @@ export const tr = {
     registerTitle: "Kayıt Ol",
     fullName: "Ad Soyad",
     passwordRepeat: "Şifre Tekrar",
-    emailPlaceholder: "ornek@epikmimarlik.com",
+    emailPlaceholder: "ornek@kozmozinovasyon.com",
     emailPlaceholderShort: "ornek@mail.com",
     passwordPlaceholder: "••••••••",
     fullNamePlaceholder: "Ahmet Yılmaz",
