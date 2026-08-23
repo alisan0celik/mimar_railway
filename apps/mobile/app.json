@@ -3,7 +3,7 @@
     "name": "Planova",
     "slug": "mimar-app",
     "owner": "celikler",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "scheme": "mimar",
@@ -74,7 +74,8 @@
       [
         "expo-calendar",
         {
-          "calendarPermission": "Planova, takvim etkinliklerinizi telefonunuzun takvimine yazmak için izin istiyor."
+          "calendarPermission": "Proje takvimindeki etkinlikleri telefonunuzun takvimine yazmak için kullanılır. Bu özellik isteğe bağlıdır ve uygulama içinden kapatılabilir.",
+          "remindersPermission": false
         }
       ]
     ],
