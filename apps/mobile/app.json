@@ -75,7 +75,7 @@
         "expo-calendar",
         {
           "calendarPermission": "Proje takvimindeki etkinlikleri telefonunuzun takvimine yazmak için kullanılır. Bu özellik isteğe bağlıdır ve uygulama içinden kapatılabilir.",
-          "remindersPermission": false
+          "remindersPermission": "Takvim özelliğinin çalışabilmesi için gereklidir. Planova hatırlatıcılarınızı okumaz veya değiştirmez."
         }
       ]
     ],
