@@ -27,6 +27,7 @@ import {
   NoPermissionState,
   Screen,
 } from "../../../shared/ui";
+import { roleLabel } from "../../../shared/utils/roleLabel";
 
 function isOwnerRole(code: string) {
   return code.startsWith("owner-");
@@ -274,7 +275,7 @@ export function OfficeTeamScreen() {
                       name={active ? "radiobox-marked" : "radiobox-blank"}
                       size={20}
                     />
-                    <Text style={styles.roleOptionText}>{role.name}</Text>
+                    <Text style={styles.roleOptionText}>{roleLabel(role, t)}</Text>
                     {savingRoleId === role.id ? (
                       <ActivityIndicator color={colors.primary} size="small" />
                     ) : null}

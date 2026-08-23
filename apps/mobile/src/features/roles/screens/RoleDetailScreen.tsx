@@ -10,6 +10,7 @@ import { radius, spacing, typography } from "../../../shared/theme";
 import { useThemedStyles, type AppColors } from "../../../shared/theme";
 import { useThemeColors } from "../../../shared/theme/ThemeProvider";
 import { AppButton, DesignBackHeader, NoPermissionState, Screen } from "../../../shared/ui";
+import { roleLabel } from "../../../shared/utils/roleLabel";
 
 type RoleDetailScreenProps = {
   roleId: string;
@@ -71,7 +72,7 @@ export function RoleDetailScreen({ roleId }: RoleDetailScreenProps) {
 
   return (
     <Screen scroll contentContainerStyle={styles.content}>
-      <DesignBackHeader title={role.name} />
+      <DesignBackHeader title={roleLabel(role, t)} />
 
       <View style={styles.tabs}>
         {(

@@ -365,6 +365,11 @@ export const en = {
   roles: {
     title: "Roles",
     addRole: "Add New Role",
+    builtIn: {
+      owner: "Owner",
+      officeManager: "Office Manager",
+      officeEmployee: "Office Employee",
+    },
     usersAssigned: "{count} users assigned",
     approveFlow: {
       title: "Assign Role & Approve",

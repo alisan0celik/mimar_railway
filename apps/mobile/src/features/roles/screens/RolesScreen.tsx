@@ -19,6 +19,7 @@ import { useThemedStyles, type AppColors } from "../../../shared/theme";
 import { useThemeColors } from "../../../shared/theme/ThemeProvider";
 import { AppButton, ConfirmDialog, DesignBackHeader, EmptyState, NoPermissionState, Screen, showAppAlert } from "../../../shared/ui";
 import { initials } from "../../../shared/utils/initials";
+import { roleLabel } from "../../../shared/utils/roleLabel";
 
 type RolesScreenProps = {
   pendingUserId?: string;
@@ -180,7 +181,7 @@ export function RolesScreen({ pendingUserId }: RolesScreenProps) {
                 />
               </View>
               <View style={styles.body}>
-                <Text style={styles.name}>{role.name}</Text>
+                <Text style={styles.name}>{roleLabel(role, t)}</Text>
                 <Text style={styles.count}>{roleSubtitle(role, t)}</Text>
               </View>
               <MaterialCommunityIcons

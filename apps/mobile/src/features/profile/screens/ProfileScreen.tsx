@@ -18,6 +18,7 @@ import {
   showAppAlert,
 } from "../../../shared/ui";
 import { initials } from "../../../shared/utils/initials";
+import { roleLabel as translateRole } from "../../../shared/utils/roleLabel";
 
 type MenuItem = {
   id: string;
@@ -36,7 +37,8 @@ export function ProfileScreen() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
-  const roleLabel = user?.roles?.[0]?.name ?? t("profile.defaultRole");
+  const firstRole = user?.roles?.[0];
+  const roleLabel = firstRole ? translateRole(firstRole, t) : t("profile.defaultRole");
   const canManageTeam = useCan(PERMISSIONS.USER_ROLE_ASSIGN);
   const canViewRoles = useCan(PERMISSIONS.ROLE_VIEW);
   const canApproveUsers = useCan(PERMISSIONS.USER_APPROVE);

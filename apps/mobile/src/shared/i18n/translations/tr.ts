@@ -365,6 +365,11 @@ export const tr = {
   roles: {
     title: "Roller",
     addRole: "Yeni Rol Ekle",
+    builtIn: {
+      owner: "Sahip",
+      officeManager: "Ofis Yöneticisi",
+      officeEmployee: "Ofis Çalışanı",
+    },
     usersAssigned: "{count} kullanıcı atanmış",
     approveFlow: {
       title: "Rol Ata ve Onayla",

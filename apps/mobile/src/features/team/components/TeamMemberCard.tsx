@@ -7,6 +7,7 @@ import { radius, spacing, typography } from "../../../shared/theme";
 import { useThemedStyles, type AppColors } from "../../../shared/theme";
 import { useThemeColors } from "../../../shared/theme/ThemeProvider";
 import { initials } from "../../../shared/utils/initials";
+import { roleLabels } from "../../../shared/utils/roleLabel";
 
 type TeamMemberCardProps = {
   user: UserDTO;
@@ -28,7 +29,7 @@ export function TeamMemberCard({
   const styles = useThemedStyles(createStyles);
   const colors = useThemeColors();
   const { t } = useTranslation();
-  const roleLabel = user.roles.length > 0 ? user.roles.map((r) => r.name).join(", ") : "—";
+  const roleText = roleLabels(user.roles, t);
 
   const hasActions = Boolean(canChangeRole || canRemove);
 
@@ -52,7 +53,7 @@ export function TeamMemberCard({
           </Text>
           <View style={styles.roleChip}>
             <Text numberOfLines={1} style={styles.roleText}>
-              {roleLabel}
+              {roleText}
             </Text>
           </View>
         </View>
