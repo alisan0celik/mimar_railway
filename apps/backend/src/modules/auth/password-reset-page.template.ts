@@ -39,7 +39,8 @@ export function renderResetPasswordPage(token: string): string {
     width: 100%; max-width: 420px; background: #161619; border: 1px solid rgba(161,161,170,0.18);
     border-radius: 16px; padding: 28px;
   }
-  h1 { margin: 0 0 8px; font-size: 20px; font-weight: 600; }
+  .logo { display: block; width: 56px; height: 56px; border-radius: 12px; margin: 0 auto 14px; }
+  h1 { margin: 0 0 8px; font-size: 20px; font-weight: 600; text-align: center; }
   p { margin: 0 0 20px; font-size: 14px; line-height: 1.6; color: #A1A1AA; }
   label { display: block; font-size: 13px; color: #A1A1AA; margin-bottom: 6px; }
   input {
@@ -61,6 +62,7 @@ export function renderResetPasswordPage(token: string): string {
 </head>
 <body>
   <div class="card">
+    <img class="logo" src="/brand/logo.png" width="56" height="56" alt="Planova">
     <h1>Şifre Sıfırlama</h1>
     ${
       hasToken

@@ -13,7 +13,7 @@ async function bootstrap() {
 
   // Şifre sıfırlama sayfası e-postadaki bağlantıdan açılıyor; insanlara giden
   // bir adres olduğu için /api önekinin dışında tutulur.
-  app.setGlobalPrefix("api", { exclude: ["reset-password"] });
+  app.setGlobalPrefix("api", { exclude: ["reset-password", "brand/logo.png"] });
   app.useWebSocketAdapter(new IoAdapter(app));
   app.useStaticAssets(process.env.UPLOAD_DIR || join(process.cwd(), "uploads"), {
     prefix: "/api/uploads/",

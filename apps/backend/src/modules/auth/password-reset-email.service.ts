@@ -33,7 +33,7 @@ export class PasswordResetEmailService {
         from,
         to: email,
         subject: `${appName} şifre sıfırlama`,
-        html: this.renderHtml(appName, resetUrl),
+        html: this.renderHtml(appName, resetUrl, this.buildLogoUrl(resetUrl)),
         text: this.renderText(appName, resetUrl),
       }),
     });
@@ -45,6 +45,17 @@ export class PasswordResetEmailService {
     }
 
     return resetUrl;
+  }
+
+  /**
+   * Logonun mutlak adresi.
+   *
+   * Sıfırlama adresiyle aynı kökten türetilir; alan adı değişse bile görsel
+   * doğru yerden gelir. E-posta istemcileri göreli adresleri ve data: URI'leri
+   * göstermediği için mutlak adres zorunlu.
+   */
+  private buildLogoUrl(resetUrl: string): string {
+    return new URL("/brand/logo.png", resetUrl).toString();
   }
 
   private buildResetUrl(token: string): string {
@@ -66,18 +77,43 @@ export class PasswordResetEmailService {
     ].join("\n");
   }
 
-  private renderHtml(appName: string, resetUrl: string): string {
+  private renderHtml(appName: string, resetUrl: string, logoUrl: string): string {
+    /*
+     * E-posta istemcileri modern CSS'in çoğunu desteklemiyor; yerleşim
+     * tablolarla ve satır içi stille kurulur. Görseller varsayılan olarak
+     * engellenebildiği için logonun altında yazıyla marka adı da bulunur:
+     * görsel gelmese bile e-postanın kimden geldiği belli olur.
+     */
     return `
-      <div style="font-family:Arial,sans-serif;line-height:1.6;color:#172033">
-        <h2>${appName} şifre sıfırlama</h2>
-        <p>Hesabınız için şifre sıfırlama talebi aldık.</p>
-        <p>
-          <a href="${resetUrl}" style="display:inline-block;background:#2563eb;color:#fff;padding:12px 18px;border-radius:6px;text-decoration:none;font-weight:700">
-            Yeni şifre belirle
-          </a>
-        </p>
-        <p>Bu bağlantı 1 saat geçerlidir.</p>
-        <p>Bu işlemi siz başlatmadıysanız bu e-postayı yok sayabilirsiniz.</p>
+      <div style="margin:0;padding:24px;background:#f4f5f7;font-family:Arial,Helvetica,sans-serif">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:480px;margin:0 auto;background:#ffffff;border-radius:12px;border:1px solid #e4e4e7">
+          <tr>
+            <td align="center" style="padding:28px 24px 8px 24px">
+              <img src="${logoUrl}" width="64" height="64" alt="${appName}"
+                   style="display:block;width:64px;height:64px;border:0;border-radius:14px" />
+              <div style="margin-top:10px;font-size:18px;font-weight:bold;color:#0B1B2E">${appName}</div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:8px 28px 0 28px;color:#172033;font-size:15px;line-height:1.6">
+              <h2 style="margin:16px 0 8px 0;font-size:18px;color:#0B1B2E">Şifre sıfırlama</h2>
+              <p style="margin:0 0 16px 0">Hesabınız için şifre sıfırlama talebi aldık.</p>
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="padding:8px 28px 4px 28px">
+              <a href="${resetUrl}" style="display:inline-block;background:#F97316;color:#ffffff;padding:13px 26px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:15px">
+                Yeni şifre belirle
+              </a>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:16px 28px 28px 28px;color:#6b7280;font-size:13px;line-height:1.6">
+              <p style="margin:0 0 6px 0">Bu bağlantı 1 saat geçerlidir.</p>
+              <p style="margin:0">Bu işlemi siz başlatmadıysanız bu e-postayı yok sayabilirsiniz.</p>
+            </td>
+          </tr>
+        </table>
       </div>
     `;
   }
