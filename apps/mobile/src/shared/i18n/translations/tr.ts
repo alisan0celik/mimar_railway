@@ -752,6 +752,16 @@ export const tr = {
     amountLabel: "Satış bedeli (₺)",
     costLabel: "Taşeron bedeli (₺)",
     itemCostMeta: "Maliyet {cost} · Kâr {margin}",
+    extras: "Diğer Alacak ve Borçlar",
+    extrasHint: "İş artışı, fiyat farkı, avans, ceza gibi imalata bağlı olmayan tutarlar. İlerleme yüzdesine katılmaz, sözleşme toplamına eklenir.",
+    noExtras: "Henüz kayıt yok.",
+    addExtra: "Ekle",
+    extraNameLabel: "Açıklama",
+    extraNamePlaceholder: "Örn. İş Artışı, Fiyat Farkı, Avans",
+    extraReceivable: "Alacak",
+    extraPayable: "Borç",
+    extraRemaining: "Kalan {amount}",
+    extraSettled: "Tamamı ödendi",
     earnedCost: "Doğan Maliyet",
     margin: "Kâr",
     payIncoming: "Hakediş Ödeme",
@@ -887,7 +897,7 @@ export const tr = {
         },
         progress: {
           title: "İmalat ve Hakediş",
-          steps: "Proje detayının üstündeki İmalat ve Hakediş bağlantısına girin.|İlk projede liste boş gelir; sözleşmeyi kendi imalat kalemlerinize bölün ve her kaleme bedelini yazın.|Sık kullandığınız kalemleri yıldızlayın; bu liste şirketinize kaydolur ve sonraki projeleriniz o kalemlerle açılır.|İş ilerledikçe kalemin ilerleme yüzdesini güncelleyin; hak edilen tutar kendiliğinden hesaplanır.|Hakediş Düzenle ile o ana kadar hak edilen tutardan önceki hakedişler düşülerek yeni hakediş oluşturulur.|Kaleme taşeron bedelini de girerseniz Taşeron Hakedişi düzenleyebilir, kalem başına kârı görebilirsiniz.|Hakediş tahsil edildiğinde durumunu Ödendi yapın; işveren hakedişi tahsilat, taşeron hakedişi gider olarak finansa düşer.|İlerlemeyi proje yetkisi olan herkes güncelleyebilir, tutarları yalnızca finans yetkisi olanlar görür."
+          steps: "Proje detayının üstündeki İmalat ve Hakediş bağlantısına girin.|İlk projede liste boş gelir; sözleşmeyi kendi imalat kalemlerinize bölün ve her kaleme bedelini yazın.|Sık kullandığınız kalemleri yıldızlayın; bu liste şirketinize kaydolur ve sonraki projeleriniz o kalemlerle açılır.|İş ilerledikçe kalemin ilerleme yüzdesini güncelleyin; hak edilen tutar kendiliğinden hesaplanır.|Hakediş Düzenle ile o ana kadar hak edilen tutardan önceki hakedişler düşülerek yeni hakediş oluşturulur.|İş artışı, fiyat farkı, avans gibi imalata bağlı olmayan tutarları Diğer Alacak ve Borçlar bölümüne ekleyin; sözleşme toplamına girer ama ilerleme yüzdesini etkilemez.|Kaleme taşeron bedelini de girerseniz Taşeron Hakedişi düzenleyebilir, kalem başına kârı görebilirsiniz.|Hakediş tahsil edildiğinde durumunu Ödendi yapın; işveren hakedişi tahsilat, taşeron hakedişi gider olarak finansa düşer.|İlerlemeyi proje yetkisi olan herkes güncelleyebilir, tutarları yalnızca finans yetkisi olanlar görür."
         },
         finance: {
           title: "Finans",

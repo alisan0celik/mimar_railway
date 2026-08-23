@@ -8,6 +8,8 @@ export type ProjectSectionDTO = {
   content: string | null;
   updatedBy: string | null;
   projectId: string;
+  /** "work" imalat kalemi, "extra" imalata bağlı olmayan alacak/borç. */
+  kind?: string;
   /** İşverene satış bedeli. Finans yetkisi yoksa sunucu bu alanı göndermez. */
   amount?: number;
   /** Taşerona maliyeti. Finans yetkisi yoksa gönderilmez. */
@@ -320,7 +322,13 @@ export const projectApi = {
   },
   async createSection(
     projectId: string,
-    payload: { name: string; amount?: number; costAmount?: number; progress?: number },
+    payload: {
+      name: string;
+      kind?: "work" | "extra";
+      amount?: number;
+      costAmount?: number;
+      progress?: number;
+    },
   ) {
     const { data } = await apiClient.post<ProjectSectionDTO>(
       `/projects/${projectId}/sections`,

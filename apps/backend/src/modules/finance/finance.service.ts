@@ -32,6 +32,8 @@ export class FinanceService {
         financeRecords: {
           orderBy: [{ date: "desc" }, { createdAt: "desc" }],
         },
+        // Sözleşme bedeli kalem toplamından geliyor.
+        sections: { select: { amount: true } },
       },
       orderBy: { createdAt: "desc" },
     });
@@ -43,6 +45,7 @@ export class FinanceService {
         customerName: project.customerName || "Bilinmiyor",
         budget: project.budget,
         financeRecords: project.financeRecords,
+        sectionAmounts: project.sections.map((section) => section.amount),
       }),
     );
 

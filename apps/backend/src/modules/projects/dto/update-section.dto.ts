@@ -1,4 +1,14 @@
-import { IsInt, IsNumber, IsOptional, IsString, Max, MaxLength, Min, MinLength } from "class-validator";
+import {
+  IsIn,
+  IsInt,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Max,
+  MaxLength,
+  Min,
+  MinLength,
+} from "class-validator";
 
 export class UpdateSectionDto {
   @IsOptional()
@@ -19,6 +29,11 @@ export class UpdateSectionDto {
   @IsOptional()
   @IsString()
   content?: string;
+
+  /** "work" imalat kalemi, "extra" imalata bağlı olmayan alacak/borç. */
+  @IsOptional()
+  @IsIn(["work", "extra"])
+  kind?: string;
 
   /** İşverene satış bedeli (TL). */
   @IsOptional()

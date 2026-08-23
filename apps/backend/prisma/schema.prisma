@@ -239,7 +239,11 @@ model Section {
   order     Int      @default(0)
   status    String   @default("not-started") // "not-started", "in-progress", "review", "approved"
   content   String?
-  /// Bu imalat kaleminin işverene satış bedeli (TL).
+  /// Satır türü: "work" imalat kalemi, "extra" imalata bağlı olmayan
+  /// alacak/borç (iş artışı, fiyat farkı, avans, ceza...). Ekstralar
+  /// baştan tamamen hak edilmiş sayılır ve ilerleme yüzdesine katılmaz.
+  kind      String   @default("work")
+  /// İşverene satış bedeli (TL). Ekstralarda alacak tutarı.
   amount    Float    @default(0)
   /// Kalemin taşerona maliyeti (TL). İkisi arasındaki fark kalemin kârı.
   costAmount Float   @default(0)

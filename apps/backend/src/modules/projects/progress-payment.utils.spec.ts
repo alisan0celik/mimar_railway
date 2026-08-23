@@ -85,4 +85,34 @@ describe("progress payment utils", () => {
   it("keeps currency free of float artefacts", () => {
     expect(calculateEarnedAmount([{ amount: 0.1, progress: 100 }, { amount: 0.2, progress: 100 }])).toBe(0.3);
   });
+
+  describe("extras", () => {
+    const withExtra = [
+      { amount: 1_000_000, progress: 50, kind: "work" },
+      // İş artışı: baştan tamamen hak edilmiş, ilerlemesi yok
+      { amount: 200_000, progress: 0, kind: "extra" },
+    ];
+
+    it("counts an extra as fully earned regardless of its progress", () => {
+      expect(calculateEarnedAmount(withExtra)).toBe(700_000);
+    });
+
+    it("keeps extras out of the progress percentage", () => {
+      // Yalnızca imalat kalemi sayılır: 500.000 / 1.000.000
+      expect(calculateOverallProgress(withExtra)).toBe(50);
+    });
+
+    it("reaches 100% when the work is done even with extras present", () => {
+      expect(
+        calculateOverallProgress([
+          { amount: 1_000_000, progress: 100, kind: "work" },
+          { amount: 200_000, progress: 0, kind: "extra" },
+        ]),
+      ).toBe(100);
+    });
+
+    it("includes extras in the contract total", () => {
+      expect(calculateContractTotal(withExtra)).toBe(1_200_000);
+    });
+  });
 });

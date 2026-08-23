@@ -9,12 +9,24 @@
  */
 
 export type ProgressItem = {
-  /** İşverene satış bedeli. */
+  /** İşverene satış bedeli. Ekstralarda alacak tutarı. */
   amount: number;
-  /** Taşerona maliyeti. Girilmemişse 0 kabul edilir. */
+  /** Taşerona maliyeti. Ekstralarda borç tutarı. */
   costAmount?: number;
   progress: number;
+  /** "work" imalat kalemi, "extra" imalata bağlı olmayan alacak/borç. */
+  kind?: string;
 };
+
+/** Ekstralar imalat sayılmaz: baştan tamamen hak edilmiş kabul edilir. */
+export function isWorkItem(item: ProgressItem): boolean {
+  return (item.kind ?? "work") === "work";
+}
+
+/** Ekstranın ilerlemesi her zaman %100'dür; girilen değer dikkate alınmaz. */
+export function effectiveProgress(item: ProgressItem): number {
+  return isWorkItem(item) ? clampProgress(item.progress) : 100;
+}
 
 /** Hakediş yönü: işverenden alınan / taşerona ödenen. */
 export const PAYMENT_DIRECTIONS = ["incoming", "outgoing"] as const;
@@ -48,7 +60,7 @@ export function roundCurrency(value: number): number {
 
 export function calculateEarnedAmount(items: ProgressItem[]): number {
   const total = items.reduce(
-    (sum, item) => sum + toFiniteNumber(item.amount) * (clampProgress(item.progress) / 100),
+    (sum, item) => sum + toFiniteNumber(item.amount) * (effectiveProgress(item) / 100),
     0,
   );
   return roundCurrency(total);
@@ -57,7 +69,7 @@ export function calculateEarnedAmount(items: ProgressItem[]): number {
 /** İlerlemeye göre taşerona doğmuş maliyet. */
 export function calculateEarnedCost(items: ProgressItem[]): number {
   const total = items.reduce(
-    (sum, item) => sum + toFiniteNumber(item.costAmount) * (clampProgress(item.progress) / 100),
+    (sum, item) => sum + toFiniteNumber(item.costAmount) * (effectiveProgress(item) / 100),
     0,
   );
   return roundCurrency(total);
@@ -79,16 +91,19 @@ export function calculateContractTotal(items: ProgressItem[]): number {
  * ilerleme hep 0 görünürdü.
  */
 export function calculateOverallProgress(items: ProgressItem[]): number {
-  if (items.length === 0) return 0;
+  // Ekstralar hesaba katılmaz: fiyat farkı ya da avans yüzünden imalat
+  // tamamlandığında yüzdenin %100'e ulaşamaması yanlış olurdu.
+  const workItems = items.filter(isWorkItem);
+  if (workItems.length === 0) return 0;
 
-  const contractTotal = calculateContractTotal(items);
+  const contractTotal = calculateContractTotal(workItems);
   if (contractTotal <= 0) {
     const average =
-      items.reduce((sum, item) => sum + clampProgress(item.progress), 0) / items.length;
+      workItems.reduce((sum, item) => sum + clampProgress(item.progress), 0) / workItems.length;
     return Math.round(average * 100) / 100;
   }
 
-  const earned = calculateEarnedAmount(items);
+  const earned = calculateEarnedAmount(workItems);
   return Math.round((earned / contractTotal) * 10000) / 100;
 }
 

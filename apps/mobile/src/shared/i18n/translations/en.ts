@@ -752,6 +752,16 @@ export const en = {
     amountLabel: "Sale value",
     costLabel: "Subcontractor cost",
     itemCostMeta: "Cost {cost} · Margin {margin}",
+    extras: "Other Receivables and Payables",
+    extrasHint: "Amounts outside the work items — variations, escalation, advances, penalties. They stay out of the progress percentage and are added to the contract total.",
+    noExtras: "Nothing recorded yet.",
+    addExtra: "Add",
+    extraNameLabel: "Description",
+    extraNamePlaceholder: "e.g. Variation, Escalation, Advance",
+    extraReceivable: "Receivable",
+    extraPayable: "Payable",
+    extraRemaining: "{amount} remaining",
+    extraSettled: "Fully settled",
     earnedCost: "Incurred Cost",
     margin: "Margin",
     payIncoming: "Record Payment",
@@ -887,7 +897,7 @@ export const en = {
         },
         progress: {
           title: "Work Items and Billing",
-          steps: "Open the Work Items and Billing link at the top of the project detail.|The first project starts empty; split the contract into your own work items and give each one its value.|Star the ones you use often; the list is saved for your company and later projects open with them.|Update each item's progress as the work advances; the earned amount is calculated for you.|Issue Payment creates a new progress payment from the earned total minus what earlier payments already billed.|Enter the subcontractor cost too and you can issue subcontractor payments and see the margin per item.|When a payment is settled, set it to Paid; employer payments are recorded as collections and subcontractor payments as expenses.|Anyone with project rights can update progress, but only finance rights reveal the amounts."
+          steps: "Open the Work Items and Billing link at the top of the project detail.|The first project starts empty; split the contract into your own work items and give each one its value.|Star the ones you use often; the list is saved for your company and later projects open with them.|Update each item's progress as the work advances; the earned amount is calculated for you.|Issue Payment creates a new progress payment from the earned total minus what earlier payments already billed.|Put variations, escalation and advances under Other Receivables and Payables; they count towards the contract total without affecting the progress percentage.|Enter the subcontractor cost too and you can issue subcontractor payments and see the margin per item.|When a payment is settled, set it to Paid; employer payments are recorded as collections and subcontractor payments as expenses.|Anyone with project rights can update progress, but only finance rights reveal the amounts."
         },
         finance: {
           title: "Finance",

@@ -51,6 +51,8 @@ export function calculateProjectFinanceSummary(input: {
   customerName: string;
   budget: number | null;
   financeRecords: FinanceRecordInput[];
+  /** İmalat kalemleri ve ekstraların işverene bedelleri. */
+  sectionAmounts?: number[];
 }): ProjectFinanceSummary {
   let receivedAmount = 0;
   let expenseAmount = 0;
@@ -63,7 +65,19 @@ export function calculateProjectFinanceSummary(input: {
     }
   }
 
-  const agreedAmount = input.budget || 0;
+  /*
+   * Sözleşme bedeli, bedeli girilmiş kalemlerin toplamıdır.
+   *
+   * Proje açılırken elle yazılan bütçe ile kalem toplamı iki ayrı sayıydı ve
+   * biri diğerinden habersiz olduğu için kaçınılmaz olarak ayrışıyordu.
+   * Kalem kullanılmayan projelerde (ör. yalnız ofis işi) elle girilen bütçe
+   * yedek olarak kullanılmaya devam eder.
+   */
+  const sectionTotal = (input.sectionAmounts ?? []).reduce(
+    (sum, amount) => sum + (Number.isFinite(amount) ? amount : 0),
+    0,
+  );
+  const agreedAmount = sectionTotal > 0 ? sectionTotal : input.budget || 0;
   const profitAmount = receivedAmount - expenseAmount;
   const remainingAmount = Math.max(0, agreedAmount - receivedAmount);
   const overpaymentAmount = Math.max(0, receivedAmount - agreedAmount);

@@ -1,4 +1,14 @@
-import { IsInt, IsNumber, IsOptional, IsString, Max, MaxLength, Min, MinLength } from "class-validator";
+import {
+  IsIn,
+  IsInt,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Max,
+  MaxLength,
+  Min,
+  MinLength,
+} from "class-validator";
 
 export class CreateSectionDto {
   @IsString()
@@ -10,6 +20,11 @@ export class CreateSectionDto {
   @IsInt()
   @Min(0)
   order?: number;
+
+  /** "work" imalat kalemi, "extra" imalata bağlı olmayan alacak/borç. */
+  @IsOptional()
+  @IsIn(["work", "extra"])
+  kind?: string;
 
   /** İşverene satış bedeli (TL). */
   @IsOptional()

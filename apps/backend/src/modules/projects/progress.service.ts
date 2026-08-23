@@ -208,9 +208,11 @@ export class ProgressService {
         projectId,
         name: dto.name,
         order: dto.order ?? (last?.order ?? 0) + 1,
+        kind: dto.kind === "extra" ? "extra" : "work",
         amount: roundCurrency(dto.amount ?? 0),
         costAmount: roundCurrency(dto.costAmount ?? 0),
-        progress: clampProgress(dto.progress ?? 0),
+        // Ekstra baştan tamamen hak edilmiştir; ilerlemesi girilmez.
+        progress: dto.kind === "extra" ? 100 : clampProgress(dto.progress ?? 0),
         status: dto.status ?? "not-started",
         updatedBy: user?.fullName ?? "Sistem",
       },

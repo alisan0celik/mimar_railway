@@ -48,6 +48,9 @@ export function ProgressPaymentScreen({ projectId }: { projectId: string }) {
   const [busy, setBusy] = useState(false);
   const [newItemName, setNewItemName] = useState("");
   const [newItemAmount, setNewItemAmount] = useState("");
+  const [newExtraName, setNewExtraName] = useState("");
+  const [newExtraAmount, setNewExtraAmount] = useState("");
+  const [newExtraIsPayable, setNewExtraIsPayable] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draftAmount, setDraftAmount] = useState("");
   const [draftProgress, setDraftProgress] = useState("");
@@ -123,6 +126,42 @@ export function ProgressPaymentScreen({ projectId }: { projectId: string }) {
       await projectApi.createSection(projectId, { name, amount: parseAmount(newItemAmount) });
       setNewItemName("");
       setNewItemAmount("");
+      await load();
+    } catch {
+      showAppAlert(t("common.error"), t("progress.saveFailed"));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  /** İmalat kalemleri ve imalata bağlı olmayan alacak/borçlar ayrı listelenir. */
+  const workItems = useMemo(
+    () => sections.filter((section) => (section.kind ?? "work") === "work"),
+    [sections],
+  );
+  const extraItems = useMemo(
+    () => sections.filter((section) => section.kind === "extra"),
+    [sections],
+  );
+
+  const handleAddExtra = async () => {
+    const name = newExtraName.trim();
+    if (name.length < 2) {
+      showAppAlert(t("common.error"), t("progress.nameTooShort"));
+      return;
+    }
+    setBusy(true);
+    try {
+      const value = parseAmount(newExtraAmount);
+      await projectApi.createSection(projectId, {
+        name,
+        kind: "extra",
+        // Borç olarak işaretlenmişse tutar maliyet tarafına yazılır.
+        amount: newExtraIsPayable ? 0 : value,
+        costAmount: newExtraIsPayable ? value : 0,
+      });
+      setNewExtraName("");
+      setNewExtraAmount("");
       await load();
     } catch {
       showAppAlert(t("common.error"), t("progress.saveFailed"));
@@ -363,7 +402,7 @@ export function ProgressPaymentScreen({ projectId }: { projectId: string }) {
 
       <Text style={styles.sectionTitle}>{t("progress.items")}</Text>
 
-      {sections.length === 0 ? (
+      {workItems.length === 0 ? (
         <View style={styles.emptyCard}>
           <MaterialCommunityIcons color={colors.primary} name="format-list-checks" size={32} />
           <Text style={styles.emptyTitle}>{t("progress.emptyTitle")}</Text>
@@ -381,7 +420,7 @@ export function ProgressPaymentScreen({ projectId }: { projectId: string }) {
           ) : null}
         </View>
       ) : (
-        sections.map((section) => {
+        workItems.map((section) => {
           const editing = editingId === section.id;
           const earned = (section.amount ?? 0) * ((section.progress ?? 0) / 100);
           return (
@@ -575,6 +614,143 @@ export function ProgressPaymentScreen({ projectId }: { projectId: string }) {
             <Text style={styles.addBtnText}>{t("progress.addItem")}</Text>
           </Pressable>
         </View>
+      ) : null}
+
+      {canSeeFinance ? (
+        <>
+          <Text style={styles.sectionTitle}>{t("progress.extras")}</Text>
+          <Text style={styles.extrasHint}>{t("progress.extrasHint")}</Text>
+
+          {extraItems.length === 0 ? (
+            <Text style={styles.empty}>{t("progress.noExtras")}</Text>
+          ) : (
+            extraItems.map((extra) => {
+              const payable = (extra.costAmount ?? 0) > 0;
+              const value = payable ? (extra.costAmount ?? 0) : (extra.amount ?? 0);
+              const direction: ProgressPaymentDirection = payable ? "outgoing" : "incoming";
+              const remaining = billableOf(extra, direction);
+
+              return (
+                <View key={extra.id} style={styles.itemCard}>
+                  <View style={styles.itemHeader}>
+                    <MaterialCommunityIcons
+                      color={payable ? colors.danger : colors.success}
+                      name={payable ? "arrow-up-circle-outline" : "arrow-down-circle-outline"}
+                      size={18}
+                    />
+                    <Text style={styles.itemName}>{extra.name}</Text>
+                    <Text
+                      style={[
+                        styles.itemPercent,
+                        { color: payable ? colors.danger : colors.success },
+                      ]}
+                    >
+                      {formatCurrency(value)}
+                    </Text>
+                  </View>
+
+                  <Text style={styles.itemMeta}>
+                    {remaining > 0
+                      ? t("progress.extraRemaining", { amount: formatCurrency(remaining) })
+                      : t("progress.extraSettled")}
+                  </Text>
+
+                  <View style={styles.itemActions}>
+                    {canEditItems ? (
+                      <Pressable onPress={() => handleDeleteItem(extra)} style={styles.linkBtn}>
+                        <MaterialCommunityIcons
+                          color={colors.danger}
+                          name="trash-can-outline"
+                          size={16}
+                        />
+                        <Text style={[styles.linkText, { color: colors.danger }]}>
+                          {t("common.delete")}
+                        </Text>
+                      </Pressable>
+                    ) : null}
+                    {canBill && remaining > 0 ? (
+                      <Pressable
+                        disabled={busy}
+                        onPress={() => handleCreatePayment(extra, direction)}
+                        style={styles.linkBtn}
+                      >
+                        <MaterialCommunityIcons
+                          color={payable ? colors.info : colors.warning}
+                          name="cash-check"
+                          size={16}
+                        />
+                        <Text
+                          style={[
+                            styles.linkText,
+                            { color: payable ? colors.info : colors.warning },
+                          ]}
+                        >
+                          {payable ? t("progress.payOutgoing") : t("progress.payIncoming")}
+                        </Text>
+                      </Pressable>
+                    ) : null}
+                  </View>
+                </View>
+              );
+            })
+          )}
+
+          {canEditItems ? (
+            <View style={styles.addCard}>
+              <Text style={styles.fieldLabel}>{t("progress.extraNameLabel")}</Text>
+              <TextInput
+                onChangeText={setNewExtraName}
+                placeholder={t("progress.extraNamePlaceholder")}
+                placeholderTextColor={colors.textMuted}
+                style={styles.input}
+                value={newExtraName}
+              />
+
+              <View style={styles.directionRow}>
+                <Pressable
+                  onPress={() => setNewExtraIsPayable(false)}
+                  style={[styles.directionChip, !newExtraIsPayable && styles.directionChipActive]}
+                >
+                  <Text
+                    style={[
+                      styles.directionChipText,
+                      !newExtraIsPayable && styles.directionChipTextActive,
+                    ]}
+                  >
+                    {t("progress.extraReceivable")}
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => setNewExtraIsPayable(true)}
+                  style={[styles.directionChip, newExtraIsPayable && styles.directionChipActive]}
+                >
+                  <Text
+                    style={[
+                      styles.directionChipText,
+                      newExtraIsPayable && styles.directionChipTextActive,
+                    ]}
+                  >
+                    {t("progress.extraPayable")}
+                  </Text>
+                </Pressable>
+              </View>
+
+              <Text style={styles.fieldLabel}>{t("progress.amountLabel")}</Text>
+              <TextInput
+                keyboardType="numeric"
+                onChangeText={setNewExtraAmount}
+                placeholder="0"
+                placeholderTextColor={colors.textMuted}
+                style={styles.input}
+                value={newExtraAmount}
+              />
+
+              <Pressable disabled={busy} onPress={handleAddExtra} style={styles.addBtn}>
+                <Text style={styles.addBtnText}>{t("progress.addExtra")}</Text>
+              </Pressable>
+            </View>
+          ) : null}
+        </>
       ) : null}
 
       {canSeeFinance && summary && itemsTotal > 0 ? (
@@ -815,6 +991,25 @@ function createStyles(colors: AppColors) {
       justifyContent: "center",
     },
     cancelBtnText: { ...typography.caption, color: colors.textMuted, fontWeight: "600" },
+    extrasHint: {
+      ...typography.caption,
+      color: colors.textMuted,
+      marginBottom: spacing.sm,
+      lineHeight: 16,
+    },
+    directionRow: { flexDirection: "row", gap: spacing.sm },
+    directionChip: {
+      flex: 1,
+      alignItems: "center",
+      paddingVertical: spacing.sm,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.surfaceMuted,
+    },
+    directionChipActive: { borderColor: colors.primary, backgroundColor: colors.primarySoft },
+    directionChipText: { ...typography.caption, color: colors.textMuted, fontWeight: "600" },
+    directionChipTextActive: { color: colors.primary },
     addCard: {
       backgroundColor: colors.cardSoft,
       borderRadius: radius.lg,

@@ -123,4 +123,32 @@ describe("calculateGlobalFinanceSummary", () => {
     expect(global.totalProfitAmount).toBe(850_000);
     expect(global.projectCount).toBe(2);
   });
+
+  it("takes the contract total from the priced items when there are any", () => {
+    const summary = calculateProjectFinanceSummary({
+      projectId: "p1",
+      projectName: "Blok A",
+      customerName: "Müşteri",
+      // Elle girilen bütçe kalem toplamıyla çelişiyor; kalemler kazanır.
+      budget: 40_000_000,
+      financeRecords: [],
+      sectionAmounts: [1_000_000, 200_000],
+    });
+
+    expect(summary.agreedAmount).toBe(1_200_000);
+    expect(summary.remainingAmount).toBe(1_200_000);
+  });
+
+  it("falls back to the entered budget when no item is priced", () => {
+    const summary = calculateProjectFinanceSummary({
+      projectId: "p1",
+      projectName: "Blok A",
+      customerName: "Müşteri",
+      budget: 500_000,
+      financeRecords: [],
+      sectionAmounts: [0, 0],
+    });
+
+    expect(summary.agreedAmount).toBe(500_000);
+  });
 });
