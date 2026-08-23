@@ -65,6 +65,9 @@ export function TransactionCard({ transaction, onEdit, onDelete }: TransactionCa
               <MaterialCommunityIcons color={colors.textMuted} name="pencil-outline" size={16} />
             </Pressable>
           ) : null}
+          {!onEdit && !onDelete && transaction.locked ? (
+            <MaterialCommunityIcons color={colors.textDisabled} name="lock-outline" size={16} />
+          ) : null}
           {onDelete ? (
             <Pressable hitSlop={8} onPress={onDelete} style={styles.actionBtn}>
               <MaterialCommunityIcons color={colors.textMuted} name="delete-outline" size={16} />

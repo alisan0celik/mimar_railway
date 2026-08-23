@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../../common/prisma.service";
 import { NotificationsService } from "../notifications/notifications.service";
 import {
@@ -174,12 +174,34 @@ export class FinanceService {
     });
   }
 
+  /**
+   * Hakedişten doğan kayıtlar finans ekranından değiştirilemez.
+   *
+   * Bu kayıtların tutarı hakedişin kümülatif hesabından geliyor: burada elle
+   * değiştirilirse bir sonraki hakediş yanlış "önceki toplam" üzerinden
+   * hesaplanır, silinirse hakediş ödenmiş görünmeye devam eder. Her iki
+   * durumda da iki ekran ayrışır. Düzenleme hakediş ekranından yapılır.
+   */
+  private async assertNotProgressPayment(recordId: string) {
+    const linked = await this.prisma.progressPayment.findFirst({
+      where: { financeRecordId: recordId },
+      select: { id: true },
+    });
+
+    if (linked) {
+      throw new BadRequestException(
+        "Bu kayıt bir hakedişten oluştu. Değiştirmek için İmalat ve Hakediş ekranını kullanın.",
+      );
+    }
+  }
+
   async update(companyId: string, id: string, dto: UpdateFinanceRecordDto) {
     const record = await this.prisma.financeRecord.findFirst({
       where: { id, companyId },
     });
 
     if (!record) throw new NotFoundException("Kayıt bulunamadı");
+    await this.assertNotProgressPayment(id);
 
     const updated = await this.prisma.financeRecord.update({
       where: { id },
@@ -215,6 +237,7 @@ export class FinanceService {
     });
 
     if (!record) throw new NotFoundException("Kayıt bulunamadı");
+    await this.assertNotProgressPayment(id);
 
     await this.prisma.financeRecord.delete({ where: { id } });
     const summary = await this.buildSummariesResponse(companyId);

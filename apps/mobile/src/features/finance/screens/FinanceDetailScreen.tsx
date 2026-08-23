@@ -231,8 +231,18 @@ export function FinanceDetailScreen({ projectId }: FinanceDetailScreenProps) {
           filteredTransactions.map((transaction) => (
             <TransactionCard
               key={transaction.id}
-              onDelete={canUpdate ? () => handleDeleteTransaction(transaction.id) : undefined}
-              onEdit={canUpdate ? () => handleEditTransaction(transaction) : undefined}
+              // Hakedişten doğan kayıtlar burada değiştirilemez; sunucu da
+              // reddeder, düğmeleri göstermek yanıltıcı olurdu.
+              onDelete={
+                canUpdate && !transaction.locked
+                  ? () => handleDeleteTransaction(transaction.id)
+                  : undefined
+              }
+              onEdit={
+                canUpdate && !transaction.locked
+                  ? () => handleEditTransaction(transaction)
+                  : undefined
+              }
               transaction={transaction}
             />
           ))

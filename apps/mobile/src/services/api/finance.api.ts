@@ -10,6 +10,8 @@ export interface FinanceTransactionDTO {
   description: string;
   paidBy?: string;
   projectId?: string;
+  /** Hakedişten doğan kayıt: düzenlenemez, silinemez. */
+  locked?: boolean;
 }
 
 export interface FinanceSummaryDTO {

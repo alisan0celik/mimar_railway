@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { AppState } from "react-native";
 import { router } from "expo-router";
 
 import { getPostAuthRoute } from "../features/auth/utils/post-auth-route";
@@ -71,8 +72,18 @@ export function useMembershipStatusWatcher(enabled: boolean) {
       });
     }, POLL_INTERVAL_MS);
 
+    // Uygulama arka plandayken işletim sistemi zamanlayıcıyı kısıtlıyor;
+    // öne dönüldüğünde 45 saniye beklemeden durum kontrol edilir.
+    const appStateSub = AppState.addEventListener("change", (state) => {
+      if (state !== "active" || handledRef.current) return;
+      void syncMembershipStatusFromProfile().then((handled) => {
+        if (handled) handledRef.current = true;
+      });
+    });
+
     return () => {
       clearInterval(pollId);
+      appStateSub.remove();
       socketService.off("notification", onNotification);
     };
   }, [enabled]);

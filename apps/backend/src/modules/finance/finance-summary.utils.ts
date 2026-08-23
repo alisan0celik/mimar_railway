@@ -29,6 +29,8 @@ export type ProjectFinanceSummary = {
     date: string;
     description: string;
     paidBy: string;
+    /** Hakedişten doğan kayıt: finans ekranından değiştirilemez. */
+    locked: boolean;
   }>;
 };
 
@@ -101,6 +103,9 @@ export function calculateProjectFinanceSummary(input: {
       date: record.date.toISOString().split("T")[0],
       description: record.description || "",
       paidBy: record.paidBy || record.category || "",
+      // Hakedişten doğan kayıtlar burada düzenlenemez; uygulama da
+      // düzenleme ve silme düğmelerini bu işarete göre gizler.
+      locked: record.category === "progress-payment",
     })),
   };
 }
