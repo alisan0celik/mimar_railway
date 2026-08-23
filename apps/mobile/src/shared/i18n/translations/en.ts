@@ -669,12 +669,7 @@ export const en = {
     joinForm: {
       title: "Join Company",
       requestDesc: "Send a request to join this company",
-      inviteSectionTitle: "Join with Invite Code",
       sendRequestSectionTitle: "Send Request",
-      inviteCode: "Invite Code",
-      inviteCodePlaceholder: "ABCDE123",
-      joinWithCode: "Join with Code",
-      inviteSoon: "Joining with an invite code will be available soon.",
       sendRequest: "Send Request",
       message: "Your Message",
       messagePlaceholder: "Explain why you want to join...",
@@ -687,8 +682,6 @@ export const en = {
       descriptionSuffix: ".",
       messageOptional: "Message (Optional)",
       messagePlaceholder: "Tell us about yourself...",
-      invitePrompt: "Have an invite code? ",
-      inviteLink: "Join with Code",
     },
     approvalPending: {
       title: "Awaiting Approval",

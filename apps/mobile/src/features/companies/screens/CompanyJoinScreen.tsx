@@ -22,7 +22,6 @@ export function CompanyJoinScreen() {
   const params = useLocalSearchParams<{ companyId?: string; companyName?: string }>();
   const companyId = params.companyId ?? "";
   const companyName = params.companyName ?? "";
-  const [inviteCode, setInviteCode] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -68,28 +67,6 @@ export function CompanyJoinScreen() {
           <Text style={styles.companyDesc}>{t("companies.joinForm.requestDesc")}</Text>
         </View>
       ) : null}
-
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <MaterialCommunityIcons name="key-variant" size={20} color={colors.primary} />
-          <Text style={styles.sectionTitle}>{t("companies.joinForm.inviteSectionTitle")}</Text>
-        </View>
-        <View style={styles.formCard}>
-          <AppInput
-            label={t("companies.joinForm.inviteCode")}
-            onChangeText={setInviteCode}
-            placeholder={t("companies.joinForm.inviteCodePlaceholder")}
-            value={inviteCode}
-          />
-          <AppButton
-            fullWidth
-            disabled
-            onPress={() => showAppAlert(t("common.soon"), t("companies.joinForm.inviteSoon"))}
-            title={t("companies.joinForm.joinWithCode")}
-            style={styles.formBtn}
-          />
-        </View>
-      </View>
 
       <View style={styles.section}>
         <View style={styles.sectionHeader}>

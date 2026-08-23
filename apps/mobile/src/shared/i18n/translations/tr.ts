@@ -669,12 +669,7 @@ export const tr = {
     joinForm: {
       title: "Şirkete Katıl",
       requestDesc: "Bu şirkete katılmak için talep gönderin",
-      inviteSectionTitle: "Davet Kodu ile Katıl",
       sendRequestSectionTitle: "Talep Gönder",
-      inviteCode: "Davet Kodu",
-      inviteCodePlaceholder: "ABCDE123",
-      joinWithCode: "Kod ile Katıl",
-      inviteSoon: "Davet kodu ile katılım özelliği yakında eklenecek.",
       sendRequest: "Talep Gönder",
       message: "Mesajınız",
       messagePlaceholder: "Katılım nedeninizi belirtin...",
@@ -687,8 +682,6 @@ export const tr = {
       descriptionSuffix: " şirketine\nkatılım talebiniz gönderilecek.",
       messageOptional: "Mesaj (Opsiyonel)",
       messagePlaceholder: "Kendinizden bahsedin...",
-      invitePrompt: "Davet kodunuz mu var? ",
-      inviteLink: "Kod ile Katıl",
     },
     approvalPending: {
       title: "Onay Bekleniyor",

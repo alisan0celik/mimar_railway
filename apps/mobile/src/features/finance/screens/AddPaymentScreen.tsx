@@ -151,13 +151,15 @@ export function AddPaymentScreen({ projectId, transactionId, editingTransaction 
         date: formatDateForApi(date),
         description,
         type: direction === "received" ? "collection" : "expense",
-        projectId,
       };
 
+      // Güncellemede projectId gönderilmez: kayıt zaten bir projeye bağlı ve
+      // sunucu bilinmeyen alanları reddediyor — gönderildiğinde istek 400
+      // dönüyor ve kullanıcı "kaydedilemedi" hatası alıyordu.
       const response =
         isEditing && editTxn?.id
           ? await financeApi.updateTransaction(editTxn.id, payload as any)
-          : await financeApi.createTransaction(payload as any);
+          : await financeApi.createTransaction({ ...payload, projectId } as any);
 
       await syncFinanceSummaries(response.data.summary);
 

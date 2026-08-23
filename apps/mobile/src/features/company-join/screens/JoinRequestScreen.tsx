@@ -107,13 +107,6 @@ export function JoinRequestScreen() {
         style={styles.submitBtn}
         title={t("companies.joinForm.sendRequest")}
       />
-
-      <Pressable onPress={() => {}} style={styles.inviteLink}>
-        <Text style={styles.inviteLinkText}>
-          {t("companies.joinRequest.invitePrompt")}
-          <Text style={styles.inviteLinkHighlight}>{t("companies.joinRequest.inviteLink")}</Text>
-        </Text>
-      </Pressable>
     </Screen>
   );
 }
@@ -186,17 +179,5 @@ function createStyles(colors: AppColors) {
       minHeight: 90,
     },
     submitBtn: { marginBottom: spacing.lg },
-    inviteLink: {
-      alignItems: "center",
-      paddingVertical: spacing.sm,
-    },
-    inviteLinkText: {
-      ...typography.bodySmall,
-      color: colors.textMuted,
-    },
-    inviteLinkHighlight: {
-      color: colors.primaryLight,
-      fontWeight: "700",
-    },
   });
 }
