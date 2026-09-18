@@ -32,7 +32,9 @@ export class AuthService {
     } catch {
       // ignore logout errors
     }
-    await clearTokens();
+    // Silinemezse çağıran store yeniden dener; hatayı arayüze taşımanın,
+    // çoğu çağıran onu yakalamadığı için, bir faydası yok.
+    await clearTokens().catch(() => undefined);
   }
 
   static async getProfile() {

@@ -1,13 +1,20 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
-import { getTokens, setTokens, clearTokens } from "../auth/token-storage";
+import {
+  clearTokens,
+  getSessionEpoch,
+  getTokens,
+  isTokenStorageUnavailable,
+  setTokens,
+} from "../auth/token-storage";
 import { emitAuthSessionExpired } from "../auth/auth-session";
 import { useAuthStore } from "../../store/authStore";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000/api";
+const REQUEST_TIMEOUT_MS = 15000;
 
 export const apiClient = axios.create({
   baseURL: API_URL,
-  timeout: 15000,
+  timeout: REQUEST_TIMEOUT_MS,
   headers: {
     "Content-Type": "application/json",
   },
@@ -15,6 +22,10 @@ export const apiClient = axios.create({
 
 apiClient.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
+    // Anahtarlık okunamazsa `getTokens` hata fırlatır ve istek hiç gönderilmez.
+    // Yetkisiz göndermek 401 alıp yenileme zincirini, oradan da oturum silmeyi
+    // tetiklerdi. Hata çağırana ağ hatası gibi ulaşır; eşitleme motoru gibi
+    // çağıranlar bir sonraki turda yeniden dener.
     const tokens = await getTokens();
     if (tokens?.accessToken) {
       config.headers.Authorization = `Bearer ${tokens.accessToken}`;
@@ -47,8 +58,35 @@ const SUBSCRIPTION_BLOCK_CODES = new Set([
   "COMPANY_INACTIVE",
 ]);
 
+const NO_STORED_SESSION = "NO_STORED_SESSION";
+const SESSION_ENDED_DURING_REFRESH = "SESSION_ENDED_DURING_REFRESH";
+
+function sessionError(code: string): Error & { code: string } {
+  return Object.assign(new Error(code), { code });
+}
+
+/**
+ * Oturum yalnızca sunucu onu reddettiğinde silinir.
+ *
+ * Eskiden yenileme herhangi bir sebeple başarısız olunca — bağlantı kopması,
+ * zaman aşımı, sunucunun yeniden başlaması, anahtarlığın o an okunamaması —
+ * token'lar siliniyordu. Erişim token'ı 15 dakikada dolduğu için uygulama
+ * neredeyse her açılışta yenileme yapıyor; şantiyedeki zayıf bir bağlantı ya
+ * da sunucu güncellemesi sırasındaki birkaç saniye kullanıcıyı çıkışa
+ * atıyordu. Artık bu durumlarda istek başarısız olur ama oturum yerinde kalır.
+ */
+function isSessionRejected(error: unknown): boolean {
+  if ((error as { code?: unknown } | null)?.code === NO_STORED_SESSION) {
+    return true;
+  }
+  const status = axios.isAxiosError(error) ? error.response?.status : undefined;
+  return status === 401 || status === 403;
+}
+
 async function forceLogout() {
-  await clearTokens();
+  // Sunucu bu token'ları zaten reddetti; silinemeseler bile bir sonraki
+  // denemede yine reddedilirler, o yüzden silme hatası durumu değiştirmez.
+  await clearTokens().catch(() => undefined);
   useAuthStore.setState({
     user: null,
     isAuthenticated: false,
@@ -60,6 +98,11 @@ async function forceLogout() {
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
+    // Anahtarlık okunamadığı için hiç gönderilmemiş istek: oturuma dokunma.
+    if (isTokenStorageUnavailable(error) || !error.config) {
+      return Promise.reject(error);
+    }
+
     const originalRequest = error.config as InternalAxiosRequestConfig & {
       _retry?: boolean;
     };
@@ -81,7 +124,7 @@ apiClient.interceptors.response.use(
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       // Do not intercept auth endpoints to allow them to handle their own errors
-      if (originalRequest.url?.includes("/auth/login") || originalRequest.url?.includes("/auth/refresh") || originalRequest.url?.includes("/auth/register")) {
+      if (requestUrl.includes("/auth/login") || requestUrl.includes("/auth/refresh") || requestUrl.includes("/auth/register")) {
         return Promise.reject(error);
       }
       if (isRefreshing) {
@@ -95,19 +138,35 @@ apiClient.interceptors.response.use(
 
       originalRequest._retry = true;
       isRefreshing = true;
+      // Yenileme sürerken çıkış yapılırsa bu değer değişir; yanıt geldiğinde
+      // kontrol edilip kapatılan oturum geri yazılmaz.
+      const epoch = getSessionEpoch();
 
       try {
         const tokens = await getTokens();
         if (!tokens?.refreshToken) {
-          throw new Error("No refresh token");
+          throw sessionError(NO_STORED_SESSION);
         }
 
-        const response = await axios.post(`${API_URL}/auth/refresh`, {
-          refreshToken: tokens.refreshToken,
-        });
+        // Varsayılan axios'ta zaman aşımı yok; asılı kalan bir yenileme
+        // kuyruktaki bütün istekleri sonsuza kadar bekletirdi.
+        const response = await axios.post(
+          `${API_URL}/auth/refresh`,
+          { refreshToken: tokens.refreshToken },
+          { timeout: REQUEST_TIMEOUT_MS },
+        );
+
+        if (getSessionEpoch() !== epoch) {
+          throw sessionError(SESSION_ENDED_DURING_REFRESH);
+        }
 
         const { accessToken, refreshToken, user } = response.data;
         await setTokens(accessToken, refreshToken);
+        if (getSessionEpoch() !== epoch) {
+          // Token'lar yazılırken çıkış yapıldı; yazdıklarımızı geri al.
+          await clearTokens().catch(() => undefined);
+          throw sessionError(SESSION_ENDED_DURING_REFRESH);
+        }
         if (user) {
           useAuthStore.getState().setUser(user);
         }
@@ -117,8 +176,10 @@ apiClient.interceptors.response.use(
         return apiClient(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
-        await forceLogout();
-        emitAuthSessionExpired();
+        if (isSessionRejected(refreshError)) {
+          await forceLogout();
+          emitAuthSessionExpired();
+        }
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
