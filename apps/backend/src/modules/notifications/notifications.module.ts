@@ -1,6 +1,8 @@
 import { Module } from "@nestjs/common";
 import { JwtModule } from "@nestjs/jwt";
 import { ConfigModule, ConfigService } from "@nestjs/config";
+import { AnnouncementsController } from "./announcements.controller";
+import { AnnouncementsService } from "./announcements.service";
 import { NotificationsController } from "./notifications.controller";
 import { NotificationsGateway } from "./notifications.gateway";
 import { NotificationsService } from "./notifications.service";
@@ -20,8 +22,9 @@ import { getJwtAccessSecret } from "../../config/jwt.config";
       }),
     }),
   ],
-  controllers: [NotificationsController],
+  controllers: [NotificationsController, AnnouncementsController],
   providers: [
+    AnnouncementsService,
     NotificationsGateway,
     NotificationsService,
     FcmService,

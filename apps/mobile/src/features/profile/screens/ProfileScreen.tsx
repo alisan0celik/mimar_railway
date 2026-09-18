@@ -129,6 +129,13 @@ export function ProfileScreen() {
         color: "#0EA5E9",
       },
       {
+        id: "platformAnnouncement",
+        icon: "bullhorn-outline",
+        label: t("profile.platformAnnouncement"),
+        route: "/(main)/platform/announcement",
+        color: "#F97316",
+      },
+      {
         id: "notif",
         icon: "bell-outline",
         label: t("profile.notifications"),
@@ -170,7 +177,11 @@ export function ProfileScreen() {
       if (item.id === "pending") return canApproveUsers;
       if (item.id === "roles") return canViewRoles;
       if (item.id === "companyLogo") return canEditCompany;
-      if (item.id === "platformCompanies" || item.id === "platformSupport") {
+      if (
+        item.id === "platformCompanies" ||
+        item.id === "platformSupport" ||
+        item.id === "platformAnnouncement"
+      ) {
         return Boolean(user?.isPlatformAdmin);
       }
       return true;

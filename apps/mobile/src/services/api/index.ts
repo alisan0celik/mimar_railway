@@ -17,3 +17,5 @@ export { usersApi } from "./users.api";
 export type { UserDTO, PaginatedResponse } from "./users.api";
 export { rolesApi } from "./roles.api";
 export type { RoleDTO, RoleDetailDTO, CreateRoleInput, UpdateRoleInput } from "./roles.api";
+export { announcementsApi } from "./announcements.api";
+export type { AnnouncementAudienceDTO } from "./announcements.api";

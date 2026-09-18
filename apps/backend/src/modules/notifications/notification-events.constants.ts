@@ -9,6 +9,8 @@ export const NOTIFICATION_TARGET = {
   CALENDAR_EVENT: "calendar_event",
   SUPPORT_TICKET: "support_ticket",
   SUBSCRIPTION: "subscription",
+  /** Platform yöneticisinin bütün kullanıcılara gönderdiği duyuru (bakım, kesinti...). */
+  ANNOUNCEMENT: "announcement",
 } as const;
 
 export const SUBSCRIPTION_ACTION = {
