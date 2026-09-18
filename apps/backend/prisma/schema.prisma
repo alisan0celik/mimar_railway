@@ -104,6 +104,7 @@ model Company {
   calendarEvents        CalendarEvent[]
   progressPayments      ProgressPayment[]
   workItems             CompanyWorkItem[]
+  favouriteTasks        CompanyFavouriteTask[]
   createdAt             DateTime          @default(now())
   updatedAt             DateTime          @updatedAt
   supportTickets        SupportTicket[]
@@ -516,5 +517,21 @@ model CompanyWorkItem {
   updatedAt DateTime @updatedAt
 
   @@unique([companyId, name])
+  @@index([companyId])
+}
+
+/// Şirketin favori yapılacakları.
+/// Her projede tekrar tekrar girilen işler (ruhsat dosyası, zemin etüdü...)
+/// bir kez yıldızlanır ve yeni açılan projelere otomatik eklenir.
+model CompanyFavouriteTask {
+  id        String   @id @default(cuid())
+  title     String
+  order     Int      @default(0)
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([companyId, title])
   @@index([companyId])
 }

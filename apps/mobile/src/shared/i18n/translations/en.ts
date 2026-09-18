@@ -154,6 +154,10 @@ export const en = {
       empty: "No to-dos yet",
       statusCompleted: "Completed",
       statusWaiting: "Waiting",
+      favouriteAdd: "Add to favourites",
+      favouriteRemove: "Remove from favourites",
+      favouriteHint: "Starred to-dos are added automatically to every new project.",
+      favouriteError: "Couldn't update the favourite. Check your connection and try again.",
     },
     types: {
       residential: "Residential",
@@ -876,7 +880,7 @@ export const en = {
         },
         todos: {
           question: "How do to-dos work?",
-          answer: "Managers add to-dos; office employees can mark them complete. New to-dos notify the project team.",
+          answer: "Managers add to-dos; office employees can mark them complete. New to-dos notify the project team. Star the to-dos you repeat on every project (a permit file, a soil survey) to add them to your favourites: favourite to-dos are added automatically to every new project. Tapping the star again removes it from favourites; existing projects are not affected.",
         },
         notifications: {
           question: "Where do I manage notification preferences?",

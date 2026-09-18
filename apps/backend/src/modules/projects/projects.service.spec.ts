@@ -1,5 +1,6 @@
 import { BadRequestException, NotFoundException } from "@nestjs/common";
 import { ProjectsService } from "./projects.service";
+import { CreateProjectDto } from "./dto/create-project.dto";
 import { PrismaService } from "../../common/prisma.service";
 import { NotificationsService } from "../notifications/notifications.service";
 import {
@@ -10,11 +11,13 @@ import {
 
 describe("ProjectsService tasks", () => {
   const prisma = {
-    project: { findUnique: jest.fn(), findFirst: jest.fn() },
+    project: { findUnique: jest.fn(), findFirst: jest.fn(), create: jest.fn() },
     user: { findUnique: jest.fn(), findMany: jest.fn() },
     projectTeam: { findMany: jest.fn(), createMany: jest.fn(), deleteMany: jest.fn() },
     projectNote: { create: jest.fn() },
     task: { findFirst: jest.fn(), update: jest.fn(), create: jest.fn() },
+    companyWorkItem: { findMany: jest.fn() },
+    companyFavouriteTask: { findMany: jest.fn() },
   };
 
   const notificationsService = {
@@ -28,6 +31,67 @@ describe("ProjectsService tasks", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  describe("create with favourite tasks", () => {
+    const dto = { name: "Yeni Proje", customerName: "Ege Turizm" } as CreateProjectDto;
+
+    beforeEach(() => {
+      prisma.companyWorkItem.findMany.mockResolvedValue([]);
+      prisma.companyFavouriteTask.findMany.mockResolvedValue([
+        { title: "Ruhsat dosyası" },
+        { title: "Zemin etüdü" },
+        { title: "Müşteriye sunum" },
+      ]);
+      prisma.project.create.mockImplementation(async ({ data }) => ({ id: "p1", name: data.name, sections: [] }));
+      prisma.user.findUnique.mockResolvedValue({ fullName: "Ali Çelik" });
+      prisma.user.findMany.mockResolvedValue([]);
+    });
+
+    const createdTasks = () => prisma.project.create.mock.calls[0][0].data.tasks.create;
+
+    it("adds the company's favourite tasks to the new project in favourite order", async () => {
+      await service.create("c1", "u1", dto);
+
+      const tasks = createdTasks();
+      expect(tasks.map((task: { title: string }) => task.title)).toEqual([
+        "Ruhsat dosyası",
+        "Zemin etüdü",
+        "Müşteriye sunum",
+      ]);
+      expect(tasks.every((task: { status: string; createdById: string }) =>
+        task.status === "todo" && task.createdById === "u1",
+      )).toBe(true);
+    });
+
+    it("stamps the first favourite newest so it lists first", async () => {
+      // Liste en yeni üstte sıralanıyor; aynı işlemdeki görevler aynı zamanı
+      // alsaydı sıra rastgele olurdu.
+      await service.create("c1", "u1", dto);
+
+      const times = createdTasks().map((task: { createdAt: Date }) => task.createdAt.getTime());
+      expect(times[0]).toBeGreaterThan(times[1]);
+      expect(times[1]).toBeGreaterThan(times[2]);
+      const [first] = createdTasks();
+      expect(first.updatedAt).toEqual(first.createdAt);
+    });
+
+    it("sends one project notification, not one per favourite task", async () => {
+      prisma.user.findMany.mockResolvedValue([{ id: "u2", notificationPreferences: null }]);
+
+      await service.create("c1", "u1", dto);
+
+      expect(prisma.task.create).not.toHaveBeenCalled();
+      expect(notificationsService.createForUser).toHaveBeenCalledTimes(1);
+    });
+
+    it("creates no tasks when the company has no favourites", async () => {
+      prisma.companyFavouriteTask.findMany.mockResolvedValue([]);
+
+      await service.create("c1", "u1", dto);
+
+      expect(createdTasks()).toEqual([]);
+    });
   });
 
   describe("updateTaskStatus", () => {

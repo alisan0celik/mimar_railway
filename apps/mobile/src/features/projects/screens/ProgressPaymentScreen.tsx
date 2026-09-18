@@ -17,11 +17,7 @@ import { useThemedStyles, type AppColors } from "../../../shared/theme";
 import { useThemeColors } from "../../../shared/theme/ThemeProvider";
 import { ConfirmDialog, DesignBackHeader, Screen, showAppAlert } from "../../../shared/ui";
 import { formatCurrency } from "../../../shared/utils";
-
-/** Türkçe "İ" düz toLowerCase ile bozulduğu için ad karşılaştırması yerel ayarla yapılır. */
-function normaliseName(value: string): string {
-  return value.trim().toLocaleLowerCase("tr");
-}
+import { normaliseName } from "../../../shared/utils/normaliseName";
 
 /** Kullanıcının girdiği tutar metnini sayıya çevirir; boşsa 0. */
 function parseAmount(text: string): number {

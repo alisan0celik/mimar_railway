@@ -16,7 +16,13 @@ import {
   updateTaskOffline, 
   deleteTaskOffline 
 } from "../../../offline/sync/sync-engine";
-import { type ProjectNoteDTO, type ProjectTaskDTO, type ProjectDTO } from "../../../services/api/project.api";
+import {
+  type CompanyFavouriteTaskDTO,
+  type ProjectNoteDTO,
+  type ProjectTaskDTO,
+  type ProjectDTO,
+} from "../../../services/api/project.api";
+import { normaliseName } from "../../../shared/utils/normaliseName";
 import { radius, spacing, typography, useThemedStyles, type AppColors } from "../../../shared/theme";
 import { useThemeColors } from "../../../shared/theme/ThemeProvider";
 import {
@@ -124,6 +130,15 @@ export function ProjectDetailScreen() {
   const [editingTodoId, setEditingTodoId] = useState<string | null>(null);
   const [editingTodoText, setEditingTodoText] = useState("");
 
+  // Şirketin favori yapılacakları: yıldızlananlar yeni projelere otomatik eklenir.
+  const [favouriteTasks, setFavouriteTasks] = useState<CompanyFavouriteTaskDTO[]>([]);
+  // Aynı yıldıza art arda basılınca istekler birbirini ezmesin diye.
+  const [pendingFavourite, setPendingFavourite] = useState<string | null>(null);
+  const favouriteTitles = useMemo(
+    () => new Set(favouriteTasks.map((item) => normaliseName(item.title))),
+    [favouriteTasks],
+  );
+
   const fetchNotes = async () => {
     if (!projectId) return;
     try {
@@ -140,11 +155,22 @@ export function ProjectDetailScreen() {
     } catch {}
   };
 
+  const fetchFavouriteTasks = async () => {
+    // Yıldız yalnızca yapılacakları yönetebilenlere gösteriliyor.
+    if (!canManageTodos) return;
+    try {
+      setFavouriteTasks(await projectApi.getFavouriteTasks());
+    } catch {
+      // Çevrimdışıyken liste gelmez; yıldıza basılınca hata anlatılıyor.
+    }
+  };
+
   useFocusEffect(
     useCallback(() => {
       fetchNotes();
       fetchTodos();
-    }, [projectId])
+      void fetchFavouriteTasks();
+    }, [projectId, canManageTodos])
   );
 
   const q = query.trim().toLowerCase();
@@ -228,6 +254,43 @@ export function ProjectDetailScreen() {
     } catch (error) {
       logMutationError("task", error);
       showAppAlert(t("common.error"), `${t("projects.todos.addError")}${mutationErrorDetail(error)}`);
+    }
+  };
+
+  const handleToggleFavourite = async (todo: ProjectTaskDTO) => {
+    const key = normaliseName(todo.title);
+    if (pendingFavourite === key) return;
+
+    const isFavourite = favouriteTitles.has(key);
+    const previous = favouriteTasks;
+
+    // Yıldız anında dönsün; istek başarısız olursa geri alınır.
+    setFavouriteTasks(
+      isFavourite
+        ? previous.filter((item) => normaliseName(item.title) !== key)
+        : [...previous, { id: `pending-${key}`, title: todo.title, order: Number.MAX_SAFE_INTEGER }],
+    );
+    setPendingFavourite(key);
+
+    try {
+      if (isFavourite) {
+        await projectApi.removeFavouriteTask(todo.title);
+      } else {
+        await projectApi.addFavouriteTask(todo.title);
+      }
+    } catch {
+      setFavouriteTasks(previous);
+      setPendingFavourite(null);
+      showAppAlert(t("common.error"), t("projects.todos.favouriteError"));
+      return;
+    }
+
+    try {
+      setFavouriteTasks(await projectApi.getFavouriteTasks());
+    } catch {
+      // Değişiklik sunucuya yazıldı; liste tazelenemezse iyimser hali doğru.
+    } finally {
+      setPendingFavourite(null);
     }
   };
 
@@ -422,13 +485,24 @@ export function ProjectDetailScreen() {
                     </View>
                   ) : null}
 
+                  {canManageTodos && favouriteTasks.length === 0 && todos.length > 0 ? (
+                    // Özelliği keşfettirmek için; ilk favoriden sonra kaybolur.
+                    <View style={styles.favouriteHint}>
+                      <MaterialCommunityIcons color={colors.warning} name="star-outline" size={16} />
+                      <Text style={styles.favouriteHintText}>{t("projects.todos.favouriteHint")}</Text>
+                    </View>
+                  ) : null}
+
                   {todos.length === 0 ? (
                     <View style={styles.emptyNotes}>
                       <MaterialCommunityIcons color={colors.textMuted} name="clipboard-text-outline" size={40} />
                       <Text style={styles.emptyNotesText}>{t("projects.todos.empty")}</Text>
                     </View>
                   ) : (
-                    todos.map((todo) => (
+                    todos.map((todo) => {
+                      const favouriteKey = normaliseName(todo.title);
+                      const isFavourite = favouriteTitles.has(favouriteKey);
+                      return (
                       <View key={todo.id} style={styles.todoRow}>
                         <Pressable
                           accessibilityRole="checkbox"
@@ -469,6 +543,25 @@ export function ProjectDetailScreen() {
 
                         {canManageTodos ? (
                           <View style={styles.todoActions}>
+                            <Pressable
+                              accessibilityLabel={
+                                isFavourite
+                                  ? t("projects.todos.favouriteRemove")
+                                  : t("projects.todos.favouriteAdd")
+                              }
+                              accessibilityRole="button"
+                              accessibilityState={{ selected: isFavourite, busy: pendingFavourite === favouriteKey }}
+                              disabled={pendingFavourite === favouriteKey}
+                              hitSlop={6}
+                              onPress={() => handleToggleFavourite(todo)}
+                              style={styles.todoActionBtn}
+                            >
+                              <MaterialCommunityIcons
+                                color={isFavourite ? colors.warning : colors.textDisabled}
+                                name={isFavourite ? "star" : "star-outline"}
+                                size={18}
+                              />
+                            </Pressable>
                             {editingTodoId === todo.id ? (
                               <Pressable
                                 onPress={async () => {
@@ -510,7 +603,8 @@ export function ProjectDetailScreen() {
                           </View>
                         ) : null}
                       </View>
-                    ))
+                      );
+                    })
                   )}
                 </View>
               ) : null}
@@ -711,6 +805,17 @@ function createStyles(colors: AppColors) {
     alignItems: "center",
     gap: spacing.sm,
     marginBottom: spacing.md,
+  },
+  favouriteHint: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    marginBottom: spacing.md,
+  },
+  favouriteHintText: {
+    ...typography.caption,
+    color: colors.textMuted,
+    flex: 1,
   },
   addTodoInput: {
     flex: 1,

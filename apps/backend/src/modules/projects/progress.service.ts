@@ -17,6 +17,7 @@ import { CreateProgressPaymentDto } from "./dto/create-progress-payment.dto";
 import { CreateSectionDto } from "./dto/create-section.dto";
 import { UpdateProgressPaymentDto } from "./dto/update-progress-payment.dto";
 import { UpdateSectionDto } from "./dto/update-section.dto";
+import { normaliseName } from "./normalise-name";
 import {
   calculateEarnedAmount,
   calculateEarnedCost,
@@ -55,16 +56,6 @@ function formatAmount(value: number): string {
   return `${value.toLocaleString("tr-TR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ₺`;
 }
 
-/**
- * Kalem adlarını karşılaştırmak için normalleştirir.
- *
- * Düz `toLowerCase()` Türkçe'de yanlış sonuç veriyor: "İ" harfi "i" yerine
- * birleşik noktalı "i̇" üretiyor ve "Kaba İnşaat" ile "kaba inşaat" farklı
- * görünüyor. Bu yüzden Türkçe yerel ayarıyla küçültülür.
- */
-function normaliseName(value: string): string {
-  return value.trim().toLocaleLowerCase("tr").normalize("NFC");
-}
 
 @Injectable()
 export class ProgressService {

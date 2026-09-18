@@ -71,8 +71,35 @@ export class ProjectsService {
     return favourites.map((item) => item.name);
   }
 
+  /**
+   * Yeni projeye eklenecek favori yapılacaklar, favori sırasıyla.
+   *
+   * Görevler proje oluşturma işleminin içinde ekleniyor, `addTask` ile tek
+   * tek değil: o yol her görev için ekibe bildirim gönderiyor ve on favorisi
+   * olan bir şirkette yeni proje on ayrı bildirim demek olurdu. Proje için
+   * zaten tek bir bildirim gidiyor.
+   */
+  private async favouriteTaskTitles(companyId: string): Promise<string[]> {
+    const favourites = await this.prisma.companyFavouriteTask.findMany({
+      where: { companyId },
+      orderBy: [{ order: "asc" }, { createdAt: "asc" }],
+      select: { title: true },
+    });
+
+    return favourites.map((item) => item.title);
+  }
+
   async create(companyId: string, userId: string, dto: CreateProjectDto) {
-    const workItems = await this.resolveWorkItems(companyId, dto);
+    const [workItems, favouriteTasks] = await Promise.all([
+      this.resolveWorkItems(companyId, dto),
+      this.favouriteTaskTitles(companyId),
+    ]);
+
+    // Yapılacaklar hem sunucuda hem cihaz önbelleğinde en yeni üstte
+    // sıralanıyor. Aynı işlemde yazılan görevler aynı zamanı alacağından sıra
+    // rastgele olurdu; ilk favoriye en yeni zamanı verip milisaniye
+    // aralıklarla geri gidildiğinde favori sırası ekranda korunur.
+    const now = Date.now();
 
     const project = await this.prisma.project.create({
       data: {
@@ -99,6 +126,19 @@ export class ProjectsService {
             content: "Bekliyor",
             updatedBy: "Sistem",
           })),
+        },
+        tasks: {
+          create: favouriteTasks.map((title, index) => {
+            const stamp = new Date(now - index);
+            return {
+              title,
+              status: "todo",
+              priority: "medium",
+              createdById: userId,
+              createdAt: stamp,
+              updatedAt: stamp,
+            };
+          }),
         },
       },
       include: {

@@ -26,6 +26,13 @@ export type CompanyWorkItemDTO = {
   order: number;
 };
 
+/** Şirketin favori yapılacağı; yeni projelere otomatik eklenir. */
+export type CompanyFavouriteTaskDTO = {
+  id: string;
+  title: string;
+  order: number;
+};
+
 export type ProgressPaymentStatus = "draft" | "paid" | "cancelled";
 
 /** "incoming" işverenden alınan, "outgoing" taşerona ödenen hakediş. */
@@ -374,6 +381,19 @@ export const projectApi = {
     const { data } = await apiClient.post<ProjectSectionDTO[]>(
       `/projects/${projectId}/sections/from-favourites`,
     );
+    return data;
+  },
+
+  async getFavouriteTasks() {
+    const { data } = await apiClient.get<CompanyFavouriteTaskDTO[]>("/favourite-tasks");
+    return data;
+  },
+  async addFavouriteTask(title: string) {
+    const { data } = await apiClient.post<CompanyFavouriteTaskDTO>("/favourite-tasks", { title });
+    return data;
+  },
+  async removeFavouriteTask(title: string) {
+    const { data } = await apiClient.delete("/favourite-tasks", { data: { title } });
     return data;
   },
 

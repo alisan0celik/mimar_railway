@@ -154,6 +154,10 @@ export const tr = {
       empty: "Henüz yapılacak eklenmemiş",
       statusCompleted: "Tamamlandı",
       statusWaiting: "Bekliyor",
+      favouriteAdd: "Favorilere ekle",
+      favouriteRemove: "Favorilerden çıkar",
+      favouriteHint: "Yıldızladığınız yapılacaklar yeni açılan her projeye otomatik eklenir.",
+      favouriteError: "Favori güncellenemedi. İnternet bağlantınızı kontrol edip tekrar deneyin.",
     },
     types: {
       residential: "Konut",
@@ -876,7 +880,7 @@ export const tr = {
         },
         todos: {
           question: "Yapılacaklar nasıl çalışır?",
-          answer: "Yöneticiler yapılacak ekler; ofis çalışanları kutucukla tamamlayabilir. Yeni yapılacak oluşturulduğunda proje ekibine bildirim gider.",
+          answer: "Yöneticiler yapılacak ekler; ofis çalışanları kutucukla tamamlayabilir. Yeni yapılacak oluşturulduğunda proje ekibine bildirim gider. Her projede tekrar eden işleri (ruhsat dosyası, zemin etüdü gibi) yanındaki yıldızla favorilere ekleyin: favori yapılacaklar yeni açılan her projeye otomatik eklenir. Yıldıza tekrar dokunmak favoriden çıkarır; mevcut projelerdeki görevler etkilenmez.",
         },
         notifications: {
           question: "Bildirim tercihlerimi nereden yönetirim?",
