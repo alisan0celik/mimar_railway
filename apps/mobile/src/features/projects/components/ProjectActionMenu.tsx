@@ -17,12 +17,18 @@ import { useThemeColors } from "../../../shared/theme/ThemeProvider";
 
 const MOBILE_SHEET_MAX_WIDTH = 428;
 
+/**
+ * Verilmeyen eylem menüde gösterilmez; hangi eylemin görüneceğine çağıran
+ * yetkiye ve projenin durumuna göre karar verir.
+ */
 type ProjectActionMenuProps = {
   visible: boolean;
   projectName: string;
   loading?: boolean;
   onClose: () => void;
-  onMarkCompleted: () => void;
+  onEdit?: () => void;
+  onMarkCompleted?: () => void;
+  onDelete?: () => void;
 };
 
 export function ProjectActionMenu({
@@ -30,7 +36,9 @@ export function ProjectActionMenu({
   projectName,
   loading,
   onClose,
+  onEdit,
   onMarkCompleted,
+  onDelete,
 }: ProjectActionMenuProps) {
   const styles = useThemedStyles(createStyles);
   const colors = useThemeColors();
@@ -64,16 +72,47 @@ export function ProjectActionMenu({
               {projectName}
             </Text>
 
-            <Pressable
-              disabled={loading}
-              onPress={onMarkCompleted}
-              style={({ pressed }) => [styles.actionRow, pressed && styles.actionPressed]}
-            >
-              <View style={styles.actionIconWrap}>
-                <MaterialCommunityIcons color={colors.primary} name="check-circle-outline" size={22} />
-              </View>
-              <Text style={styles.actionText}>{t("projects.markCompleted")}</Text>
-            </Pressable>
+            {onEdit ? (
+              <Pressable
+                accessibilityRole="button"
+                disabled={loading}
+                onPress={onEdit}
+                style={({ pressed }) => [styles.actionRow, pressed && styles.actionPressed]}
+              >
+                <View style={styles.actionIconWrap}>
+                  <MaterialCommunityIcons color={colors.primary} name="pencil-outline" size={22} />
+                </View>
+                <Text style={styles.actionText}>{t("projects.actions.edit")}</Text>
+              </Pressable>
+            ) : null}
+
+            {onMarkCompleted ? (
+              <Pressable
+                accessibilityRole="button"
+                disabled={loading}
+                onPress={onMarkCompleted}
+                style={({ pressed }) => [styles.actionRow, pressed && styles.actionPressed]}
+              >
+                <View style={styles.actionIconWrap}>
+                  <MaterialCommunityIcons color={colors.primary} name="check-circle-outline" size={22} />
+                </View>
+                <Text style={styles.actionText}>{t("projects.markCompleted")}</Text>
+              </Pressable>
+            ) : null}
+
+            {onDelete ? (
+              <Pressable
+                accessibilityRole="button"
+                disabled={loading}
+                onPress={onDelete}
+                style={({ pressed }) => [styles.actionRow, pressed && styles.actionPressed]}
+              >
+                <View style={[styles.actionIconWrap, styles.dangerIconWrap]}>
+                  <MaterialCommunityIcons color={colors.danger} name="delete-outline" size={22} />
+                </View>
+                <Text style={[styles.actionText, styles.dangerText]}>{t("projects.actions.delete")}</Text>
+              </Pressable>
+            ) : null}
 
             <Pressable
               onPress={onClose}
@@ -166,6 +205,8 @@ function createStyles(colors: AppColors) {
       fontWeight: "600",
       flex: 1,
     },
+    dangerIconWrap: { backgroundColor: colors.dangerSoft },
+    dangerText: { color: colors.danger },
     cancelBtn: {
       alignItems: "center",
       justifyContent: "center",

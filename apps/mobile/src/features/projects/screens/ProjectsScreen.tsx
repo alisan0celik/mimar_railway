@@ -11,9 +11,19 @@ import { type ProjectStatus } from "../../../shared/types/project.types";
 import { useProjectStore } from "../../../store/projectStore";
 import { spacing, typography } from "../../../shared/theme";
 import { useThemedStyles, type AppColors } from "../../../shared/theme";
-import { DesignEqualFilterBar, EmptyState, Screen, SearchInput, showAppAlert } from "../../../shared/ui";
+import {
+  ConfirmDialog,
+  DesignEqualFilterBar,
+  EmptyState,
+  Screen,
+  SearchInput,
+  showAppAlert,
+} from "../../../shared/ui";
 
 type FilterKey = "all" | "active" | "completed";
+
+/** Eylem menüsünün kapanma animasyonu; bitmeden ikinci pencere açılmıyor. */
+const MENU_CLOSE_DELAY_MS = 350;
 
 function statusMatches(status: ProjectStatus, filter: FilterKey): boolean {
   if (filter === "all") return true;
@@ -33,9 +43,18 @@ export function ProjectsScreen() {
   const [activeFilter, setActiveFilter] = useState<FilterKey>("all");
   const [menuProject, setMenuProject] = useState<ProjectDTO | null>(null);
   const [completing, setCompleting] = useState(false);
-  const { projects, fetchProjects, updateProject } = useProjectStore();
-  const canCompleteProject =
-    useCan(PERMISSIONS.PROJECT_COMPLETE) || useCan(PERMISSIONS.PROJECT_UPDATE);
+  const [deleteTarget, setDeleteTarget] = useState<ProjectDTO | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const { projects, fetchProjects, updateProject, deleteProject } = useProjectStore();
+  // Hook'lar koşulsuz çağrılmalı: eskiden `a || b` yazıldığı için ilki doğruyken
+  // ikinci useCan hiç çağrılmıyor, hook sırası render'dan render'a değişiyordu.
+  const canComplete = useCan(PERMISSIONS.PROJECT_COMPLETE);
+  const canUpdate = useCan(PERMISSIONS.PROJECT_UPDATE);
+  const canUpdateFinance = useCan(PERMISSIONS.FINANCE_UPDATE);
+  const canCompleteProject = canComplete || canUpdate;
+  // Silme projenin finans kayıtlarını da götürdüğü için sunucu finans yetkisi
+  // de istiyor; menüde de aynı kural.
+  const canDeleteProject = canUpdate && canUpdateFinance;
 
   useFocusEffect(
     useCallback(() => {
@@ -77,6 +96,37 @@ export function ProjectsScreen() {
     }
   }, [menuProject, t, updateProject]);
 
+  const handleEdit = useCallback(() => {
+    if (!menuProject) return;
+    const projectId = menuProject.id;
+    setMenuProject(null);
+    router.push({ pathname: "/(main)/projects/[projectId]/edit", params: { projectId } });
+  }, [menuProject, router]);
+
+  const handleAskDelete = useCallback(() => {
+    if (!menuProject) return;
+    const target = menuProject;
+    setMenuProject(null);
+    // iOS, bir Modal kapanma animasyonundayken ikincisini göstermiyor; onay
+    // penceresi menü kapandıktan sonra açılıyor.
+    setTimeout(() => setDeleteTarget(target), MENU_CLOSE_DELAY_MS);
+  }, [menuProject]);
+
+  const handleDelete = useCallback(async () => {
+    if (!deleteTarget) return;
+
+    setDeleting(true);
+    try {
+      await deleteProject(deleteTarget.id);
+      setDeleteTarget(null);
+    } catch {
+      setDeleteTarget(null);
+      showAppAlert(t("states.error"), t("projects.errors.deleteFailed"));
+    } finally {
+      setDeleting(false);
+    }
+  }, [deleteTarget, deleteProject, t]);
+
   return (
     <>
       <Screen contentContainerStyle={styles.content} scroll>
@@ -112,7 +162,9 @@ export function ProjectsScreen() {
                 }
                 project={project}
                 showMenu={
-                  canCompleteProject && isActiveProject(project.status as ProjectStatus)
+                  canUpdate ||
+                  canDeleteProject ||
+                  (canCompleteProject && isActiveProject(project.status as ProjectStatus))
                 }
               />
             ))
@@ -123,9 +175,28 @@ export function ProjectsScreen() {
       <ProjectActionMenu
         loading={completing}
         onClose={() => setMenuProject(null)}
-        onMarkCompleted={handleMarkCompleted}
+        onDelete={canDeleteProject ? handleAskDelete : undefined}
+        onEdit={canUpdate ? handleEdit : undefined}
+        onMarkCompleted={
+          menuProject && canCompleteProject && isActiveProject(menuProject.status as ProjectStatus)
+            ? handleMarkCompleted
+            : undefined
+        }
         projectName={menuProject?.name ?? ""}
         visible={menuProject !== null}
+      />
+
+      <ConfirmDialog
+        confirmDestructive
+        confirmLabel={t("projects.delete.confirm")}
+        loading={deleting}
+        message={t("projects.delete.confirmBody", { name: deleteTarget?.name ?? "" })}
+        onCancel={() => {
+          if (!deleting) setDeleteTarget(null);
+        }}
+        onConfirm={handleDelete}
+        title={t("projects.delete.confirmTitle")}
+        visible={deleteTarget !== null}
       />
     </>
   );

@@ -229,6 +229,18 @@ export const en = {
       open: "Open project actions menu",
       close: "Close project actions menu",
     },
+    actions: {
+      edit: "Edit",
+      delete: "Delete Project",
+    },
+    edit: {
+      title: "Edit Project",
+    },
+    delete: {
+      confirmTitle: "Delete this project?",
+      confirmBody: "“{name}” will be permanently deleted together with its notes, to-dos, work items, progress payments, files and finance records. This can't be undone.",
+      confirm: "Delete Project",
+    },
   },
   finance: {
     title: "Finance",
@@ -927,7 +939,7 @@ export const en = {
       sections: {
         projects: {
           title: "Projects",
-          steps: "View active projects from the Projects tab.|Use notes, team, and to-dos tabs in project detail.|Managers can create and update projects.",
+          steps: "View active projects from the Projects tab.|Use notes, team, and to-dos tabs in project detail.|Managers can create and update projects.|Edit or delete a project from the three-dot menu on its card.|Deleting also permanently removes its notes, to-dos, progress payments and finance records, so only managers with finance rights can delete projects.",
         },
         team: {
           title: "Team management",
@@ -935,7 +947,7 @@ export const en = {
         },
         todos: {
           title: "To-dos",
-          steps: "View tasks in the To-dos tab.|Managers add tasks; team members mark them complete.|Completed tasks are visible to the whole team.",
+          steps: "View tasks in the To-dos tab.|Managers add tasks; team members mark them complete.|Completed tasks are visible to the whole team.|Star the to-dos you repeat on every project; they are added automatically to new projects.",
         },
         progress: {
           title: "Work Items and Billing",

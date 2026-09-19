@@ -232,11 +232,16 @@ export class ProjectsService {
     // Check if exists
     await this.findOne(companyId, id);
 
+    const name = dto.name?.trim();
+    if (dto.name !== undefined && !name) {
+      throw new BadRequestException("Proje adı boş olamaz");
+    }
+
     return this.prisma.project.update({
       where: { id },
       data: {
-        name: dto.name,
-        customerName: dto.customerName,
+        name,
+        customerName: dto.customerName?.trim(),
         projectType: dto.projectType,
         location: dto.location,
         description: dto.description,
@@ -255,11 +260,24 @@ export class ProjectsService {
     });
   }
 
+  /**
+   * Projeyi ve ona bağlı her şeyi siler.
+   *
+   * Notlar, yapılacaklar, kalemler, hakedişler ve dosyalar veritabanında
+   * projeyle birlikte siliniyor. Finans kayıtları ise projeye bağı koparılıp
+   * bırakılıyordu: hiçbir ekranda görünmeyen sahipsiz kayıtlar olarak
+   * birikiyorlardı. Artık aynı işlemde onlar da siliniyor; kullanıcı silme
+   * onayında bunu açıkça görüyor.
+   */
   async remove(companyId: string, id: string) {
     await this.findOne(companyId, id);
-    return this.prisma.project.delete({
-      where: { id },
-    });
+
+    const [, project] = await this.prisma.$transaction([
+      this.prisma.financeRecord.deleteMany({ where: { projectId: id, companyId } }),
+      this.prisma.project.delete({ where: { id } }),
+    ]);
+
+    return project;
   }
 
   // --- NOTES ---

@@ -229,6 +229,18 @@ export const tr = {
       open: "Proje işlemleri menüsünü aç",
       close: "Proje işlemleri menüsünü kapat",
     },
+    actions: {
+      edit: "Düzenle",
+      delete: "Projeyi Sil",
+    },
+    edit: {
+      title: "Projeyi Düzenle",
+    },
+    delete: {
+      confirmTitle: "Proje silinsin mi?",
+      confirmBody: "“{name}” projesi; notları, yapılacakları, imalat kalemleri, hakedişleri, dosyaları ve finans kayıtlarıyla birlikte kalıcı olarak silinecek. Bu işlem geri alınamaz.",
+      confirm: "Projeyi Sil",
+    },
   },
   finance: {
     title: "Finans",
@@ -901,7 +913,7 @@ export const tr = {
         },
         joinCompany: {
           question: "Bir ofise nasıl katılırım?",
-          answer: "Ofis arama ekranından davet kodu veya ofis adı ile talep gönderin. Ofis yöneticisi onayladıktan ve rol atadıktan sonra uygulamayı kullanabilirsiniz.",
+          answer: "Ofis arama ekranından ofis adıyla katılım talebi gönderin. Ofis yöneticisi onayladıktan ve rol atadıktan sonra uygulamayı kullanabilirsiniz.",
         },
         projectTeam: {
           question: "Proje ekibine nasıl üye eklerim?",
@@ -927,7 +939,7 @@ export const tr = {
       sections: {
         projects: {
           title: "Projeler",
-          steps: "Projeler sekmesinden aktif projeleri görüntüleyin.|Proje detayında notlar, ekip ve yapılacaklar sekmelerini kullanın.|Yönetici yetkisiyle proje oluşturup güncelleyebilirsiniz.",
+          steps: "Projeler sekmesinden aktif projeleri görüntüleyin.|Proje detayında notlar, ekip ve yapılacaklar sekmelerini kullanın.|Yönetici yetkisiyle proje oluşturup güncelleyebilirsiniz.|Proje kartındaki üç nokta menüsünden projeyi düzenleyebilir veya silebilirsiniz.|Silme; notları, yapılacakları, hakedişleri ve finans kayıtlarını da kalıcı olarak kaldırır. Bu yüzden yalnızca finans yetkisi olan yöneticiler proje silebilir.",
         },
         team: {
           title: "Ekip yönetimi",
@@ -935,7 +947,7 @@ export const tr = {
         },
         todos: {
           title: "Yapılacaklar",
-          steps: "Yapılacaklar sekmesinde görevleri görüntüleyin.|Yönetici yeni görev ekler; ekip üyesi kutucukla tamamlar.|Tamamlanan görevler tüm ekip tarafından görülür.",
+          steps: "Yapılacaklar sekmesinde görevleri görüntüleyin.|Yönetici yeni görev ekler; ekip üyesi kutucukla tamamlar.|Tamamlanan görevler tüm ekip tarafından görülür.|Her projede tekrar eden işleri yanındaki yıldızla favorilere ekleyin; yeni açılan projelere otomatik eklenir.",
         },
         progress: {
           title: "İmalat ve Hakediş",

@@ -19,6 +19,22 @@ function getMethodPermissionsAny(
   return Reflect.getMetadata(PERMISSIONS_ANY_KEY, method as object);
 }
 
+describe("ProjectsController project permissions", () => {
+  const controller = ProjectsController.prototype;
+
+  it("lets anyone who can update a project edit it", () => {
+    expect(getMethodPermissions(controller, "update")).toEqual(["project.update"]);
+  });
+
+  it("requires finance rights on top of project rights to delete, since finance records go too", () => {
+    // Ofis çalışanında project.update var ama finance.update yok: silemez.
+    expect(getMethodPermissions(controller, "remove")).toEqual([
+      "project.update",
+      "finance.update",
+    ]);
+  });
+});
+
 describe("ProjectsController task permissions", () => {
   const controller = ProjectsController.prototype;
 

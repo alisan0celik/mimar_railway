@@ -1,7 +1,9 @@
-import { IsOptional, IsString, IsNumber, IsDateString, IsIn } from 'class-validator';
+import { IsOptional, IsString, IsNumber, IsDateString, IsIn, IsNotEmpty } from 'class-validator';
 
 export class UpdateProjectDto {
+  /** Gönderilmeyebilir, ama gönderildiyse boş olamaz: proje adsız kalırdı. */
   @IsOptional()
+  @IsNotEmpty()
   @IsString()
   name?: string;
 

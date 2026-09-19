@@ -11,7 +11,15 @@ import {
 
 describe("ProjectsService tasks", () => {
   const prisma = {
-    project: { findUnique: jest.fn(), findFirst: jest.fn(), create: jest.fn() },
+    $transaction: jest.fn(),
+    project: {
+      findUnique: jest.fn(),
+      findFirst: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+    },
+    financeRecord: { deleteMany: jest.fn() },
     user: { findUnique: jest.fn(), findMany: jest.fn() },
     projectTeam: { findMany: jest.fn(), createMany: jest.fn(), deleteMany: jest.fn() },
     projectNote: { create: jest.fn() },
@@ -31,6 +39,62 @@ describe("ProjectsService tasks", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  describe("remove", () => {
+    beforeEach(() => {
+      prisma.project.findFirst.mockResolvedValue({ id: "p1", companyId: "c1" });
+      prisma.financeRecord.deleteMany.mockReturnValue("finance-delete");
+      prisma.project.delete.mockReturnValue("project-delete");
+      prisma.$transaction.mockResolvedValue([{ count: 4 }, { id: "p1" }]);
+    });
+
+    it("deletes the project's finance records with it, in one transaction", async () => {
+      // Eskiden finans kayıtları projesiz kalıp görünmez biçimde birikiyordu.
+      await expect(service.remove("c1", "p1")).resolves.toEqual({ id: "p1" });
+
+      expect(prisma.financeRecord.deleteMany).toHaveBeenCalledWith({
+        where: { projectId: "p1", companyId: "c1" },
+      });
+      expect(prisma.project.delete).toHaveBeenCalledWith({ where: { id: "p1" } });
+      expect(prisma.$transaction).toHaveBeenCalledWith(["finance-delete", "project-delete"]);
+    });
+
+    it("refuses a project from another company", async () => {
+      prisma.project.findFirst.mockResolvedValue(null);
+
+      await expect(service.remove("c1", "baska-sirket")).rejects.toBeInstanceOf(NotFoundException);
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("update", () => {
+    beforeEach(() => {
+      prisma.project.findFirst.mockResolvedValue({ id: "p1", companyId: "c1" });
+      prisma.project.update.mockResolvedValue({ id: "p1" });
+    });
+
+    it("trims the name and customer before saving", async () => {
+      await service.update("c1", "p1", { name: "  Zeytin Dalı  ", customerName: " Ege Turizm " });
+
+      expect(prisma.project.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ name: "Zeytin Dalı", customerName: "Ege Turizm" }),
+        }),
+      );
+    });
+
+    it("rejects a blank name instead of leaving the project nameless", async () => {
+      await expect(service.update("c1", "p1", { name: "   " })).rejects.toBeInstanceOf(BadRequestException);
+      expect(prisma.project.update).not.toHaveBeenCalled();
+    });
+
+    it("leaves the name alone when it is not sent", async () => {
+      await service.update("c1", "p1", { customerName: "Yeni Müşteri" });
+
+      const { data } = prisma.project.update.mock.calls[0][0];
+      expect(data.name).toBeUndefined();
+    });
   });
 
   describe("create with favourite tasks", () => {

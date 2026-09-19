@@ -20,11 +20,10 @@ import {
   WORK_ITEM_TEMPLATES,
   type WorkItemTemplate,
 } from "../constants/workItemTemplates";
+import { PROJECT_TYPE_KEYS } from "../constants/projectTypes";
 
 /** Kalem listesinin kaynağı: şirket favorileri ya da hazır şablonlardan biri. */
 type WorkItemSource = WorkItemTemplate | "favourites";
-
-const PROJECT_TYPE_KEYS = ["residential", "office", "villa", "commercial", "mixed"] as const;
 
 export function CreateProjectScreen() {
   const styles = useThemedStyles(createStyles);

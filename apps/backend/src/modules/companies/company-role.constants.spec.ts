@@ -37,6 +37,17 @@ describe("company-role.constants", () => {
     expect(OFFICE_EMPLOYEE_PERMISSIONS).not.toContain("role.view");
   });
 
+  it("lets managers delete projects but not office employees", () => {
+    // Proje silme project.update + finance.update ister (ProjectsController.remove).
+    const canDeleteProjects = (permissions: readonly string[]) =>
+      permissions.includes("project.update") && permissions.includes("finance.update");
+
+    expect(canDeleteProjects(ALL_PERMISSIONS)).toBe(true);
+    expect(canDeleteProjects(OFFICE_EMPLOYEE_PERMISSIONS)).toBe(false);
+    // Çalışan projeyi düzenleyebilmeye devam ediyor.
+    expect(OFFICE_EMPLOYEE_PERMISSIONS).toContain("project.update");
+  });
+
   it("maps approve role types to code prefixes", () => {
     expect(OFFICE_ROLE_CODE_PREFIX["office-manager"]).toBe("office-manager-");
     expect(OFFICE_ROLE_CODE_PREFIX["office-employee"]).toBe("office-employee-");

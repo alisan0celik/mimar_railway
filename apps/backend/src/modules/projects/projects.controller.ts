@@ -61,8 +61,15 @@ export class ProjectsController {
     return this.projectsService.update(this.companyId(user), id, updateProjectDto);
   }
 
+  /**
+   * Silme, projenin notlarını, yapılacaklarını, kalemlerini, hakedişlerini ve
+   * finans kayıtlarını da götürür. Finans verisini değiştiremeyen biri onu
+   * silememeli; bu yüzden proje güncelleme yetkisine ek olarak finans
+   * güncelleme yetkisi isteniyor. Varsayılan rollerde bu ikisi yalnızca
+   * şirket sahibinde ve ofis yöneticisinde birlikte var.
+   */
   @Delete(":id")
-  @Permissions("project.update")
+  @Permissions("project.update", "finance.update")
   @ApiOperation({ summary: "Projeyi sil" })
   remove(@CurrentUser() user: JwtPayload, @Param("id") id: string) {
     return this.projectsService.remove(this.companyId(user), id);
