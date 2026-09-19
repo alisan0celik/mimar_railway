@@ -68,19 +68,24 @@ export interface FinanceBudgetUpdateResponseDTO {
   summary: FinanceSummariesResponseDTO;
 }
 
+/** Kaleme satış bedeli ya da taşeron bedeli girilmiş mi? */
+export function isPricedItem(item: FinanceItemDTO): boolean {
+  return item.amount > 0 || item.costAmount > 0;
+}
+
 /**
  * Proje finans listesinde görünsün mü?
  *
- * Kalem girilmiş proje, bedeli henüz yazılmamış olsa bile listelenir: kalem
- * hakediş ekranında girildiği anda proje finansa düşer, ayrıca "Finans
- * Oluştur" gerekmez.
+ * Bedeli girilmiş tek bir kalem yeter, ayrıca "Finans Oluştur" gerekmez.
+ * Bedelsiz kalemler sayılmaz: favori kalemler her yeni projeye bedelsiz
+ * ekleniyor, sayılsalardı her yeni proje finansta ₺0 ile görünürdü.
  */
 export function hasFinanceActivity(project: FinanceSummaryDTO): boolean {
   return (
     project.hasFinanceSetup ||
     project.receivedAmount > 0 ||
     project.transactions.length > 0 ||
-    (project.items?.length ?? 0) > 0
+    (project.items ?? []).some(isPricedItem)
   );
 }
 

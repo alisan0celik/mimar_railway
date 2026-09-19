@@ -965,7 +965,7 @@ export const tr = {
         },
         finance: {
           title: "Finans",
-          steps: "Finans sekmesinden proje bazlı özetleri inceleyin.|İmalat ve Hakediş ekranında kalem girdiğiniz proje finansa kendiliğinden eklenir; Finans Oluştur gerekmez. Kalemler finans detayında listelenir.|Yetkiniz varsa tahsilat ve gider kaydı ekleyin.|Proje detayından işlem geçmişine ulaşın.",
+          steps: "Finans sekmesinden proje bazlı özetleri inceleyin.|İmalat ve Hakediş ekranında bir kaleme bedel girdiğinizde proje finansa kendiliğinden eklenir; Finans Oluştur gerekmez. Kalemler finans detayında listelenir.|Yetkiniz varsa tahsilat ve gider kaydı ekleyin.|Proje detayından işlem geçmişine ulaşın.",
         },
         notifications: {
           title: "Bildirimler",

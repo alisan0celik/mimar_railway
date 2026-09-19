@@ -965,7 +965,7 @@ export const en = {
         },
         finance: {
           title: "Finance",
-          steps: "Review project summaries in the Finance tab.|A project appears in Finance on its own once you add an item under Work Items and Billing; no need to Create Finance. Its items are listed in the finance detail.|Add payments and expenses if permitted.|Open transaction history from project detail.",
+          steps: "Review project summaries in the Finance tab.|A project appears in Finance on its own once you give one of its items a value under Work Items and Billing; no need to Create Finance. Its items are listed in the finance detail.|Add payments and expenses if permitted.|Open transaction history from project detail.",
         },
         notifications: {
           title: "Notifications",

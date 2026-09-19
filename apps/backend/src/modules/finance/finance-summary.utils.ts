@@ -45,9 +45,8 @@ export type ProjectFinanceSummary = {
   /**
    * Projenin imalat kalemleri ve ekstraları, hakediş ekranındaki sırayla.
    *
-   * Kalem girilmiş proje, bedeli henüz yazılmamış olsa bile finansta
-   * listelenir: kalem hakediş ekranında girildiği anda proje finansa düşer,
-   * ayrıca "Finans Oluştur" gerekmez.
+   * Bedeli girilmiş kalemi olan proje finansta kendiliğinden listelenir,
+   * ayrıca "Finans Oluştur" gerekmez (bkz. `hasFinanceActivity`).
    */
   items: FinanceItemInput[];
   transactions: Array<{
@@ -166,11 +165,23 @@ export function calculateGlobalFinanceSummary(
   );
 }
 
+/** Kaleme satış bedeli ya da taşeron bedeli girilmiş mi? */
+export function isPricedItem(item: FinanceItemInput): boolean {
+  return item.amount > 0 || item.costAmount > 0;
+}
+
+/**
+ * Proje finans listesinde görünsün mü?
+ *
+ * Bedeli girilmiş tek bir kalem yeter; bedelsiz kalemler sayılmaz. Favori
+ * kalemler her yeni projeye bedelsiz ekleniyor, sayılsalardı her yeni proje
+ * finansta ₺0 ile görünürdü.
+ */
 export function hasFinanceActivity(project: ProjectFinanceSummary): boolean {
   return (
     project.hasFinanceSetup ||
     project.receivedAmount > 0 ||
     project.transactions.length > 0 ||
-    project.items.length > 0
+    project.items.some(isPricedItem)
   );
 }

@@ -179,20 +179,35 @@ describe("calculateGlobalFinanceSummary", () => {
 });
 
 describe("work items in finance", () => {
-  it("lists a project as soon as it has an item, even an unpriced one", () => {
-    // Kalem hakediş ekranında girildiği anda proje finansa düşmeli;
-    // kullanıcıdan ayrıca "Finans Oluştur" beklenmiyor.
+  it("lists a project as soon as an item has a value", () => {
+    // Bedeli girilen kalem projeyi finansa düşürür; kullanıcıdan ayrıca
+    // "Finans Oluştur" beklenmiyor.
     const summary = calculateProjectFinanceSummary({
       projectId: "p1",
       projectName: "Villa",
       customerName: "Müşteri",
       budget: null,
       financeRecords: [],
-      items: [makeItem()],
+      items: [makeItem({ amount: 250_000 })],
     });
 
-    expect(summary.hasFinanceSetup).toBe(false);
     expect(hasFinanceActivity(summary)).toBe(true);
+  });
+
+  it("does not list a project whose items have no value yet", () => {
+    // Favori kalemler her yeni projeye bedelsiz ekleniyor; bunlar sayılsaydı
+    // her yeni proje finansta ₺0 ile görünürdü.
+    const summary = calculateProjectFinanceSummary({
+      projectId: "p1",
+      projectName: "Villa",
+      customerName: "Müşteri",
+      budget: null,
+      financeRecords: [],
+      items: [makeItem({ id: "s1" }), makeItem({ id: "s2", name: "Elektrik" })],
+    });
+
+    expect(summary.items).toHaveLength(2);
+    expect(hasFinanceActivity(summary)).toBe(false);
   });
 
   it("lists a project whose only item is a subcontractor cost", () => {
