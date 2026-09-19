@@ -20,8 +20,22 @@ export const apiClient = axios.create({
   },
 });
 
+/**
+ * Oturum açmadan çağrılan uçlar; sunucuda `@Public()`.
+ *
+ * Bunlar için token okunmuyor: depo okunamadığında giriş de engelleniyordu,
+ * oysa giriş token'a ihtiyaç duymuyor ve başarılı giriş depodaki kaydı zaten
+ * yenisiyle değiştiriyor.
+ */
+const PUBLIC_AUTH_PATH =
+  /^\/auth\/(register|check-email|login|social|refresh|forgot-password|reset-password)(\?|$)/;
+
 apiClient.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
+    if (PUBLIC_AUTH_PATH.test(config.url ?? "")) {
+      return config;
+    }
+
     // Anahtarlık okunamazsa `getTokens` hata fırlatır ve istek hiç gönderilmez.
     // Yetkisiz göndermek 401 alıp yenileme zincirini, oradan da oturum silmeyi
     // tetiklerdi. Hata çağırana ağ hatası gibi ulaşır; eşitleme motoru gibi

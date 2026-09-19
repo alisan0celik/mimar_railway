@@ -116,9 +116,11 @@ android {
             def enableShrinkResources = findProperty('android.enableShrinkResourcesInReleaseBuilds') ?: 'false'
             shrinkResources enableShrinkResources.toBoolean()
             minifyEnabled enableMinifyInReleaseBuilds
-            // The plain "proguard-android.txt" carries -dontoptimize, which left
-            // Play Console's optimisation score empty even with R8 on.
-            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
+            // Keep the plain rules file (-dontoptimize): R8 still shrinks and
+            // obfuscates, which is what Play Console flagged. An APK built with
+            // the optimising file could not read expo-secure-store, so nobody
+            // could sign in; do not switch back without testing an APK first.
+            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
             def enablePngCrunchInRelease = findProperty('android.enablePngCrunchInReleaseBuilds') ?: 'true'
             crunchPngs enablePngCrunchInRelease.toBoolean()
         }

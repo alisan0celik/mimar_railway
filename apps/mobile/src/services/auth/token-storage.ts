@@ -63,7 +63,14 @@ export class TokenStorageUnavailableError extends Error {
   readonly reason: unknown;
 
   constructor(reason: unknown) {
-    super("Token deposu şu an okunamıyor");
+    // Altta yatan hata mesaja ekleniyor: kullanıcıya gösterilen hata kutusu
+    // cihazda log almadan sebebi görmenin tek yolu.
+    const detail = (reason as { message?: unknown } | null)?.message;
+    super(
+      typeof detail === "string" && detail.length > 0
+        ? `Token deposu şu an okunamıyor (${detail})`
+        : "Token deposu şu an okunamıyor",
+    );
     this.name = "TokenStorageUnavailableError";
     this.reason = reason;
   }
