@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 import type { FinanceTransactionDTO } from "../../../services/api/finance.api";
-import { financeApi } from "../../../services/api/finance.api";
+import { financeApi, isPricedItem } from "../../../services/api/finance.api";
 import { formatCurrency } from "../../../shared/utils";
 import { PERMISSIONS, useCan } from "../../../shared/permissions";
 import { useTranslation } from "../../../shared/i18n";
@@ -140,6 +140,8 @@ export function FinanceDetailScreen({ projectId }: FinanceDetailScreenProps) {
     );
   }
 
+  const pricedItems = (finance.items ?? []).filter(isPricedItem);
+
   return (
     <View style={styles.wrapper}>
       <Screen contentContainerStyle={styles.content} scroll>
@@ -215,10 +217,14 @@ export function FinanceDetailScreen({ projectId }: FinanceDetailScreenProps) {
           </Text>
         ) : null}
 
-        {/* Arama yalnızca işlemleri süzüyor; aranırken kalemler gizlenir. */}
-        {finance.items && finance.items.length > 0 && q.length === 0 ? (
+        {/*
+          Yalnızca bedeli girilmiş kalemler; hiç yoksa kart görünmez. Favori
+          kalemler her projeye bedelsiz ekleniyor, onlar burada gürültü olurdu.
+          Arama yalnızca işlemleri süzüyor; aranırken kalemler gizlenir.
+        */}
+        {pricedItems.length > 0 && q.length === 0 ? (
           <FinanceItemsCard
-            items={finance.items}
+            items={pricedItems}
             onEdit={() => router.push(`/(main)/projects/${finance.projectId}/progress`)}
           />
         ) : null}

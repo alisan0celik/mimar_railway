@@ -9,6 +9,7 @@ import { useThemeColors } from "../../../shared/theme/ThemeProvider";
 import { formatCurrency } from "../../../shared/utils";
 
 type FinanceItemsCardProps = {
+  /** Yalnızca bedeli girilmiş kalemler (`isPricedItem`). */
   items: FinanceItemDTO[];
   /** Kalemler hakediş ekranında düzenleniyor; burası yalnızca listeler. */
   onEdit: () => void;
@@ -66,6 +67,7 @@ export function FinanceItemsCard({ items, onEdit }: FinanceItemsCardProps) {
                 ) : null}
               </View>
 
+              {/* Yalnız taşeron bedeli olan kalemde tutar zaten altta yazıyor. */}
               {value > 0 ? (
                 <Text
                   style={[
@@ -75,9 +77,7 @@ export function FinanceItemsCard({ items, onEdit }: FinanceItemsCardProps) {
                 >
                   {formatCurrency(value)}
                 </Text>
-              ) : showCost ? null : (
-                <Text style={styles.unpriced}>{t("finance.itemUnpriced")}</Text>
-              )}
+              ) : null}
             </View>
           );
         })}
@@ -156,10 +156,5 @@ function createStyles(colors: AppColors) {
     },
     amountReceivable: { color: colors.success },
     amountPayable: { color: colors.danger },
-    unpriced: {
-      ...typography.caption,
-      color: colors.warning,
-      fontWeight: "600",
-    },
   });
 }

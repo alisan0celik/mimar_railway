@@ -2,7 +2,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { useTranslation } from "../../../shared/i18n";
-import type { FinanceSummaryDTO } from "../../../services/api/finance.api";
+import { isPricedItem, type FinanceSummaryDTO } from "../../../services/api/finance.api";
 import { radius, spacing, typography } from "../../../shared/theme";
 import { useThemedStyles, type AppColors } from "../../../shared/theme";
 import { useThemeColors } from "../../../shared/theme/ThemeProvider";
@@ -41,10 +41,10 @@ export function FinanceProjectCard({ finance, onPress }: FinanceProjectCardProps
           {finance.customerName}
         </Text>
         {!finance.hasFinanceSetup ? (
-          // Kalemi olan proje finansa kendiliğinden düşer; eksik olan
-          // "Finans Oluştur" değil, kalem bedelleri.
+          // Bedeli girilmiş kalemi olan proje finansa kendiliğinden düşer;
+          // eksik olan "Finans Oluştur" değil, satış bedelleri.
           <Text style={styles.notSetup}>
-            {(finance.items?.length ?? 0) > 0
+            {(finance.items ?? []).some(isPricedItem)
               ? t("finance.itemsNotPriced")
               : t("finance.notSetup")}
           </Text>
