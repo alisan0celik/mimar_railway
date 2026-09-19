@@ -41,7 +41,13 @@ export function FinanceProjectCard({ finance, onPress }: FinanceProjectCardProps
           {finance.customerName}
         </Text>
         {!finance.hasFinanceSetup ? (
-          <Text style={styles.notSetup}>{t("finance.notSetup")}</Text>
+          // Kalemi olan proje finansa kendiliğinden düşer; eksik olan
+          // "Finans Oluştur" değil, kalem bedelleri.
+          <Text style={styles.notSetup}>
+            {(finance.items?.length ?? 0) > 0
+              ? t("finance.itemsNotPriced")
+              : t("finance.notSetup")}
+          </Text>
         ) : (
           <>
             <Text style={styles.meta}>

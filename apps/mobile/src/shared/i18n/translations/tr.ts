@@ -267,6 +267,12 @@ export const tr = {
     overpaymentNotice: "Fazla tahsilat: {amount}",
     noProjects: "Henüz finans tanımlı proje yok. Finans Oluştur ile başlayın.",
     notSetup: "Finans tanımlanmadı",
+    itemsNotPriced: "Kalem bedelleri girilmedi",
+    itemsSection: "Kalemler",
+    itemsEdit: "Kalemleri Düzenle",
+    itemUnpriced: "Bedel girilmedi",
+    itemCost: "Taşeron {amount}",
+    itemExtra: "Diğer",
     createFinance: "Finans Oluştur",
     paymentHistory: "Ödeme Geçmişi",
     detail: {
@@ -959,7 +965,7 @@ export const tr = {
         },
         finance: {
           title: "Finans",
-          steps: "Finans sekmesinden proje bazlı özetleri inceleyin.|Yetkiniz varsa tahsilat ve gider kaydı ekleyin.|Proje detayından işlem geçmişine ulaşın.",
+          steps: "Finans sekmesinden proje bazlı özetleri inceleyin.|İmalat ve Hakediş ekranında kalem girdiğiniz proje finansa kendiliğinden eklenir; Finans Oluştur gerekmez. Kalemler finans detayında listelenir.|Yetkiniz varsa tahsilat ve gider kaydı ekleyin.|Proje detayından işlem geçmişine ulaşın.",
         },
         notifications: {
           title: "Bildirimler",

@@ -14,6 +14,16 @@ export interface FinanceTransactionDTO {
   locked?: boolean;
 }
 
+/** Projenin imalat kalemi ya da ekstrası. */
+export interface FinanceItemDTO {
+  id: string;
+  name: string;
+  /** "work" imalat kalemi, "extra" imalata bağlı olmayan alacak/borç. */
+  kind: string;
+  amount: number;
+  costAmount: number;
+}
+
 export interface FinanceSummaryDTO {
   projectId: string;
   projectName: string;
@@ -28,6 +38,8 @@ export interface FinanceSummaryDTO {
   overpaymentAmount: number;
   hasFinanceSetup: boolean;
   currency: string;
+  /** Eski sunucu sürümleri göndermiyor. */
+  items?: FinanceItemDTO[];
   transactions: FinanceTransactionDTO[];
 }
 
@@ -56,11 +68,19 @@ export interface FinanceBudgetUpdateResponseDTO {
   summary: FinanceSummariesResponseDTO;
 }
 
+/**
+ * Proje finans listesinde görünsün mü?
+ *
+ * Kalem girilmiş proje, bedeli henüz yazılmamış olsa bile listelenir: kalem
+ * hakediş ekranında girildiği anda proje finansa düşer, ayrıca "Finans
+ * Oluştur" gerekmez.
+ */
 export function hasFinanceActivity(project: FinanceSummaryDTO): boolean {
   return (
     project.hasFinanceSetup ||
     project.receivedAmount > 0 ||
-    project.transactions.length > 0
+    project.transactions.length > 0 ||
+    (project.items?.length ?? 0) > 0
   );
 }
 

@@ -19,6 +19,7 @@ import {
   Screen,
   showAppAlert,
 } from "../../../shared/ui";
+import { FinanceItemsCard } from "../components/FinanceItemsCard";
 import { TransactionCard } from "../components/TransactionCard";
 import { syncFinanceSummaries } from "../utils/syncFinanceSummaries";
 
@@ -212,6 +213,14 @@ export function FinanceDetailScreen({ projectId }: FinanceDetailScreenProps) {
               amount: formatCurrency(finance.overpaymentAmount),
             })}
           </Text>
+        ) : null}
+
+        {/* Arama yalnızca işlemleri süzüyor; aranırken kalemler gizlenir. */}
+        {finance.items && finance.items.length > 0 && q.length === 0 ? (
+          <FinanceItemsCard
+            items={finance.items}
+            onEdit={() => router.push(`/(main)/projects/${finance.projectId}/progress`)}
+          />
         ) : null}
 
         <Text style={styles.listCount}>

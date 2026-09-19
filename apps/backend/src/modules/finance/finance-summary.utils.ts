@@ -10,6 +10,18 @@ export type FinanceRecordInput = {
   category?: string | null;
 };
 
+/** Projenin imalat kalemi ya da ekstrası, finans ekranında gösterildiği haliyle. */
+export type FinanceItemInput = {
+  id: string;
+  name: string;
+  /** "work" imalat kalemi, "extra" imalata bağlı olmayan alacak/borç. */
+  kind: string;
+  /** İşverene satış bedeli. */
+  amount: number;
+  /** Taşerona maliyeti. */
+  costAmount: number;
+};
+
 export type ProjectFinanceSummary = {
   projectId: string;
   projectName: string;
@@ -30,6 +42,14 @@ export type ProjectFinanceSummary = {
   overpaymentAmount: number;
   hasFinanceSetup: boolean;
   currency: string;
+  /**
+   * Projenin imalat kalemleri ve ekstraları, hakediş ekranındaki sırayla.
+   *
+   * Kalem girilmiş proje, bedeli henüz yazılmamış olsa bile finansta
+   * listelenir: kalem hakediş ekranında girildiği anda proje finansa düşer,
+   * ayrıca "Finans Oluştur" gerekmez.
+   */
+  items: FinanceItemInput[];
   transactions: Array<{
     id: string;
     type: string;
@@ -61,9 +81,11 @@ export function calculateProjectFinanceSummary(input: {
   customerName: string;
   budget: number | null;
   financeRecords: FinanceRecordInput[];
-  /** İmalat kalemleri ve ekstraların işverene bedelleri. */
-  sectionAmounts?: number[];
+  /** İmalat kalemleri ve ekstralar, gösterilecek sırayla. */
+  items?: FinanceItemInput[];
 }): ProjectFinanceSummary {
+  const items = input.items ?? [];
+
   let receivedAmount = 0;
   let expenseAmount = 0;
 
@@ -83,8 +105,8 @@ export function calculateProjectFinanceSummary(input: {
    * Kalem kullanılmayan projelerde (ör. yalnız ofis işi) elle girilen bütçe
    * yedek olarak kullanılmaya devam eder.
    */
-  const sectionTotal = (input.sectionAmounts ?? []).reduce(
-    (sum, amount) => sum + (Number.isFinite(amount) ? amount : 0),
+  const sectionTotal = items.reduce(
+    (sum, item) => sum + (Number.isFinite(item.amount) ? item.amount : 0),
     0,
   );
   const agreedAmount = sectionTotal > 0 ? sectionTotal : input.budget || 0;
@@ -105,6 +127,7 @@ export function calculateProjectFinanceSummary(input: {
     overpaymentAmount,
     hasFinanceSetup: agreedAmount > 0,
     currency: "TRY",
+    items,
     transactions: input.financeRecords.map((record) => ({
       id: record.id,
       type: normalizeFinanceRecordType(record.type),
@@ -147,6 +170,7 @@ export function hasFinanceActivity(project: ProjectFinanceSummary): boolean {
   return (
     project.hasFinanceSetup ||
     project.receivedAmount > 0 ||
-    project.transactions.length > 0
+    project.transactions.length > 0 ||
+    project.items.length > 0
   );
 }

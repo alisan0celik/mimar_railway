@@ -24,6 +24,24 @@ function makeRecord(
   };
 }
 
+function makeItem(
+  overrides: Partial<{
+    id: string;
+    name: string;
+    kind: string;
+    amount: number;
+    costAmount: number;
+  }> = {},
+) {
+  return {
+    id: overrides.id ?? "sec-1",
+    name: overrides.name ?? "Kaba inşaat",
+    kind: overrides.kind ?? "work",
+    amount: overrides.amount ?? 0,
+    costAmount: overrides.costAmount ?? 0,
+  };
+}
+
 describe("calculateProjectFinanceSummary", () => {
   it("calculates collection-only project", () => {
     const summary = calculateProjectFinanceSummary({
@@ -132,7 +150,10 @@ describe("calculateGlobalFinanceSummary", () => {
       // Elle girilen bütçe kalem toplamıyla çelişiyor; kalemler kazanır.
       budget: 40_000_000,
       financeRecords: [],
-      sectionAmounts: [1_000_000, 200_000],
+      items: [
+        makeItem({ id: "s1", amount: 1_000_000 }),
+        makeItem({ id: "s2", name: "İş artışı", kind: "extra", amount: 200_000 }),
+      ],
     });
 
     expect(summary.agreedAmount).toBe(1_200_000);
@@ -148,11 +169,76 @@ describe("calculateGlobalFinanceSummary", () => {
       customerName: "Müşteri",
       budget: 500_000,
       financeRecords: [],
-      sectionAmounts: [0, 0],
+      items: [makeItem({ id: "s1" }), makeItem({ id: "s2", name: "Elektrik" })],
     });
 
     expect(summary.agreedAmount).toBe(500_000);
     // Kalem bedeli yok; tutar elle düzenlenebilir kalmalı.
     expect(summary.agreedAmountFromSections).toBe(false);
+  });
+});
+
+describe("work items in finance", () => {
+  it("lists a project as soon as it has an item, even an unpriced one", () => {
+    // Kalem hakediş ekranında girildiği anda proje finansa düşmeli;
+    // kullanıcıdan ayrıca "Finans Oluştur" beklenmiyor.
+    const summary = calculateProjectFinanceSummary({
+      projectId: "p1",
+      projectName: "Villa",
+      customerName: "Müşteri",
+      budget: null,
+      financeRecords: [],
+      items: [makeItem()],
+    });
+
+    expect(summary.hasFinanceSetup).toBe(false);
+    expect(hasFinanceActivity(summary)).toBe(true);
+  });
+
+  it("lists a project whose only item is a subcontractor cost", () => {
+    const summary = calculateProjectFinanceSummary({
+      projectId: "p1",
+      projectName: "Villa",
+      customerName: "Müşteri",
+      budget: null,
+      financeRecords: [],
+      items: [makeItem({ costAmount: 300_000 })],
+    });
+
+    // Maliyet sözleşme bedeline eklenmez, ama proje yine finansta görünür.
+    expect(summary.agreedAmount).toBe(0);
+    expect(hasFinanceActivity(summary)).toBe(true);
+  });
+
+  it("returns the items in the order they were given", () => {
+    const items = [
+      makeItem({ id: "s1", name: "Kaba inşaat", amount: 1_200_000, costAmount: 900_000 }),
+      makeItem({ id: "s2", name: "Elektrik", amount: 300_000 }),
+      makeItem({ id: "s3", name: "Avans", kind: "extra", amount: 50_000 }),
+    ];
+
+    const summary = calculateProjectFinanceSummary({
+      projectId: "p1",
+      projectName: "Villa",
+      customerName: "Müşteri",
+      budget: null,
+      financeRecords: [],
+      items,
+    });
+
+    expect(summary.items).toEqual(items);
+    expect(summary.agreedAmount).toBe(1_550_000);
+  });
+
+  it("returns no items for a project without any", () => {
+    const summary = calculateProjectFinanceSummary({
+      projectId: "p1",
+      projectName: "Ofis işi",
+      customerName: "Müşteri",
+      budget: 100_000,
+      financeRecords: [],
+    });
+
+    expect(summary.items).toEqual([]);
   });
 });

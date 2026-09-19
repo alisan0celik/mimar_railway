@@ -267,6 +267,12 @@ export const en = {
     overpaymentNotice: "Overpayment: {amount}",
     noProjects: "No projects with finance setup yet. Start with Create Finance.",
     notSetup: "Finance not set up",
+    itemsNotPriced: "Item values not entered",
+    itemsSection: "Work Items",
+    itemsEdit: "Edit Items",
+    itemUnpriced: "No value yet",
+    itemCost: "Subcontractor {amount}",
+    itemExtra: "Other",
     createFinance: "Create Finance",
     paymentHistory: "Payment History",
     detail: {
@@ -959,7 +965,7 @@ export const en = {
         },
         finance: {
           title: "Finance",
-          steps: "Review project summaries in the Finance tab.|Add payments and expenses if permitted.|Open transaction history from project detail.",
+          steps: "Review project summaries in the Finance tab.|A project appears in Finance on its own once you add an item under Work Items and Billing; no need to Create Finance. Its items are listed in the finance detail.|Add payments and expenses if permitted.|Open transaction history from project detail.",
         },
         notifications: {
           title: "Notifications",

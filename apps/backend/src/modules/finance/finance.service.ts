@@ -32,8 +32,12 @@ export class FinanceService {
         financeRecords: {
           orderBy: [{ date: "desc" }, { createdAt: "desc" }],
         },
-        // Sözleşme bedeli kalem toplamından geliyor.
-        sections: { select: { amount: true } },
+        // Sözleşme bedeli kalem toplamından geliyor; kalemler finans
+        // detayında da listeleniyor. Sıra hakediş ekranındakiyle aynı.
+        sections: {
+          select: { id: true, name: true, kind: true, amount: true, costAmount: true },
+          orderBy: [{ order: "asc" }, { createdAt: "asc" }],
+        },
       },
       orderBy: { createdAt: "desc" },
     });
@@ -45,7 +49,7 @@ export class FinanceService {
         customerName: project.customerName || "Bilinmiyor",
         budget: project.budget,
         financeRecords: project.financeRecords,
-        sectionAmounts: project.sections.map((section) => section.amount),
+        items: project.sections,
       }),
     );
 
