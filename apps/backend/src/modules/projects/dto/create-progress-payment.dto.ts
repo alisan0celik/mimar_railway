@@ -1,13 +1,21 @@
-import { IsIn, IsISO8601, IsOptional, IsString, MaxLength } from "class-validator";
+import { IsIn, IsISO8601, IsNumber, IsOptional, IsString, MaxLength, Min } from "class-validator";
 
-/**
- * Tutar bilerek alınmıyor — kalemin imalat ilerlemesinden hesaplanır, böylece
- * hakediş ile sahadaki gerçek ilerleme birbirinden ayrışamaz.
- */
 export class CreateProgressPaymentDto {
   /** Hakedişin düzenleneceği imalat kalemi. */
   @IsString()
   sectionId!: string;
+
+  /**
+   * Hakediş tutarı (TL). Kalemin o yöndeki kalan bedelini aşamaz.
+   *
+   * Gönderilmezse tutar eskisi gibi ilerleme yüzdesinden hesaplanır: ilerleme
+   * kaldırılmadan önceki uygulama sürümleri tutar göndermiyor ve güncelleyene
+   * kadar hakediş kesebilmeleri gerekiyor.
+   */
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0.01)
+  amount?: number;
 
   /**
    * "incoming" işverenden alınan, "outgoing" taşerona ödenen hakediş.

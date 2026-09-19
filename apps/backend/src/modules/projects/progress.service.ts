@@ -33,6 +33,15 @@ import {
 const PAYMENT_STATUSES = ["draft", "paid", "cancelled"] as const;
 type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
 
+/** Hakediş tutarını belirlemek için gereken kalem alanları. */
+type PaymentSection = {
+  name: string;
+  amount: number;
+  costAmount: number;
+  progress: number;
+  kind: string;
+};
+
 /** Hakediş tahsil edildiğinde yazılan finans kayıt türleri. */
 const COLLECTION_TYPE = "collection";
 const EXPENSE_TYPE = "expense";
@@ -356,7 +365,10 @@ export class ProgressService {
       this.sectionsOf(projectId),
       this.prisma.progressPayment.findMany({
         where: { projectId },
-        select: { amount: true, status: true },
+        // Yön seçilmezse hesap her kaydı işveren hakedişi sayıyordu: taşeron
+        // ödemeleri "düzenlenen hakediş" toplamına ekleniyor, taşeron
+        // toplamı da hep sıfır çıkıyordu.
+        select: { amount: true, status: true, direction: true },
       }),
       this.collectedAmount(projectId),
     ]);
@@ -383,8 +395,11 @@ export class ProgressService {
   /**
    * Belirli bir imalat kalemi için hakediş düzenler.
    *
-   * Tutar istemciden alınmaz: kalemin o anki hak edişinden (bedel × ilerleme)
-   * aynı kalem için daha önce düzenlenmiş, iptal edilmemiş hakedişler düşülür.
+   * Tutarı kullanıcı girer; kalemin o yöndeki bedelinden (işverene satış ya
+   * da taşeron bedeli) daha önce düzenlenmiş, iptal edilmemiş hakedişler
+   * düşülür ve girilen tutar bu kalanı aşamaz. Tutar gönderilmezse eski
+   * uygulama sürümleri için ilerlemeden hesaplanır.
+   *
    * Numaralandırma kalem içinde yürür — "Mimari 1", "Mimari 2" — böylece
    * finans kaydı hangi imalatın hangi hakedişi olduğunu taşır.
    */
@@ -410,20 +425,17 @@ export class ProgressService {
       select: { amount: true, status: true, number: true },
     });
 
-    const cumulativeAmount =
-      direction === "outgoing" ? calculateEarnedCost([section]) : calculateEarnedAmount([section]);
-    const previousAmount = payments
-      .filter((payment) => payment.status !== "cancelled")
-      .reduce((sum, payment) => sum + payment.amount, 0);
-    const amount = roundCurrency(cumulativeAmount - previousAmount);
+    // Sorgu zaten yöne göre süzüyor; iptal edilmemiş olanlar faturalanmış sayılır.
+    const previousAmount = roundCurrency(
+      payments
+        .filter((payment) => payment.status !== "cancelled")
+        .reduce((sum, payment) => sum + payment.amount, 0),
+    );
 
-    if (amount <= 0) {
-      throw new BadRequestException(
-        direction === "outgoing"
-          ? `${section.name} kaleminde taşerona ödenecek yeni tutar oluşmadı`
-          : `${section.name} kaleminde önceki hakedişlerden bu yana yeni hak ediş oluşmadı`,
-      );
-    }
+    const { amount, cumulativeAmount, progressPercent } =
+      dto.amount !== undefined
+        ? this.enteredPaymentAmounts(section, direction, previousAmount, dto.amount)
+        : this.progressPaymentAmounts(section, direction, previousAmount);
 
     const nextNumber = payments.reduce((max, payment) => Math.max(max, payment.number), 0) + 1;
     const settled = dto.status !== "draft";
@@ -437,9 +449,9 @@ export class ProgressService {
         number: nextNumber,
         issueDate: dto.issueDate ? new Date(dto.issueDate) : new Date(),
         cumulativeAmount,
-        previousAmount: roundCurrency(previousAmount),
+        previousAmount,
         amount,
-        progressPercent: clampProgress(section.progress),
+        progressPercent,
         status: settled ? "paid" : "draft",
         note: dto.note,
         createdById: userId,
@@ -462,6 +474,68 @@ export class ProgressService {
 
     await this.notifyManagers(companyId, projectId, created, settled ? "paid" : "issued");
     return created;
+  }
+
+  /**
+   * Kullanıcının girdiği tutarla hakediş: kalemin o yöndeki bedelinden
+   * daha önce faturalananlar düşülür ve girilen tutar kalanı aşamaz. Fazlası
+   * için ayrı bir "Diğer" kalemi (iş artışı, fiyat farkı) açılmalı.
+   */
+  private enteredPaymentAmounts(
+    section: PaymentSection,
+    direction: PaymentDirection,
+    previousAmount: number,
+    requested: number,
+  ) {
+    const base = roundCurrency(direction === "outgoing" ? section.costAmount : section.amount);
+    const remaining = Math.max(roundCurrency(base - previousAmount), 0);
+
+    if (remaining <= 0) {
+      throw new BadRequestException(
+        direction === "outgoing"
+          ? `${section.name} kaleminde taşerona ödenecek tutar kalmadı`
+          : `${section.name} kaleminin bedelinin tamamı hakedişe bağlandı`,
+      );
+    }
+
+    const amount = roundCurrency(requested);
+    if (amount > remaining) {
+      throw new BadRequestException(
+        `Tutar ${section.name} kaleminin kalan bedelini aşıyor (kalan ${formatAmount(remaining)})`,
+      );
+    }
+
+    const cumulativeAmount = roundCurrency(previousAmount + amount);
+    return {
+      amount,
+      cumulativeAmount,
+      // Artık iş ilerlemesi değil, kalemin ne kadarının faturalandığı.
+      progressPercent: base > 0 ? clampProgress((cumulativeAmount / base) * 100) : 0,
+    };
+  }
+
+  /**
+   * Tutar göndermeyen eski uygulama sürümleri için: hak edilen (bedel ×
+   * ilerleme) eksi önceki hakedişler. Herkes güncellediğinde kaldırılabilir.
+   */
+  private progressPaymentAmounts(
+    section: PaymentSection,
+    direction: PaymentDirection,
+    previousAmount: number,
+  ) {
+    const cumulativeAmount =
+      direction === "outgoing" ? calculateEarnedCost([section]) : calculateEarnedAmount([section]);
+    const amount = roundCurrency(cumulativeAmount - previousAmount);
+
+    if (amount <= 0) {
+      throw new BadRequestException(
+        direction === "outgoing"
+          ? `${section.name} kaleminde taşerona ödenecek yeni tutar oluşmadı`
+          : `${section.name} kaleminde önceki hakedişlerden bu yana yeni hak ediş oluşmadı`,
+      );
+    }
+
+    return { amount, cumulativeAmount, progressPercent: clampProgress(section.progress) };
   }
 
   /**

@@ -14,8 +14,6 @@ export type ProjectSectionDTO = {
   amount?: number;
   /** Taşerona maliyeti. Finans yetkisi yoksa gönderilmez. */
   costAmount?: number;
-  /** Tamamlanma yüzdesi (0-100). */
-  progress: number;
   createdAt: string;
   updatedAt: string;
 };
@@ -56,19 +54,25 @@ export type ProgressPaymentDTO = {
   createdBy: { id: string; fullName: string };
 };
 
+/**
+ * Hakediş özeti. İlerleme kaldırıldı; ilerlemeye dayalı alanlar (hak edilen,
+ * doğan maliyet...) sunucu tarafından eski sürümler için hâlâ gönderiliyor ama
+ * burada kullanılmıyor.
+ */
 export type ProgressSummaryDTO = {
   contractTotal: number;
-  earnedAmount: number;
-  progressPercent: number;
+  /** İşverene faturalanan (iptal edilmemiş) hakediş toplamı. */
   billedAmount: number;
-  billableAmount: number;
+  /** Sözleşmeden henüz faturalanmamış tutar. */
+  remainingAmount: number;
   collectedAmount: number;
   outstandingAmount: number;
   costTotal: number;
-  earnedCost: number;
+  /** Taşerona ödenen hakediş toplamı. */
   costBilledAmount: number;
-  costBillableAmount: number;
-  marginAmount: number;
+  costRemainingAmount: number;
+  /** Faturalanan − taşerona ödenen. */
+  billedMarginAmount: number;
   itemCount: number;
 };
 
@@ -334,7 +338,6 @@ export const projectApi = {
       kind?: "work" | "extra";
       amount?: number;
       costAmount?: number;
-      progress?: number;
     },
   ) {
     const { data } = await apiClient.post<ProjectSectionDTO>(
@@ -350,7 +353,6 @@ export const projectApi = {
       name?: string;
       amount?: number;
       costAmount?: number;
-      progress?: number;
       status?: string;
     },
   ) {
@@ -414,6 +416,8 @@ export const projectApi = {
     payload: {
       sectionId: string;
       direction?: ProgressPaymentDirection;
+      /** Hakediş tutarı; kalemin o yöndeki kalan bedelini aşamaz. */
+      amount: number;
       /** "paid" gönderilirse hakediş doğrudan tahsil edilmiş oluşturulur. */
       status?: "draft" | "paid";
       note?: string;

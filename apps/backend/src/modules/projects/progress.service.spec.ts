@@ -152,6 +152,113 @@ describe("ProgressService", () => {
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
+  describe("entered amount", () => {
+    it("bills the entered amount even when the item has no progress", async () => {
+      // Mekanik: bedel 1.000.000, ilerleme 0 — ilerleme artık hakedişi belirlemiyor.
+      prisma.section.findFirst.mockResolvedValue(sections[2]);
+      prisma.progressPayment.findMany.mockResolvedValue([]);
+
+      const payment: any = await service.createPayment(
+        "c1",
+        "p1",
+        { sectionId: "s3", amount: 250_000 },
+        "u1",
+      );
+
+      expect(payment.amount).toBe(250_000);
+      expect(payment.previousAmount).toBe(0);
+      expect(payment.cumulativeAmount).toBe(250_000);
+      // Faturalanan oran: 250.000 / 1.000.000
+      expect(payment.progressPercent).toBe(25);
+    });
+
+    it("adds up on top of the item's earlier payments", async () => {
+      prisma.section.findFirst.mockResolvedValue(sections[2]);
+      prisma.progressPayment.findMany.mockResolvedValue([
+        { amount: 250_000, status: "paid", number: 1 },
+        { amount: 100_000, status: "cancelled", number: 2 },
+      ]);
+
+      const payment: any = await service.createPayment(
+        "c1",
+        "p1",
+        { sectionId: "s3", amount: 750_000 },
+        "u1",
+      );
+
+      expect(payment.number).toBe(3);
+      expect(payment.previousAmount).toBe(250_000);
+      expect(payment.cumulativeAmount).toBe(1_000_000);
+      expect(payment.progressPercent).toBe(100);
+    });
+
+    it("refuses more than what is left of the item's value", async () => {
+      prisma.section.findFirst.mockResolvedValue(sections[2]);
+      prisma.progressPayment.findMany.mockResolvedValue([
+        { amount: 900_000, status: "paid", number: 1 },
+      ]);
+
+      const error = await service
+        .createPayment("c1", "p1", { sectionId: "s3", amount: 100_001 }, "u1")
+        .catch((caught) => caught);
+
+      expect(error).toBeInstanceOf(BadRequestException);
+      expect(error.message).toContain("100.000");
+      expect(prisma.progressPayment.create).not.toHaveBeenCalled();
+    });
+
+    it("accepts exactly what is left", async () => {
+      prisma.section.findFirst.mockResolvedValue(sections[2]);
+      prisma.progressPayment.findMany.mockResolvedValue([
+        { amount: 900_000, status: "paid", number: 1 },
+      ]);
+
+      const payment: any = await service.createPayment(
+        "c1",
+        "p1",
+        { sectionId: "s3", amount: 100_000 },
+        "u1",
+      );
+
+      expect(payment.amount).toBe(100_000);
+    });
+
+    it("refuses once the item is fully billed", async () => {
+      prisma.section.findFirst.mockResolvedValue(sections[2]);
+      prisma.progressPayment.findMany.mockResolvedValue([
+        { amount: 1_000_000, status: "paid", number: 1 },
+      ]);
+
+      await expect(
+        service.createPayment("c1", "p1", { sectionId: "s3", amount: 1 }, "u1"),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    it("limits a subcontractor payment by the item's cost, not its sale price", async () => {
+      // Mekanik taşeron bedeli 700.000; satış bedeli 1.000.000.
+      prisma.section.findFirst.mockResolvedValue(sections[2]);
+      prisma.progressPayment.findMany.mockResolvedValue([]);
+
+      await expect(
+        service.createPayment(
+          "c1",
+          "p1",
+          { sectionId: "s3", direction: "outgoing", amount: 800_000 },
+          "u1",
+        ),
+      ).rejects.toBeInstanceOf(BadRequestException);
+
+      const payment: any = await service.createPayment(
+        "c1",
+        "p1",
+        { sectionId: "s3", direction: "outgoing", amount: 700_000 },
+        "u1",
+      );
+      expect(payment.direction).toBe("outgoing");
+      expect(payment.amount).toBe(700_000);
+    });
+  });
+
   it("refuses to bill an item that is not in the project", async () => {
     prisma.section.findFirst.mockResolvedValue(null);
 
@@ -424,6 +531,36 @@ describe("ProgressService", () => {
         }),
       }),
     );
+  });
+
+  it("keeps subcontractor payments out of the billed total", async () => {
+    prisma.progressPayment.findMany.mockResolvedValue([
+      { amount: 600_000, status: "paid", direction: "incoming" },
+      { amount: 250_000, status: "paid", direction: "outgoing" },
+    ]);
+
+    const summary = await service.getSummary("c1", "p1");
+
+    // Yön okunmadığında 250.000'lik taşeron ödemesi de hakedişe ekleniyordu.
+    expect(prisma.progressPayment.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ select: expect.objectContaining({ direction: true }) }),
+    );
+    expect(summary.billedAmount).toBe(600_000);
+    expect(summary.costBilledAmount).toBe(250_000);
+  });
+
+  it("reports what is left to bill and the margin on what has been billed", async () => {
+    prisma.progressPayment.findMany.mockResolvedValue([
+      { amount: 600_000, status: "paid", direction: "incoming" },
+      { amount: 250_000, status: "paid", direction: "outgoing" },
+    ]);
+
+    const summary = await service.getSummary("c1", "p1");
+
+    // Sözleşme 3.000.000, taşeron bedelleri 2.000.000
+    expect(summary.remainingAmount).toBe(2_400_000);
+    expect(summary.costRemainingAmount).toBe(1_750_000);
+    expect(summary.billedMarginAmount).toBe(350_000);
   });
 
   it("reports the margin between what is earned and what it costs", async () => {

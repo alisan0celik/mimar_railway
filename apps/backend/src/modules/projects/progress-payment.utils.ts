@@ -1,11 +1,16 @@
 /**
  * Hakediş hesabı.
  *
- * Sözleşme, imalat kalemlerine (Section) bölünür; her kalemin bir bedeli ve
- * tamamlanma yüzdesi vardır. Hak edilen tutar bu ikisinin çarpımlarının
- * toplamıdır. Hakediş belgeleri kümülatif düzenlenir: yeni hakedişin net
- * tutarı, o ana kadar hak edilen toplamdan daha önce düzenlenmiş
- * hakedişlerin düşülmesiyle bulunur.
+ * Sözleşme, imalat kalemlerine (Section) bölünür; her kalemin işverene satış
+ * bedeli ve taşerona maliyeti vardır. Hakediş tutarını kullanıcı girer: her
+ * hakediş kalemin o yöndeki kalan bedelinden düşer ve kalanı aşamaz
+ * (bkz. `ProgressService.createPayment`).
+ *
+ * Eskiden tutar ilerleme yüzdesinden hesaplanıyordu (bedel × ilerleme −
+ * önceki hakedişler). İlerleme uygulamadan kaldırıldı; `effectiveProgress`,
+ * `calculateEarnedAmount` gibi ilerleme fonksiyonları yalnızca tutar
+ * göndermeyen eski uygulama sürümleri ve onların okuduğu özet alanları için
+ * duruyor. Herkes güncellediğinde silinebilirler.
  */
 
 export type ProgressItem = {
@@ -131,6 +136,12 @@ export function calculateBilledAmount(
 
 export type ProgressSummary = {
   contractTotal: number;
+  /** Sözleşmeden henüz hakedişe bağlanmamış tutar. */
+  remainingAmount: number;
+  /** Taşeron bedellerinden henüz ödenmemiş tutar. */
+  costRemainingAmount: number;
+  /** Faturalanan hakediş − taşerona ödenen: bu ana kadarki kâr. */
+  billedMarginAmount: number;
   earnedAmount: number;
   progressPercent: number;
   billedAmount: number;
@@ -147,7 +158,10 @@ export type ProgressSummary = {
   costBilledAmount: number;
   /** Doğmuş ama taşeron hakedişine bağlanmamış maliyet. */
   costBillableAmount: number;
-  /** Bu ana kadarki kâr: hak edilen − doğmuş maliyet. */
+  /**
+   * Hak edilen − doğmuş maliyet. İlerlemeye dayalı; yalnızca eski uygulama
+   * sürümleri okuyor, yenisi `billedMarginAmount` kullanıyor.
+   */
   marginAmount: number;
   itemCount: number;
 };
@@ -168,6 +182,11 @@ export function calculateProgressSummary(input: {
 
   return {
     contractTotal,
+    // Fazla hakediş düzenlenmişse kalan eksiye düşmez, sıfır gösterilir.
+    remainingAmount: Math.max(roundCurrency(contractTotal - billedAmount), 0),
+    costRemainingAmount: Math.max(roundCurrency(costTotal - costBilledAmount), 0),
+    // Kâr negatif olabilir; zararı gizlemek yanlış olur.
+    billedMarginAmount: roundCurrency(billedAmount - costBilledAmount),
     earnedAmount,
     progressPercent: calculateOverallProgress(input.items),
     billedAmount,

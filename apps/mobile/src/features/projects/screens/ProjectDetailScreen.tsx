@@ -342,21 +342,26 @@ export function ProjectDetailScreen() {
           title={project.name}
         />
 
-        <Pressable
-          onPress={() =>
-            router.push({
-              pathname: "/(main)/projects/[projectId]/progress",
-              params: { projectId },
-            })
-          }
-          style={styles.progressLink}
-        >
-          <MaterialCommunityIcons color={colors.primary} name="chart-timeline-variant" size={18} />
-          <Text style={styles.progressLinkText}>
-            {canSeeFinance ? t("progress.title") : t("progress.titleNoFinance")}
-          </Text>
-          <MaterialCommunityIcons color={colors.textMuted} name="chevron-right" size={18} />
-        </Pressable>
+        {/*
+          Finans yetkisi olmayanlar bu ekrana yalnızca kalem ilerlemesini
+          güncellemek için giriyordu. İlerleme kaldırılınca ekranda onlara
+          tutarları gizli bir kalem listesinden başka bir şey kalmadı.
+        */}
+        {canSeeFinance ? (
+          <Pressable
+            onPress={() =>
+              router.push({
+                pathname: "/(main)/projects/[projectId]/progress",
+                params: { projectId },
+              })
+            }
+            style={styles.progressLink}
+          >
+            <MaterialCommunityIcons color={colors.primary} name="chart-timeline-variant" size={18} />
+            <Text style={styles.progressLinkText}>{t("progress.title")}</Text>
+            <MaterialCommunityIcons color={colors.textMuted} name="chevron-right" size={18} />
+          </Pressable>
+        ) : null}
 
         <View style={styles.searchWrap}>
           <MaterialCommunityIcons color={colors.textMuted} name="magnify" size={20} style={styles.searchIcon} />

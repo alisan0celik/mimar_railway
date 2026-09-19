@@ -38,7 +38,11 @@ export class CreateSectionDto {
   @Min(0)
   costAmount?: number;
 
-  /** Tamamlanma yüzdesi. */
+  /**
+   * Tamamlanma yüzdesi. Uygulamadan kaldırıldı; yalnızca eski sürümler
+   * gönderiyor. Kabul edilmeye devam ediyor ki o sürümlerde kalem kaydetmek
+   * (bilinmeyen alan reddedildiği için) bozulmasın.
+   */
   @IsOptional()
   @IsNumber()
   @Min(0)
