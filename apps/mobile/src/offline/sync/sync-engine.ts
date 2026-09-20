@@ -1,5 +1,6 @@
 import { syncApi } from "../../services/api/sync.api";
 import { tKey } from "../../shared/i18n";
+import { sortProjectsByNewest } from "../../shared/utils/sortProjects";
 import { projectApi, type ProjectMessageDTO, type ProjectNoteDTO, type ProjectTaskDTO } from "../../services/api/project.api";
 import { useAuthStore } from "../../store/authStore";
 import { useOfflineStore } from "../../store/offlineStore";
@@ -173,7 +174,9 @@ export async function fetchProjectsWithCache(): Promise<void> {
 
   if (isOnline()) {
     try {
-      const projects = await projectApi.getProjects();
+      // Sunucu zaten en yeniden eskiye gönderiyor; sıra tek yerden
+      // geçsin ki önbellekten gelen listeyle birebir aynı olsun.
+      const projects = sortProjectsByNewest(await projectApi.getProjects());
       await saveProjects(projects, user.companyId);
       useProjectStore.getState().setProjects(projects);
     } catch {

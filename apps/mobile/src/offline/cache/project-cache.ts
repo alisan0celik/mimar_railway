@@ -1,4 +1,5 @@
 import type { ProjectDTO } from "../../services/api/project.api";
+import { sortProjectsByNewest } from "../../shared/utils/sortProjects";
 import { getDatabase } from "../db/database";
 
 export async function saveProjects(projects: ProjectDTO[], companyId: string): Promise<void> {
@@ -25,9 +26,11 @@ export async function getCachedProjects(companyId: string): Promise<ProjectDTO[]
   if (!db) return [];
 
   const rows = await db.getAllAsync<{ payload: string }>(
-    `SELECT payload FROM cached_projects WHERE company_id = ? ORDER BY updated_at DESC`,
+    `SELECT payload FROM cached_projects WHERE company_id = ?`,
     companyId,
   );
 
-  return rows.map((row) => JSON.parse(row.payload) as ProjectDTO);
+  // Sıra satırların `updated_at` sütunundan değil, sunucudakiyle aynı
+  // kuraldan geliyor; aksi halde açılışta liste yeniden diziliyordu.
+  return sortProjectsByNewest(rows.map((row) => JSON.parse(row.payload) as ProjectDTO));
 }
