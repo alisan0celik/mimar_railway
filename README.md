@@ -87,6 +87,15 @@ cd mimar-platform
 npm install
 ```
 
+> **Expo paketlerini yama sürümüne yükseltmeyin.** 20 Eyl 2026'da 14 Expo paketi
+> SDK 55'in beklediği yama sürümlerine çekildi (ör. `expo` 55.0.29 → 55.0.31);
+> `babel-preset-expo` hoisting dışında kaldı, dönüşüm uygulanmadı ve Hermes
+> `private properties are not supported` hatasıyla derlemeyi durdurdu. Sürümler
+> bilerek geride tutuluyor ve `expo doctor` uyarısı `apps/mobile/package.json`
+> içindeki `expo.install.exclude` ile susturuldu. Expo SDK yükseltmesi yapılırken
+> bu liste kaldırılmalı, ardından `npx expo export --platform android` ile paket
+> derlenerek Hermes adımı doğrulanmalı.
+
 ### 2. Veritabanını başlat
 
 ```bash

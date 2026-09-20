@@ -14,6 +14,24 @@
       "appConfigFieldsNotSyncedCheck": {
         "enabled": false
       }
+    },
+    "install": {
+      "exclude": [
+        "expo",
+        "expo-apple-authentication",
+        "expo-background-fetch",
+        "expo-calendar",
+        "expo-dev-client",
+        "expo-device",
+        "expo-image-picker",
+        "expo-linear-gradient",
+        "expo-notifications",
+        "expo-secure-store",
+        "expo-splash-screen",
+        "expo-sqlite",
+        "expo-task-manager",
+        "expo-web-browser"
+      ]
     }
   },
   "devDependencies": {
