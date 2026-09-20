@@ -834,6 +834,7 @@ export const en = {
     loadFailed: "Could not load the details.",
     deleteItemTitle: "Delete item",
     deleteItemMessage: "Delete the item {name}?",
+    deleteItemWithPaymentsMessage: "The item {name}, its {count} progress payments and their finance entries will all be deleted. Are you sure?",
     billed: "Billed",
     collected: "Collected",
     outstanding: "Outstanding",
@@ -960,7 +961,7 @@ export const en = {
         },
         progress: {
           title: "Work Items and Billing",
-          steps: "Open the Work Items and Billing link at the top of the project detail.|The first project starts empty; split the contract into your own work items and give each one its value.|Star the ones you use often; the list is saved for your company and later projects open with them.|Tap Record Payment; the amount comes filled with what is left of the item. Change it for a partial bill, then tap Pay.|Each payment comes off what is left of the item; you can't bill an item for more than its value.|Put variations, escalation and advances under Other Receivables and Payables; they count towards the contract total.|Enter the subcontractor cost too and you can use Pay Subcontractor and see the margin per item.|Paid progress payments are recorded in finance automatically: employer payments as collections, subcontractor payments as expenses.|Only people with finance rights can see this screen."
+          steps: "Open the Work Items and Billing link at the top of the project detail.|The first project starts empty; split the contract into your own work items and give each one its value.|Star the ones you use often; the list is saved for your company and later projects open with them.|Tap Record Payment; the amount comes filled with what is left of the item. Change it for a partial bill, then tap Pay.|Each payment comes off what is left of the item; you can't bill an item for more than its value.|Put variations, escalation and advances under Other Receivables and Payables; they count towards the contract total.|Enter the subcontractor cost too and you can use Pay Subcontractor and see the margin per item.|Paid progress payments are recorded in finance automatically: employer payments as collections, subcontractor payments as expenses.|Deleting an item also deletes the progress payments billed from it and their finance entries.|Only people with finance rights can see this screen."
         },
         finance: {
           title: "Finance",

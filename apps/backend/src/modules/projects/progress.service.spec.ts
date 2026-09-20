@@ -18,6 +18,7 @@ describe("ProgressService", () => {
       createMany: jest.fn(),
       updateMany: jest.fn(),
       deleteMany: jest.fn(),
+      delete: jest.fn(),
     },
     progressPayment: {
       findMany: jest.fn(),
@@ -26,12 +27,16 @@ describe("ProgressService", () => {
       update: jest.fn(),
       updateMany: jest.fn(),
       delete: jest.fn(),
+      deleteMany: jest.fn(),
     },
     financeRecord: {
       aggregate: jest.fn(),
       create: jest.fn(),
+      update: jest.fn(),
+      updateMany: jest.fn(),
       deleteMany: jest.fn(),
     },
+    $transaction: jest.fn(),
     user: {
       findUnique: jest.fn(),
       findMany: jest.fn(),
@@ -71,6 +76,10 @@ describe("ProgressService", () => {
     prisma.progressPayment.update.mockResolvedValue({});
     prisma.financeRecord.create.mockResolvedValue({ id: "fr1" });
     prisma.financeRecord.deleteMany.mockResolvedValue({ count: 1 });
+    prisma.financeRecord.updateMany.mockResolvedValue({ count: 1 });
+    prisma.progressPayment.deleteMany.mockResolvedValue({ count: 0 });
+    prisma.section.delete.mockResolvedValue({});
+    prisma.$transaction.mockImplementation((operations: any) => Promise.all(operations));
     prisma.companyWorkItem.findMany.mockResolvedValue([]);
     prisma.companyWorkItem.findFirst.mockResolvedValue(null);
     prisma.companyWorkItem.create.mockImplementation(({ data }: any) => Promise.resolve(data));
@@ -427,6 +436,106 @@ describe("ProgressService", () => {
     await service.removePayment("c1", "p1", "pp3");
 
     expect(prisma.financeRecord.deleteMany).toHaveBeenCalledWith({ where: { id: "fr9" } });
+  });
+
+  describe("deleting a work item", () => {
+    beforeEach(() => {
+      prisma.section.findFirst.mockResolvedValue({ id: "s1" });
+    });
+
+    it("deletes the item's payments and their finance records with it", async () => {
+      // Eskiden hakediş tarihçe olarak kalıyor, tahsilat kaydı da finans
+      // ekranında duruyordu: silinen kalemin parası görünmeye devam ediyordu.
+      prisma.progressPayment.findMany.mockResolvedValue([
+        { financeRecordId: "fr1" },
+        { financeRecordId: null },
+        { financeRecordId: "fr2" },
+      ]);
+
+      await service.removeSection("c1", "p1", "s1");
+
+      expect(prisma.financeRecord.deleteMany).toHaveBeenCalledWith({
+        where: { id: { in: ["fr1", "fr2"] }, companyId: "c1" },
+      });
+      expect(prisma.progressPayment.deleteMany).toHaveBeenCalledWith({
+        where: { projectId: "p1", sectionId: "s1" },
+      });
+      expect(prisma.section.delete).toHaveBeenCalledWith({ where: { id: "s1" } });
+      // Üçü tek işlemde: yarıda kalırsa finans ile hakediş ayrışırdı.
+      expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+    });
+
+    it("deletes an item that has no payments", async () => {
+      prisma.progressPayment.findMany.mockResolvedValue([]);
+
+      await expect(service.removeSection("c1", "p1", "s1")).resolves.toEqual({ success: true });
+      expect(prisma.financeRecord.deleteMany).toHaveBeenCalledWith({
+        where: { id: { in: [] }, companyId: "c1" },
+      });
+    });
+
+    it("rejects an item that is not in the project", async () => {
+      prisma.section.findFirst.mockResolvedValue(null);
+
+      await expect(service.removeSection("c1", "p1", "nope")).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("renaming a work item", () => {
+    beforeEach(() => {
+      prisma.section.updateMany.mockResolvedValue({ count: 1 });
+    });
+
+    it("renames the finance records the item's payments created", async () => {
+      prisma.section.findFirst.mockResolvedValue({ ...sections[0], name: "Mimari" });
+      prisma.progressPayment.findMany.mockResolvedValue([
+        { financeRecordId: "fr1", number: 1, direction: "incoming" },
+        { financeRecordId: "fr2", number: 1, direction: "outgoing" },
+      ]);
+
+      await service.updateSection("c1", "p1", "s1", { name: "Mimari Proje" }, "u1");
+
+      expect(prisma.financeRecord.updateMany).toHaveBeenCalledWith({
+        where: { id: "fr1" },
+        data: { description: "Mimari Proje 1 No'lu Hakediş" },
+      });
+      expect(prisma.financeRecord.updateMany).toHaveBeenCalledWith({
+        where: { id: "fr2" },
+        data: { description: "Mimari Proje 1 No'lu Taşeron Hakedişi" },
+      });
+    });
+
+    it("leaves finance alone when the name does not change", async () => {
+      prisma.section.findFirst.mockResolvedValue({ ...sections[0], name: "Mimari" });
+
+      await service.updateSection("c1", "p1", "s1", { name: "Mimari", amount: 10 }, "u1");
+
+      expect(prisma.financeRecord.updateMany).not.toHaveBeenCalled();
+    });
+  });
+
+  it("allows deleting the last payment of an item even when another item has more", async () => {
+    // Numaralar kalem başına yürüyor; proje genelindeki en büyük numaraya
+    // bakmak, silinebilir bir hakedişi reddediyordu.
+    prisma.progressPayment.findFirst
+      .mockResolvedValueOnce({
+        id: "pp1",
+        number: 1,
+        financeRecordId: "fr1",
+        sectionId: "s1",
+        direction: "incoming",
+      })
+      .mockResolvedValueOnce({ number: 1 });
+
+    await expect(service.removePayment("c1", "p1", "pp1")).resolves.toEqual({ success: true });
+    expect(prisma.progressPayment.findFirst).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        where: { projectId: "p1", sectionId: "s1", direction: "incoming" },
+      }),
+    );
   });
 
   it("does not duplicate a favourite that already exists", async () => {

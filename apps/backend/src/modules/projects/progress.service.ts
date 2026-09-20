@@ -236,6 +236,12 @@ export class ProgressService {
       select: { fullName: true },
     });
 
+    const existing = await this.prisma.section.findFirst({
+      where: { id: sectionId, projectId },
+      select: { name: true },
+    });
+    if (!existing) throw new NotFoundException("İmalat kalemi bulunamadı");
+
     const result = await this.prisma.section.updateMany({
       where: { id: sectionId, projectId },
       data: {
@@ -252,15 +258,73 @@ export class ProgressService {
 
     if (result.count === 0) throw new NotFoundException("İmalat kalemi bulunamadı");
 
+    // Finans kaydının açıklaması kalemin adını taşıyor ("Mimari 1 No'lu
+    // Hakediş"); kalem yeniden adlandırılınca finans ekranı eski adı
+    // göstermeye devam ediyordu.
+    if (dto.name !== undefined && dto.name !== existing.name) {
+      await this.renameFinanceRecords(projectId, sectionId, dto.name);
+    }
+
     await this.refreshProjectProgress(projectId);
     return this.prisma.section.findFirst({ where: { id: sectionId, projectId } });
   }
 
+  /** Kalemin hakedişlerinden doğan finans kayıtlarının açıklamasını yeniler. */
+  private async renameFinanceRecords(projectId: string, sectionId: string, name: string) {
+    const payments = await this.prisma.progressPayment.findMany({
+      where: { projectId, sectionId, financeRecordId: { not: null } },
+      select: { financeRecordId: true, number: true, direction: true },
+    });
+
+    await Promise.all(
+      payments.map((payment) =>
+        this.prisma.financeRecord.updateMany({
+          where: { id: payment.financeRecordId! },
+          data: {
+            description: paymentLabel(
+              name,
+              payment.number,
+              payment.direction === "outgoing" ? "outgoing" : "incoming",
+            ),
+          },
+        }),
+      ),
+    );
+  }
+
+  /**
+   * İmalat kalemini, hakedişlerini ve onlardan doğan finans kayıtlarını siler.
+   *
+   * Hakedişler eskiden tarihçe olarak kalıyordu (`sectionId` boşa düşüyordu),
+   * finans kayıtları da yerinde duruyordu: silinen bir kalemin tahsilatı
+   * finans ekranında görünmeye devam ediyor, anlaşma tutarı ise kalemle
+   * birlikte düştüğü için iki ekran ayrışıyordu. Hakediş kayıtlarının tek
+   * doğruluk kaynağı bu ekran olduğu için zincirin tamamı birlikte siliniyor.
+   */
   async removeSection(companyId: string, projectId: string, sectionId: string) {
     await this.assertProject(companyId, projectId);
 
-    const result = await this.prisma.section.deleteMany({ where: { id: sectionId, projectId } });
-    if (result.count === 0) throw new NotFoundException("İmalat kalemi bulunamadı");
+    const section = await this.prisma.section.findFirst({
+      where: { id: sectionId, projectId },
+      select: { id: true },
+    });
+    if (!section) throw new NotFoundException("İmalat kalemi bulunamadı");
+
+    const payments = await this.prisma.progressPayment.findMany({
+      where: { projectId, sectionId },
+      select: { financeRecordId: true },
+    });
+    const financeRecordIds = payments
+      .map((payment) => payment.financeRecordId)
+      .filter((id): id is string => id !== null);
+
+    await this.prisma.$transaction([
+      this.prisma.financeRecord.deleteMany({
+        where: { id: { in: financeRecordIds }, companyId },
+      }),
+      this.prisma.progressPayment.deleteMany({ where: { projectId, sectionId } }),
+      this.prisma.section.delete({ where: { id: sectionId } }),
+    ]);
 
     await this.refreshProjectProgress(projectId);
     return { success: true };
@@ -662,27 +726,31 @@ export class ProgressService {
   /**
    * Hakedişi siler.
    *
-   * Yalnızca projenin son hakedişi silinebilir: aradan biri silinirse
+   * Yalnızca serinin son hakedişi silinebilir: aradan biri silinirse
    * sonraki hakedişlerin "önceki toplam" değerleri tutarsız kalır.
+   *
+   * Seri kalem ve yön başına yürüdüğü için ("Mimari 1", "Mimari 2") kontrol
+   * de o seride yapılır. Proje genelindeki en büyük numaraya bakmak, başka
+   * bir kalemde daha çok hakediş olduğunda silinebilir kaydı reddediyordu.
    */
   async removePayment(companyId: string, projectId: string, paymentId: string) {
     await this.assertProject(companyId, projectId);
 
     const payment = await this.prisma.progressPayment.findFirst({
       where: { id: paymentId, projectId },
-      select: { id: true, number: true, financeRecordId: true },
+      select: { id: true, number: true, financeRecordId: true, sectionId: true, direction: true },
     });
     if (!payment) throw new NotFoundException("Hakediş bulunamadı");
 
     const last = await this.prisma.progressPayment.findFirst({
-      where: { projectId },
+      where: { projectId, sectionId: payment.sectionId, direction: payment.direction },
       orderBy: { number: "desc" },
       select: { number: true },
     });
 
     if (last && last.number !== payment.number) {
       throw new BadRequestException(
-        "Yalnızca son hakediş silinebilir. Aradaki bir hakedişi iptal etmek için durumunu 'iptal' yapın",
+        "Yalnızca bu kalemin son hakedişi silinebilir. Aradaki bir hakedişi iptal etmek için durumunu 'iptal' yapın",
       );
     }
 

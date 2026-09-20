@@ -236,9 +236,19 @@ export function ProgressPaymentScreen({ projectId }: { projectId: string }) {
   };
 
   const handleDeleteItem = (section: ProjectSectionDTO) => {
+    // Kalem silinince hakedişleri ve onların finans kayıtları da gidiyor;
+    // kaç kaydın silineceği onay kutusunda yazmalı.
+    const paymentCount = payments.filter((payment) => payment.sectionId === section.id).length;
+
     setConfirm({
       title: t("progress.deleteItemTitle"),
-      message: t("progress.deleteItemMessage", { name: section.name }),
+      message:
+        paymentCount > 0
+          ? t("progress.deleteItemWithPaymentsMessage", {
+              name: section.name,
+              count: paymentCount,
+            })
+          : t("progress.deleteItemMessage", { name: section.name }),
       confirmLabel: t("common.delete"),
       destructive: true,
       onConfirm: async () => {

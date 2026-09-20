@@ -834,6 +834,7 @@ export const tr = {
     loadFailed: "Bilgiler yüklenemedi.",
     deleteItemTitle: "Kalemi sil",
     deleteItemMessage: "{name} kalemini silmek istediğinize emin misiniz?",
+    deleteItemWithPaymentsMessage: "{name} kalemi, bu kalemden kesilen {count} hakediş ve bunların finans kayıtları birlikte silinecek. Emin misiniz?",
     billed: "Düzenlenen Hakediş",
     collected: "Tahsil Edilen",
     outstanding: "Bekleyen Alacak",
@@ -960,7 +961,7 @@ export const tr = {
         },
         progress: {
           title: "İmalat ve Hakediş",
-          steps: "Proje detayının üstündeki İmalat ve Hakediş bağlantısına girin.|İlk projede liste boş gelir; sözleşmeyi kendi imalat kalemlerinize bölün ve her kaleme bedelini yazın.|Sık kullandığınız kalemleri yıldızlayın; bu liste şirketinize kaydolur ve sonraki projeleriniz o kalemlerle açılır.|Hakediş Ödeme'ye basın; tutar alanı kalemin kalan bedeliyle dolu gelir. Kısmi hakediş için tutarı değiştirip Öde'ye basın.|Her hakediş kalemin kalan bedelinden düşer; bir kalemi bedelinden fazla faturalayamazsınız.|İş artışı, fiyat farkı, avans gibi kalemlere bağlı olmayan tutarları Diğer Alacak ve Borçlar bölümüne ekleyin; sözleşme toplamına girer.|Kaleme taşeron bedelini de girerseniz Taşeron Ödeme ile taşerona ödeme yapabilir, kalem başına kârı görebilirsiniz.|Ödenen hakediş finansa kendiliğinden işlenir: işveren hakedişi tahsilat, taşeron ödemesi gider olarak.|Bu ekranı yalnızca finans yetkisi olanlar görür."
+          steps: "Proje detayının üstündeki İmalat ve Hakediş bağlantısına girin.|İlk projede liste boş gelir; sözleşmeyi kendi imalat kalemlerinize bölün ve her kaleme bedelini yazın.|Sık kullandığınız kalemleri yıldızlayın; bu liste şirketinize kaydolur ve sonraki projeleriniz o kalemlerle açılır.|Hakediş Ödeme'ye basın; tutar alanı kalemin kalan bedeliyle dolu gelir. Kısmi hakediş için tutarı değiştirip Öde'ye basın.|Her hakediş kalemin kalan bedelinden düşer; bir kalemi bedelinden fazla faturalayamazsınız.|İş artışı, fiyat farkı, avans gibi kalemlere bağlı olmayan tutarları Diğer Alacak ve Borçlar bölümüne ekleyin; sözleşme toplamına girer.|Kaleme taşeron bedelini de girerseniz Taşeron Ödeme ile taşerona ödeme yapabilir, kalem başına kârı görebilirsiniz.|Ödenen hakediş finansa kendiliğinden işlenir: işveren hakedişi tahsilat, taşeron ödemesi gider olarak.|Bir kalemi silerseniz o kalemden kesilmiş hakedişler ve bunların finans kayıtları da silinir.|Bu ekranı yalnızca finans yetkisi olanlar görür."
         },
         finance: {
           title: "Finans",
