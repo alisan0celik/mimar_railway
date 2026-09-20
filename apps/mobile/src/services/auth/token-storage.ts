@@ -156,7 +156,19 @@ export async function getTokens(): Promise<SessionTokens | null> {
     }
     return legacy;
   } catch (error) {
-    throw new TokenStorageUnavailableError(error);
+    /*
+     * "Şu an okunamıyor" durumu iOS'a özgü: anahtarlık cihaz kilitliyken
+     * kapalı oluyor ve biraz sonra aynı okuma başarılı olabiliyor.
+     * Android'de böyle bir geçici durum yok; okuma hatası bozuk ya da
+     * çözülemeyen bir kayıt demek ve kalıcı. Orada hata fırlatmak
+     * kullanıcıyı kilitliyordu: uygulama açılmıyor, giriş de yapılamıyordu.
+     * Kayıt yokmuş gibi davranıyoruz; giriş yapıldığında üzerine yazılıyor.
+     */
+    if (Platform.OS === "ios") {
+      throw new TokenStorageUnavailableError(error);
+    }
+    console.warn("Token deposu okunamadı, oturum yokmuş gibi devam ediliyor", error);
+    return null;
   }
 }
 
