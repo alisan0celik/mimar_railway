@@ -1,5 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { FirebaseConfig } from "../../config/firebase.config";
+import { ApnsService } from "./apns.service";
 import { FCM_CHANNEL_DEFAULT, FCM_CHANNEL_MEMBERSHIP } from "./notification-events.constants";
 
 export interface PushNotificationPayload {
@@ -20,11 +21,16 @@ const IOS_BUNDLE_ID = process.env.IOS_BUNDLE_ID || "com.mimar.app";
 export class FcmService {
   private readonly logger = new Logger(FcmService.name);
 
-  // iOS'ta Expo, FCM token'ı değil ham APNs token'ı verir; FCM'e göndermeden önce
-  // Instance ID batchImport ile FCM kayıt token'ına çevrilir ve burada cache'lenir.
+  // iOS'ta Expo, FCM token'ı değil ham APNs token'ı verir. APNs anahtarı
+  // tanımlıysa bu token'lar doğrudan Apple'a gider (ApnsService). Değilse
+  // eski yol: Instance ID batchImport ile FCM token'ına çevrilip burada
+  // cache'lenir. Firebase batchImport'u 29 Eylül 2027'de kapatıyor.
   private readonly apnsToFcmCache = new Map<string, string>();
 
-  constructor(private readonly firebaseConfig: FirebaseConfig) {}
+  constructor(
+    private readonly firebaseConfig: FirebaseConfig,
+    private readonly apns: ApnsService,
+  ) {}
 
   private buildMessage(token: string, payload: PushNotificationPayload) {
     const channelId =
@@ -48,6 +54,10 @@ export class FcmService {
             sound: "default",
             contentAvailable: true,
           },
+          // expo-notifications iOS'ta uzak bildirimin verisini yalnızca
+          // `body` anahtarından okuyor; FCM'in en üst seviyeye koyduğu veri
+          // uygulamaya ulaşmıyor, bildirime dokunmak ekran açmıyordu.
+          body: payload.data ?? {},
         },
       },
     };
@@ -125,6 +135,50 @@ export class FcmService {
   }
 
   async sendToDevice(token: string, payload: PushNotificationPayload): Promise<FcmSendResult> {
+    return this.sendToMultipleDevices([token], payload);
+  }
+
+  /**
+   * Token'ları gideceği yere göre ayırır: APNs anahtarı tanımlıysa ham iOS
+   * token'ları doğrudan Apple'a, geri kalanı FCM'e. İki grup paralel gider;
+   * birinin başarısızlığı diğerini etkilemez.
+   */
+  async sendToMultipleDevices(
+    tokens: string[],
+    payload: PushNotificationPayload,
+  ): Promise<FcmSendResult> {
+    if (tokens.length === 0) return { invalidTokens: [] };
+
+    const direct = this.apns.isConfigured
+      ? tokens.filter((token) => this.isLikelyApnsToken(token))
+      : [];
+    const throughFcm = tokens.filter((token) => !direct.includes(token));
+
+    const [directInvalid, fcmResult] = await Promise.all([
+      this.sendDirectToApns(direct, payload),
+      this.sendThroughFcm(throughFcm, payload),
+    ]);
+
+    return { invalidTokens: [...directInvalid, ...fcmResult.invalidTokens] };
+  }
+
+  private async sendDirectToApns(
+    tokens: string[],
+    payload: PushNotificationPayload,
+  ): Promise<string[]> {
+    if (tokens.length === 0) return [];
+
+    const results = await Promise.all(tokens.map((token) => this.apns.send(token, payload)));
+    const sent = results.filter((result) => result === "sent").length;
+    this.logger.log(`APNs: ${sent} sent, ${tokens.length - sent} not sent`);
+
+    return tokens.filter((_, index) => results[index] === "invalid-token");
+  }
+
+  private async sendOneThroughFcm(
+    token: string,
+    payload: PushNotificationPayload,
+  ): Promise<FcmSendResult> {
     const messaging = this.firebaseConfig.messaging;
 
     if (!messaging) {
@@ -152,10 +206,12 @@ export class FcmService {
     }
   }
 
-  async sendToMultipleDevices(
+  private async sendThroughFcm(
     tokens: string[],
     payload: PushNotificationPayload,
   ): Promise<FcmSendResult> {
+    if (tokens.length === 0) return { invalidTokens: [] };
+
     const messaging = this.firebaseConfig.messaging;
 
     if (!messaging) {
@@ -163,13 +219,11 @@ export class FcmService {
       return { invalidTokens: [] };
     }
 
-    if (tokens.length === 0) return { invalidTokens: [] };
-
     const invalidTokens: string[] = [];
 
     try {
       if (tokens.length === 1) {
-        const result = await this.sendToDevice(tokens[0], payload);
+        const result = await this.sendOneThroughFcm(tokens[0], payload);
         invalidTokens.push(...result.invalidTokens);
         return { invalidTokens };
       }

@@ -6,6 +6,7 @@ import { AnnouncementsService } from "./announcements.service";
 import { NotificationsController } from "./notifications.controller";
 import { NotificationsGateway } from "./notifications.gateway";
 import { NotificationsService } from "./notifications.service";
+import { ApnsService } from "./apns.service";
 import { FcmService } from "./fcm.service";
 import { SubscriptionReminderService } from "./subscription-reminder.service";
 import { FirebaseConfig } from "../../config/firebase.config";
@@ -27,6 +28,7 @@ import { getJwtAccessSecret } from "../../config/jwt.config";
     AnnouncementsService,
     NotificationsGateway,
     NotificationsService,
+    ApnsService,
     FcmService,
     FirebaseConfig,
     SubscriptionReminderService,

@@ -73,6 +73,11 @@ services:
       FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL:-}
       FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY:-}
       IOS_BUNDLE_ID: ${IOS_BUNDLE_ID:-com.mimar.app}
+      # iOS bildirimleri doğrudan Apple'a: .p8 anahtarı base64 olarak tek satır.
+      # Boşsa eski FCM batchImport yolu kullanılır (29 Eyl 2027'de kapanıyor).
+      APNS_KEY_ID: ${APNS_KEY_ID:-}
+      APNS_TEAM_ID: ${APNS_TEAM_ID:-4FXVMZW9NP}
+      APNS_PRIVATE_KEY_BASE64: ${APNS_PRIVATE_KEY_BASE64:-}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       APPLE_CLIENT_ID: ${APPLE_CLIENT_ID:-}
