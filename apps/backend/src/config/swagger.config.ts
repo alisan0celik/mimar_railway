@@ -5,10 +5,10 @@ export const SWAGGER_BEARER_AUTH = "access-token";
 
 export function setupSwagger(app: INestApplication): void {
   const config = new DocumentBuilder()
-    .setTitle("Mimar Platform API")
+    .setTitle("Planyol API")
     .setDescription(
       [
-        "Mimar Platform backend REST API dokümantasyonu.",
+        "Planyol backend REST API dokümantasyonu.",
         "",
         "**Kimlik doğrulama:** Korumalı endpoint'ler için `Authorization: Bearer <accessToken>` header'ı gönderin.",
         "Access token `POST /api/auth/login` veya `POST /api/auth/register` yanıtından alınır.",
@@ -54,6 +54,6 @@ export function setupSwagger(app: INestApplication): void {
       tagsSorter: "alpha",
       operationsSorter: "alpha",
     },
-    customSiteTitle: "Mimar Platform API Docs",
+    customSiteTitle: "Planyol API Docs",
   });
 }

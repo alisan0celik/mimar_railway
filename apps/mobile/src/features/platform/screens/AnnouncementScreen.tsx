@@ -166,7 +166,7 @@ export function AnnouncementScreen() {
         <Image source={APP_ICON} style={styles.previewIcon} />
         <View style={styles.previewBody}>
           <View style={styles.previewHeader}>
-            <Text style={styles.previewApp}>PLANOVA</Text>
+            <Text style={styles.previewApp}>PLANYOL</Text>
             <Text style={styles.previewTime}>{t("announcement.previewNow")}</Text>
           </View>
           <Text numberOfLines={1} style={styles.previewTitle}>

@@ -875,7 +875,7 @@ export const tr = {
     contact: "Bize Ulaşın",
     website: "Web Sitemiz",
     contactEmail: "destek@mimarlik.app",
-    emailSubject: "Mimar Platform Destek Talebi",
+    emailSubject: "Planyol Destek Talebi",
     tickets: "Öneri ve Taleplerim",
     ticketsDesc: "Öneri, istek ve sorunlarınızı bize iletin",
     sendFailed: "Gönderilemedi. Lütfen tekrar deneyin.",

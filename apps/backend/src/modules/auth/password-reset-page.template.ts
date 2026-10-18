@@ -26,7 +26,7 @@ export function renderResetPasswordPage(token: string): string {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>Planova · Şifre Sıfırlama</title>
+<title>Planyol · Şifre Sıfırlama</title>
 <style>
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
@@ -62,11 +62,11 @@ export function renderResetPasswordPage(token: string): string {
 </head>
 <body>
   <div class="card">
-    <img class="logo" src="/brand/logo.png" width="56" height="56" alt="Planova">
+    <img class="logo" src="/brand/logo.png" width="56" height="56" alt="Planyol">
     <h1>Şifre Sıfırlama</h1>
     ${
       hasToken
-        ? `<p>Planova hesabınız için yeni bir şifre belirleyin.</p>
+        ? `<p>Planyol hesabınız için yeni bir şifre belirleyin.</p>
     <form id="form">
       <label for="password">Yeni şifre</label>
       <input id="password" type="password" autocomplete="new-password" minlength="8" required>

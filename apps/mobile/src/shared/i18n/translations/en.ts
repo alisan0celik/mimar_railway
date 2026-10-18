@@ -628,7 +628,7 @@ export const en = {
       invalidCredentials: "Invalid email or password.",
       subscriptionRenewRequired: "Your membership is inactive or expired. Please renew your membership.",
       subscriptionExpired:
-        "Your company's licence has expired. Please renew it to continue using Planova.",
+        "Your company's licence has expired. Please renew it to continue using Planyol.",
       subscriptionBlocked:
         "Your company account has been temporarily blocked. Please contact support.",
       companyInactive:
@@ -875,7 +875,7 @@ export const en = {
     contact: "Contact Us",
     website: "Our Website",
     contactEmail: "destek@mimarlik.app",
-    emailSubject: "Mimar Platform Support Request",
+    emailSubject: "Planyol Support Request",
     tickets: "My Suggestions & Requests",
     ticketsDesc: "Send us your suggestions, requests and issues",
     sendFailed: "Could not send. Please try again.",

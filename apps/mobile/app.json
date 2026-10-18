@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Planova",
+    "name": "Planyol",
     "slug": "mimar-app",
     "owner": "celikler",
     "version": "1.0.3",
@@ -75,7 +75,7 @@
         "expo-calendar",
         {
           "calendarPermission": "Proje takvimindeki etkinlikleri telefonunuzun takvimine yazmak için kullanılır. Bu özellik isteğe bağlıdır ve uygulama içinden kapatılabilir.",
-          "remindersPermission": "Takvim özelliğinin çalışabilmesi için gereklidir. Planova hatırlatıcılarınızı okumaz veya değiştirmez."
+          "remindersPermission": "Takvim özelliğinin çalışabilmesi için gereklidir. Planyol hatırlatıcılarınızı okumaz veya değiştirmez."
         }
       ]
     ],

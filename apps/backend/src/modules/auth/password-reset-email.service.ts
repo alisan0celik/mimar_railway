@@ -11,7 +11,7 @@ export class PasswordResetEmailService {
     const resetUrl = this.buildResetUrl(token);
     const apiKey = this.configService.get<string>("RESEND_API_KEY")?.trim();
     const from = this.configService.get<string>("MAIL_FROM")?.trim();
-    const appName = this.configService.get<string>("APP_NAME")?.trim() || "Mimar";
+    const appName = this.configService.get<string>("APP_NAME")?.trim() || "Planyol";
 
     if (!apiKey || !from) {
       if (process.env.NODE_ENV !== "production") {

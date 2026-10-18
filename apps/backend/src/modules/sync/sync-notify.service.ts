@@ -30,7 +30,7 @@ export class SyncNotifyService {
     await this.fcmService.sendToMultipleDevices(
       deviceTokens.map((token) => token.token),
       {
-        title: "Mimar Platform",
+        title: "Planyol",
         body: "Proje verileri güncellendi",
         data: {
           type: "sync_required",
