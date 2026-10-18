@@ -84,6 +84,17 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
     }
   }
 
+  /**
+   * Görünmeyen "verini yenile" sinyali. Yalnızca o an bağlı olan uygulamaya
+   * gider; bağlı olmayanlar uygulamayı açtıklarında zaten senkronlanıyor.
+   */
+  sendSyncRequired(userId: string, payload: { entity: string; companyId: string }) {
+    const clientId = this.connectedUsers.get(userId);
+    if (clientId) {
+      this.server.to(clientId).emit("sync_required", payload);
+    }
+  }
+
   @SubscribeMessage("mark_read")
   async handleMarkRead(client: Socket, notificationId: string) {
     const userId = client.data.userId as string | undefined;

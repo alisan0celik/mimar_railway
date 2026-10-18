@@ -1,12 +1,24 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../../common/prisma.service";
-import { FcmService } from "../notifications/fcm.service";
+import { NotificationsGateway } from "../notifications/notifications.gateway";
 
+/**
+ * Bir üye çevrimdışı yaptığı değişiklikleri gönderdiğinde, şirketteki diğer
+ * üyelerin açık uygulamalarına "verini yenile" sinyali yollar.
+ *
+ * Bu sinyal eskiden push bildirimiydi ve herkesin telefonunda görünür bir
+ * "Proje verileri güncellendi" bildirimi çıkıyordu. Sessiz (yalnızca veri
+ * içeren) push da çözmüyordu: eski Android sürümleri uygulama açıkken onu
+ * başlıksız boş bir bildirim olarak gösteriyor, iOS ise ayrı bir arka plan
+ * görevi ve yeni bir uygulama sürümü olmadan JS tarafına hiç iletmiyor.
+ * WebSocket üzerinden giden sinyal hiçbir şey göstermiyor; uygulaması açık
+ * olanlar veriyi hemen yeniliyor, kapalı olanlar açtıklarında senkronlanıyor.
+ */
 @Injectable()
 export class SyncNotifyService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly fcmService: FcmService,
+    private readonly gateway: NotificationsGateway,
   ) {}
 
   async notifyCompanySync(companyId: string, entity = "projects", excludeUserId?: string) {
@@ -19,25 +31,8 @@ export class SyncNotifyService {
       select: { id: true },
     });
 
-    if (users.length === 0) return;
-
-    const deviceTokens = await this.prisma.deviceToken.findMany({
-      where: { userId: { in: users.map((user) => user.id) } },
-    });
-
-    if (deviceTokens.length === 0) return;
-
-    await this.fcmService.sendToMultipleDevices(
-      deviceTokens.map((token) => token.token),
-      {
-        title: "Planyol",
-        body: "Proje verileri güncellendi",
-        data: {
-          type: "sync_required",
-          entity,
-          companyId,
-        },
-      },
-    );
+    for (const user of users) {
+      this.gateway.sendSyncRequired(user.id, { entity, companyId });
+    }
   }
 }
