@@ -3,7 +3,7 @@ import type { Href } from "expo-router";
 
 export function getPostAuthRoute(user: UserDTO | null | undefined): Href {
   if (!user?.companyId) {
-    return "/(auth)/company-select";
+    return "/(auth)/company-choice";
   }
 
   if (user.approvalStatus === "pending") {

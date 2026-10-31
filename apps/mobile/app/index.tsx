@@ -37,7 +37,7 @@ export default function IndexScreen() {
         return;
       }
 
-      router.replace("/(auth)/company-select");
+      router.replace("/(auth)/company-choice");
       return;
     }
 

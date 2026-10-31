@@ -31,6 +31,16 @@ export function CreateCompanyScreen() {
   const [logoAsset, setLogoAsset] = useState<CompanyLogoAsset | null>(null);
   const [saving, setSaving] = useState(false);
 
+  // Hem kayıt akışında (yol ayrımından) hem Şirketler sekmesinden açılıyor;
+  // ikisinde de geldiği yere dönmeli.
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+    router.replace("/(auth)/company-choice");
+  };
+
   const handlePhotoSelect = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
@@ -104,7 +114,7 @@ export function CreateCompanyScreen() {
   return (
     <Screen scroll contentContainerStyle={styles.content}>
       <ScreenHeader
-        onBack={() => router.replace("/(auth)/select-company")}
+        onBack={handleBack}
         subtitle={t("companies.createSubtitle")}
         title={t("companies.create")}
       />

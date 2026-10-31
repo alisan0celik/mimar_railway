@@ -2,6 +2,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { resolveApiAssetUrl } from "../../../shared/utils";
 import { useTranslation } from "../../../shared/i18n";
@@ -11,7 +12,9 @@ import { useThemeColors } from "../../../shared/theme/ThemeProvider";
 import { AppButton, DesignBackHeader, Screen, SearchInput } from "../../../shared/ui";
 import { companiesApi } from "../../../services/api";
 import type { CompanyDTO } from "../../../services/api";
-import { useAuthStore } from "../../../store/authStore";
+
+/** Sabit alt butonun altında liste içeriği kalmasın diye bırakılan boşluk. */
+const FOOTER_SPACE = 112;
 
 function companyInitial(name: string): string {
   return name.trim().charAt(0).toUpperCase() || "?";
@@ -21,7 +24,7 @@ export function SelectCompanyScreen() {
   const styles = useThemedStyles(createStyles);
   const colors = useThemeColors();
   const router = useRouter();
-  const logout = useAuthStore((s) => s.logout);
+  const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -45,97 +48,137 @@ export function SelectCompanyScreen() {
     return `${c.name} ${c.city || ""}`.toLowerCase().includes(search.trim().toLowerCase());
   });
 
-  const handleBack = useCallback(async () => {
+  // Yol ayrımı ekranından gelinir; yığın boşsa (eski bağlantı) oraya dönülür.
+  // Çıkış seçeneği yol ayrımı ekranında.
+  const handleBack = useCallback(() => {
     if (router.canGoBack()) {
       router.back();
       return;
     }
-    await logout();
-    router.replace("/(auth)/login");
-  }, [logout, router]);
+    router.replace("/(auth)/company-choice");
+  }, [router]);
+
+  // Oluşturma ekranından geri basınca listeye değil yol ayrımına dönülsün.
+  const openCreate = useCallback(() => {
+    router.replace("/(auth)/create-company");
+  }, [router]);
 
   return (
-    <Screen contentContainerStyle={styles.content} scroll>
-      <DesignBackHeader
-        fallbackRoute="/(auth)/login"
-        onBack={handleBack}
-        subtitle={t("companies.select.subtitle")}
-        title={t("companies.select.title")}
-      />
+    <View style={styles.wrapper}>
+      <Screen contentContainerStyle={[styles.content, { paddingBottom: FOOTER_SPACE + insets.bottom }]} scroll>
+        <DesignBackHeader
+          onBack={handleBack}
+          subtitle={t("companies.select.subtitle")}
+          title={t("companies.select.title")}
+        />
 
-      <SearchInput onChangeText={setSearch} placeholder={t("companies.searchPlaceholder")} value={search} />
+        <Pressable accessibilityRole="button" onPress={openCreate} style={styles.createBanner}>
+          <MaterialCommunityIcons color={colors.primary} name="domain-plus" size={22} />
+          <View style={styles.createBannerBody}>
+            <Text style={styles.createBannerTitle}>{t("companies.select.notListedTitle")}</Text>
+            <Text style={styles.createBannerDesc}>{t("companies.select.notListedDesc")}</Text>
+          </View>
+          <MaterialCommunityIcons color={colors.primary} name="chevron-right" size={22} />
+        </Pressable>
 
-      {loading ? (
-        <View style={styles.loadingWrap}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      ) : (
-      <View style={styles.list}>
-        {filtered.map((company) => {
-          const isSelected = company.id === selectedId;
-          return (
-            <Pressable
-              key={company.id}
-              onPress={() => setSelectedId(company.id)}
-              style={[styles.row, isSelected && styles.rowSelected]}
-            >
-              {company.logoUrl ? (
-                <Image
-                  source={{ uri: resolveApiAssetUrl(company.logoUrl) ?? undefined }}
-                  style={[styles.avatar, isSelected && styles.avatarSelected]}
-                />
-              ) : (
-                <View style={[styles.avatar, isSelected && styles.avatarSelected]}>
-                  <Text style={[styles.avatarText, isSelected && styles.avatarTextSelected]}>
-                    {company.logoInitials || companyInitial(company.name)}
-                  </Text>
-                </View>
-              )}
-              <View style={styles.info}>
-                <Text style={styles.name}>{company.name}</Text>
-                <Text style={styles.city}>{company.city}</Text>
-              </View>
-              {isSelected ? (
-                <View style={styles.checkmark}>
-                  <MaterialCommunityIcons color="#fff" name="check" size={16} />
-                </View>
-              ) : (
-                <View style={styles.checkmarkEmpty} />
-              )}
-            </Pressable>
-          );
-        })}
+        <SearchInput onChangeText={setSearch} placeholder={t("companies.searchPlaceholder")} value={search} />
+
+        {loading ? (
+          <View style={styles.loadingWrap}>
+            <ActivityIndicator size="large" color={colors.primary} />
+          </View>
+        ) : filtered.length === 0 ? (
+          <View style={styles.emptyWrap}>
+            <MaterialCommunityIcons color={colors.textMuted} name="magnify-close" size={32} />
+            <Text style={styles.emptyText}>{t("companies.select.empty")}</Text>
+          </View>
+        ) : (
+          <View style={styles.list}>
+            {filtered.map((company) => {
+              const isSelected = company.id === selectedId;
+              return (
+                <Pressable
+                  key={company.id}
+                  onPress={() => setSelectedId(company.id)}
+                  style={[styles.row, isSelected && styles.rowSelected]}
+                >
+                  {company.logoUrl ? (
+                    <Image
+                      source={{ uri: resolveApiAssetUrl(company.logoUrl) ?? undefined }}
+                      style={[styles.avatar, isSelected && styles.avatarSelected]}
+                    />
+                  ) : (
+                    <View style={[styles.avatar, isSelected && styles.avatarSelected]}>
+                      <Text style={[styles.avatarText, isSelected && styles.avatarTextSelected]}>
+                        {company.logoInitials || companyInitial(company.name)}
+                      </Text>
+                    </View>
+                  )}
+                  <View style={styles.info}>
+                    <Text style={styles.name}>{company.name}</Text>
+                    <Text style={styles.city}>{company.city}</Text>
+                  </View>
+                  {isSelected ? (
+                    <View style={styles.checkmark}>
+                      <MaterialCommunityIcons color="#fff" name="check" size={16} />
+                    </View>
+                  ) : (
+                    <View style={styles.checkmarkEmpty} />
+                  )}
+                </Pressable>
+              );
+            })}
+          </View>
+        )}
+      </Screen>
+
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
+        {selectedCompany ? (
+          <Text numberOfLines={1} style={styles.footerHint}>
+            {t("companies.select.selectedHint", { companyName: selectedCompany.name })}
+          </Text>
+        ) : null}
+        <AppButton
+          disabled={!selectedCompany}
+          fullWidth
+          onPress={() =>
+            router.push({
+              pathname: "/(auth)/join-request",
+              params: {
+                companyId: selectedCompany?.id ?? "",
+                companyName: selectedCompany?.name ?? "",
+              },
+            })
+          }
+          title={t("common.continue")}
+        />
       </View>
-      )}
-
-      <AppButton
-        disabled={!selectedCompany}
-        fullWidth
-        onPress={() =>
-          router.push({
-            pathname: "/(auth)/join-request",
-            params: {
-              companyId: selectedCompany?.id ?? "",
-              companyName: selectedCompany?.name ?? "",
-            },
-          })
-        }
-        style={styles.continueBtn}
-        title={t("common.continue")}
-      />
-
-      <Pressable onPress={() => router.push("/(auth)/create-company")} style={styles.createLink}>
-        <Text style={styles.createLinkText}>{t("companies.select.createLink")}</Text>
-      </Pressable>
-    </Screen>
+    </View>
   );
 }
 
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
+  wrapper: { flex: 1, backgroundColor: colors.background },
   content: { paddingBottom: spacing.xxl },
+  createBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    backgroundColor: colors.primarySoft,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: `${colors.primary}55`,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  createBannerBody: { flex: 1 },
+  createBannerTitle: { ...typography.body, color: colors.text, fontWeight: "700" },
+  createBannerDesc: { ...typography.caption, color: colors.textMuted, marginTop: 2 },
   list: { gap: spacing.sm, marginTop: spacing.md, marginBottom: spacing.xl },
   loadingWrap: { paddingVertical: spacing.xxxl, alignItems: "center" },
+  emptyWrap: { paddingVertical: spacing.xxl, alignItems: "center", gap: spacing.sm },
+  emptyText: { ...typography.bodySmall, color: colors.textMuted, textAlign: "center" },
   row: {
     flexDirection: "row",
     alignItems: "center",
@@ -176,8 +219,18 @@ function createStyles(colors: AppColors) {
     borderWidth: 1.5,
     borderColor: colors.border,
   },
-  continueBtn: { marginBottom: spacing.md },
-  createLink: { alignItems: "center", paddingVertical: spacing.md },
-  createLinkText: { ...typography.body, color: colors.primaryLight, fontWeight: "600" },
+  footer: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingTop: spacing.md,
+    paddingHorizontal: spacing.lg,
+    backgroundColor: colors.background,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    gap: spacing.xs,
+  },
+  footerHint: { ...typography.caption, color: colors.textMuted, textAlign: "center" },
 });
 }

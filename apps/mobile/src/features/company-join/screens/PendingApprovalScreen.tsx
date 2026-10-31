@@ -14,7 +14,7 @@ import { useTranslation } from "../../../shared/i18n";
 
 import { useAuthStore } from "../../../store/authStore";
 
-import { spacing, typography } from "../../../shared/theme";
+import { radius, spacing, typography } from "../../../shared/theme";
 
 import { useThemedStyles, type AppColors } from "../../../shared/theme";
 
@@ -23,6 +23,8 @@ import { useThemeColors } from "../../../shared/theme/ThemeProvider";
 import { AppButton, Screen } from "../../../shared/ui";
 
 
+
+const NEXT_STEP_KEYS = ["review", "role", "notify"] as const;
 
 function pickFirst(value: string | string[] | undefined): string {
 
@@ -58,7 +60,7 @@ export function PendingApprovalScreen() {
 
   return (
 
-    <Screen contentContainerStyle={styles.screenContent} edges={["top", "bottom"]}>
+    <Screen contentContainerStyle={styles.screenContent} edges={["top", "bottom"]} scroll>
 
       <View style={styles.mainContent}>
 
@@ -99,6 +101,18 @@ export function PendingApprovalScreen() {
         </Text>
 
         <Text style={styles.hint}>{t("companies.approvalPending.pushHint")}</Text>
+
+        <View style={styles.nextCard}>
+          <Text style={styles.nextTitle}>{t("companies.approvalPending.nextTitle")}</Text>
+          {NEXT_STEP_KEYS.map((key, index) => (
+            <View key={key} style={styles.nextRow}>
+              <View style={styles.nextBadge}>
+                <Text style={styles.nextBadgeText}>{index + 1}</Text>
+              </View>
+              <Text style={styles.nextText}>{t(`companies.approvalPending.nextSteps.${key}`)}</Text>
+            </View>
+          ))}
+        </View>
 
       </View>
 
@@ -247,6 +261,29 @@ function createStyles(colors: AppColors) {
       lineHeight: 20,
 
     },
+
+    nextCard: {
+      alignSelf: "stretch",
+      backgroundColor: colors.card,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: spacing.lg,
+      marginTop: spacing.xl,
+      gap: spacing.sm,
+    },
+    nextTitle: { ...typography.body, color: colors.text, fontWeight: "700", marginBottom: spacing.xs },
+    nextRow: { flexDirection: "row", alignItems: "flex-start", gap: spacing.md },
+    nextBadge: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      backgroundColor: colors.primarySoft,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    nextBadgeText: { ...typography.caption, color: colors.primary, fontWeight: "700" },
+    nextText: { ...typography.bodySmall, color: colors.textSoft, flex: 1, lineHeight: 20 },
 
     primaryBtn: { alignSelf: "stretch" },
 
