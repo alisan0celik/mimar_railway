@@ -21,6 +21,7 @@ import { UpdateProfileDto } from "./dto/update-profile.dto";
 import { UpdateUserStatusDto } from "./dto/update-user-status.dto";
 import { AssignRoleDto } from "./dto/assign-role.dto";
 import { UpdateNotificationPreferencesDto } from "./dto/update-notification-preferences.dto";
+import { UpdateOnboardingStateDto } from "./dto/update-onboarding-state.dto";
 import { ApiProtectedController } from "../../common/decorators/api-docs.decorator";
 
 @Controller("users")
@@ -66,6 +67,27 @@ export class UsersController {
   })
   async deleteOwnAccount(@CurrentUser() user: JwtPayload) {
     return this.usersService.deleteOwnAccount(user.sub);
+  }
+
+  @Get("me/onboarding")
+  @ApiOperation({
+    summary: "Tanıtım turu durumunu getir",
+    description: "Şirketi olmayan veya onay bekleyen kullanıcılar için de çalışır.",
+  })
+  async getOnboardingState(@CurrentUser() user: JwtPayload) {
+    return this.usersService.getOnboardingState(user.sub);
+  }
+
+  @Patch("me/onboarding")
+  @ApiOperation({
+    summary: "Tanıtım turu durumunu güncelle",
+    description: "Gönderilen üst düzey alanlar değiştirilir, diğerleri korunur.",
+  })
+  async updateOnboardingState(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: UpdateOnboardingStateDto,
+  ) {
+    return this.usersService.updateOnboardingState(user.sub, dto.onboardingState);
   }
 
   @Patch("notification-preferences")

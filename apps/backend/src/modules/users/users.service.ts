@@ -12,6 +12,11 @@ import { CompanyScopeService } from "../../common/tenant/company-scope.service";
 import { PermissionService } from "../../common/permissions/permission.service";
 import { NotificationsService } from "../notifications/notifications.service";
 import { CompaniesService } from "../companies/companies.service";
+import {
+  mergeOnboardingState,
+  normalizeOnboardingState,
+  type OnboardingState,
+} from "./onboarding-state.util";
 
 // Çıkarılan kullanıcının yeniden katılım talebi gönderebilmesi için geri verilen
 // temel izinler (kayıttaki DEFAULT_USER_PERMISSIONS ile aynı).
@@ -129,6 +134,30 @@ export class UsersService {
     }
 
     return this.updateProfile(userId, { notificationPreferences });
+  }
+
+  async getOnboardingState(userId: string): Promise<OnboardingState> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { onboardingState: true },
+    });
+    if (!user) throw new NotFoundException("Kullanıcı bulunamadı");
+    return normalizeOnboardingState(user.onboardingState);
+  }
+
+  async updateOnboardingState(userId: string, patch: unknown): Promise<OnboardingState> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { onboardingState: true },
+    });
+    if (!user) throw new NotFoundException("Kullanıcı bulunamadı");
+
+    const next = mergeOnboardingState(user.onboardingState, patch);
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { onboardingState: next },
+    });
+    return next;
   }
 
   async updateStatus(
