@@ -709,9 +709,29 @@ export const tr = {
     create: "Yeni Şirket Oluştur",
     createSubtitle: "Şirket bilgilerinizi girin",
     select: {
-      title: "Şirket Seçin",
-      subtitle: "Katılmak istediğiniz şirketi seçin",
+      title: "Katılacağın şirketi seç",
+      subtitle: "Ofisini bul, seç ve yöneticine katılım talebi gönder.",
       createLink: "+ Yeni Şirket Oluştur",
+      notListedTitle: "Şirketin listede yok mu?",
+      notListedDesc: "Yeni oluştur; şirketin sahibi sen olursun.",
+      empty: "Aramana uyan şirket bulunamadı. Ofisin henüz kayıtlı değilse yukarıdan yeni bir şirket oluşturabilirsin.",
+      selectedHint: "Seçili şirket: {companyName}",
+    },
+    choice: {
+      title: "Nasıl devam etmek istersin?",
+      subtitle: "Ofisin uygulamada kayıtlıysa ona katıl, değilse yeni bir şirket oluştur.",
+      nextLabel: "Sonra ne olacak?",
+      otherAccount: "Farklı bir hesapla giriş yap",
+      join: {
+        title: "Mevcut bir şirkete katıl",
+        desc: "Ofisin uygulamayı zaten kullanıyorsa yöneticine katılım talebi gönder.",
+        next: "Talebin ofis yöneticisine gider. O onaylayınca sana bir rol atanır ve bildirim alırsın.",
+      },
+      create: {
+        title: "Yeni şirket oluştur",
+        desc: "Ofisini ilk kez kaydediyorsan şirketin sahibi sen olursun.",
+        next: "Hemen ana sayfaya girersin; ekibinin katılım taleplerini sen onaylarsın.",
+      },
     },
     tabs: {
       member: "Üye",
@@ -747,6 +767,12 @@ export const tr = {
       sentLabel: "Talebiniz gönderildi",
       subtitle: "Katılım talebiniz {companyName} tarafından inceleniyor. Onaylandığınızda bildirim alacaksınız.",
       pushHint: "Onay veya red durumunda push bildirimi alırsınız; uygulama açıkken otomatik yönlendirilirsiniz.",
+      nextTitle: "Sonra ne olacak?",
+      nextSteps: {
+        review: "Ofis yöneticisi talebini inceler.",
+        role: "Onaylarken sana bir rol atar. Rolün, uygulamada hangi bölümleri göreceğini belirler.",
+        notify: "Onaylandığında bildirim alırsın ve uygulama seni ana sayfaya alır. Orada seni kısa bir tanıtım karşılar.",
+      },
     },
     businessTypes: {
       architecture: "Mimarlık Ofisi",
@@ -1193,5 +1219,178 @@ export const tr = {
     retry: "Tekrar Dene",
     loading: "Yükleniyor...",
     requestAccess: "Erişim Talep Et",
+  },
+  guide: {
+    controls: {
+      counter: "{current}/{total}",
+      skip: "Atla",
+      back: "Geri",
+      next: "İleri",
+      finish: "Bitir",
+    },
+    welcome: {
+      ownerTitle: "{companyName} hazır, hoş geldin!",
+      ownerBody: "Ofisini kurmak için 5 kısa adım seni bekliyor: logo, ilk proje, ekip onayı, roller ve ilk finans kaydı. Önce ana sayfayı birlikte kısaca tanıyalım.",
+      memberTitle: "{companyName} ofisine hoş geldin!",
+      memberBody: "Sana yalnızca rolünün erişebildiği bölümleri kısaca tanıtalım. Turu istediğin an atlayabilirsin.",
+      roleLabel: "Rolün: {role}",
+      start: "Turu başlat",
+      later: "Sonra",
+      defaultCompany: "Ofis",
+    },
+    newPermissions: {
+      title: "Yeni yetkiler kazandın",
+      body: "Rolün güncellendi. Artık erişebildiğin yeni bölümleri kısaca gösterelim.",
+    },
+    checklist: {
+      title: "Kurulumu tamamla ({done}/{total})",
+      subtitle: "Ofisini hazırlamak için birkaç kısa adım kaldı.",
+      dismiss: "Kurulum listesini kapat",
+      items: {
+        logo: "Ofis logonu yükle",
+        project: "İlk projeni oluştur",
+        approve: "Bir üyenin katılımını onayla",
+        roles: "Rolleri ve yetkileri incele",
+        finance: "İlk finans kaydını gir",
+      },
+    },
+    replay: {
+      title: "Turları yeniden başlat",
+      desc: "Karşılama ekranını ve ekran tanıtımlarını baştan izle.",
+      confirm: "Yeniden başlat",
+      confirmBody: "Tüm tanıtım turları sıfırlanacak. Ana sayfaya döndüğünde karşılama ekranı yeniden açılacak.",
+    },
+    tours: {
+      dashboard: {
+        logo: {
+          title: "Ofisin burada",
+          body: "Sol üstte ofisinin logosu görünür. Logoyu ofis yöneticileri ayarlardan değiştirebilir.",
+        },
+        bell: {
+          title: "Bildirimler",
+          body: "Katılım talepleri, proje güncellemeleri ve sana atanan işler burada toplanır.",
+        },
+        newProject: {
+          title: "Yeni proje",
+          body: "Müşteri ve proje bilgilerini girerek iki adımda yeni bir proje başlat.",
+        },
+        projects: {
+          title: "Projeler",
+          body: "Ofisindeki projeleri listele, ara ve durumlarına göre filtrele.",
+        },
+        finance: {
+          title: "Finans",
+          body: "Anlaşma tutarlarını, tahsilatları, giderleri ve kârı tek ekrandan takip et.",
+        },
+        pending: {
+          title: "Onay bekleyenler",
+          body: "Ofisine katılmak isteyenler burada listelenir. Onaylarken kişiye bir rol seçersin; rol, hangi ekranları kullanabileceğini belirler.",
+        },
+        roles: {
+          title: "Roller ve yetkiler",
+          body: "Hazır Ofis Yöneticisi ve Ofis Çalışanı rollerini incele, gerekirse \"Muhasebe\" gibi özel roller oluştur.",
+        },
+        notifications: {
+          title: "Bildirim geçmişi",
+          body: "Bu kısayol da bildirimlerine götürür; okunmuş ve okunmamış tüm bildirimlerini burada bulursun.",
+        },
+        tabBar: {
+          title: "Alt menü",
+          body: "Ana Sayfa, Projeler ve yetkin varsa Finans arasında tek dokunuşla geçiş yap.",
+        },
+        fab: {
+          title: "Hızlı proje ekle",
+          body: "Ortadaki + butonu, hangi sekmede olursan ol yeni proje oluşturmayı açar.",
+        },
+        more: {
+          title: "Diğer",
+          body: "Profilin, ayarlar, destek ve Kullanım Kılavuzu burada. Bu turları Kullanım Kılavuzu'ndan yeniden başlatabilirsin.",
+        },
+      },
+      projects: {
+        search: {
+          title: "Proje ara",
+          body: "Proje adına, müşteriye ya da projeyi oluşturan kişiye göre arama yap.",
+        },
+        filters: {
+          title: "Filtreler",
+          body: "Tüm, devam eden ve tamamlanan projeler arasında geçiş yap.",
+        },
+        card: {
+          title: "Proje kartı",
+          body: "Karta dokunarak projenin notlarına ve yapılacaklarına geç. Yetkin varsa sağdaki menüden projeyi düzenleyebilir veya tamamlayabilirsin.",
+        },
+      },
+      projectDetail: {
+        tabs: {
+          title: "Notlar ve Yapılacaklar",
+          body: "Notlar sekmesinde ekiple yazışırsın; Yapılacaklar sekmesinde işleri listeler, bittikçe işaretlersin.",
+        },
+        search: {
+          title: "Proje içinde ara",
+          body: "Bu projedeki notlar ve yapılacaklar arasında hızlıca arama yap.",
+        },
+        progress: {
+          title: "İmalat ve Hakediş",
+          body: "İmalat kalemlerinin ilerlemesini ve hakediş ödemelerini buradan takip et.",
+        },
+      },
+      createProject: {
+        stepper: {
+          title: "İki adımda proje",
+          body: "Önce temel bilgileri gir, ikinci adımda özeti kontrol edip projeyi oluştur.",
+        },
+        type: {
+          title: "Proje türü",
+          body: "Projenin türünü seç. Denetimli bir işse denetim firmasını da ekleyebilirsin.",
+        },
+        workItems: {
+          title: "İmalat kalemleri",
+          body: "Hazır şablonlardan birini seç ya da kalemleri tek tek işaretle. Bu kalemler ilerleme ve hakediş takibinde kullanılır.",
+        },
+      },
+      finance: {
+        summary: {
+          title: "Genel özet",
+          body: "Tüm projelerin toplam anlaşma, tahsilat, kalan alacak ve kâr bilgisi burada.",
+        },
+        add: {
+          title: "Finans kaydı ekle",
+          body: "Bir projeye anlaşma tutarı, ödeme ya da gider girmek için buraya dokun.",
+        },
+        projects: {
+          title: "Proje bazında finans",
+          body: "Finans hareketi olan projeler aşağıda listelenir; ayrıntı için projeye dokun.",
+        },
+      },
+      pendingUsers: {
+        filters: {
+          title: "Talepleri filtrele",
+          body: "Bekleyen ve reddedilen katılım taleplerini ayrı ayrı görüntüle.",
+        },
+        approve: {
+          title: "Talebi onaylama",
+          body: "Bir kişiye dokununca bilgilerini görürsün. Onaylamak için ona bir rol seçmen gerekir.",
+        },
+        roles: {
+          title: "Doğru rolü seç",
+          body: "Ofis Yöneticisi tüm yetkilere sahiptir. Ofis Çalışanı finansı, üye onayını ve rol yönetimini göremez. İstersen kişiye özel bir rol de atayabilirsin.",
+        },
+      },
+      roles: {
+        defaults: {
+          title: "Hazır roller",
+          body: "Her ofiste iki hazır rol bulunur: Ofis Yöneticisi (tüm yetkiler) ve Ofis Çalışanı (finans, üye onayı ve rol yönetimi hariç).",
+        },
+        custom: {
+          title: "Özel rol oluştur",
+          body: "\"Muhasebe\" gibi bir rol oluşturup yalnızca gereken yetkileri seçebilirsin. Uygulama herkese yalnızca yetkisi olan ekranları gösterir.",
+        },
+        assign: {
+          title: "Rol değiştirme",
+          body: "Bir üyenin rolünü, üye ayrıntılarından istediğin zaman değiştirebilirsin.",
+        },
+      },
+    },
   },
 } as const;

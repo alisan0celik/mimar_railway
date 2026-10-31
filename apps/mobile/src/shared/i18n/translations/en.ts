@@ -709,9 +709,29 @@ export const en = {
     create: "Create New Company",
     createSubtitle: "Enter your company details",
     select: {
-      title: "Select Company",
-      subtitle: "Choose the company you want to join",
+      title: "Choose the company to join",
+      subtitle: "Find your office, select it and send a join request to its admin.",
       createLink: "+ Create New Company",
+      notListedTitle: "Company not listed?",
+      notListedDesc: "Create a new one; you will be its owner.",
+      empty: "No company matches your search. If your office is not registered yet, create a new company above.",
+      selectedHint: "Selected company: {companyName}",
+    },
+    choice: {
+      title: "How would you like to continue?",
+      subtitle: "Join your office if it already uses the app, otherwise create a new company.",
+      nextLabel: "What happens next?",
+      otherAccount: "Sign in with a different account",
+      join: {
+        title: "Join an existing company",
+        desc: "If your office already uses the app, send a join request to its admin.",
+        next: "Your request goes to the office admin. Once approved, you are given a role and notified.",
+      },
+      create: {
+        title: "Create a new company",
+        desc: "If you are registering your office for the first time, you become its owner.",
+        next: "You go straight to the home screen and approve your team's join requests yourself.",
+      },
     },
     tabs: {
       member: "Member",
@@ -747,6 +767,12 @@ export const en = {
       sentLabel: "Your request was sent",
       subtitle: "Your join request is being reviewed by {companyName}. You will be notified when approved.",
       pushHint: "You will receive a push notification when approved or declined; the app will redirect you automatically while open.",
+      nextTitle: "What happens next?",
+      nextSteps: {
+        review: "The office admin reviews your request.",
+        role: "When approving, they assign you a role. Your role decides which parts of the app you can see.",
+        notify: "Once approved you get a notification and the app takes you to the home screen, where a short tour welcomes you.",
+      },
     },
     businessTypes: {
       architecture: "Architecture Office",
@@ -1193,5 +1219,178 @@ export const en = {
     retry: "Try Again",
     loading: "Loading...",
     requestAccess: "Request Access",
+  },
+  guide: {
+    controls: {
+      counter: "{current}/{total}",
+      skip: "Skip",
+      back: "Back",
+      next: "Next",
+      finish: "Finish",
+    },
+    welcome: {
+      ownerTitle: "{companyName} is ready, welcome!",
+      ownerBody: "5 short steps will get your office set up: logo, first project, team approval, roles and the first finance record. Let's take a quick look at the home screen first.",
+      memberTitle: "Welcome to {companyName}!",
+      memberBody: "We'll briefly show you only the sections your role can access. You can skip the tour at any time.",
+      roleLabel: "Your role: {role}",
+      start: "Start tour",
+      later: "Later",
+      defaultCompany: "the office",
+    },
+    newPermissions: {
+      title: "You have new permissions",
+      body: "Your role was updated. Let's quickly show you the sections you can now access.",
+    },
+    checklist: {
+      title: "Finish setup ({done}/{total})",
+      subtitle: "A few short steps left to get your office ready.",
+      dismiss: "Close setup checklist",
+      items: {
+        logo: "Upload your office logo",
+        project: "Create your first project",
+        approve: "Approve a member's join request",
+        roles: "Review roles and permissions",
+        finance: "Add your first finance record",
+      },
+    },
+    replay: {
+      title: "Restart tours",
+      desc: "Watch the welcome screen and screen tours again from the start.",
+      confirm: "Restart",
+      confirmBody: "All tours will be reset. The welcome screen opens again when you return to the home screen.",
+    },
+    tours: {
+      dashboard: {
+        logo: {
+          title: "Your office",
+          body: "Your office logo appears at the top left. Office managers can change it in settings.",
+        },
+        bell: {
+          title: "Notifications",
+          body: "Join requests, project updates and tasks assigned to you are collected here.",
+        },
+        newProject: {
+          title: "New project",
+          body: "Start a new project in two steps by entering the client and project details.",
+        },
+        projects: {
+          title: "Projects",
+          body: "List, search and filter your office's projects by status.",
+        },
+        finance: {
+          title: "Finance",
+          body: "Track agreed amounts, collections, expenses and profit on one screen.",
+        },
+        pending: {
+          title: "Pending approvals",
+          body: "People who want to join your office are listed here. When approving you pick a role, which decides the screens they can use.",
+        },
+        roles: {
+          title: "Roles and permissions",
+          body: "Review the built-in Office Manager and Office Employee roles and create custom roles such as \"Accounting\" if needed.",
+        },
+        notifications: {
+          title: "Notification history",
+          body: "This shortcut also opens your notifications; you'll find both read and unread ones here.",
+        },
+        tabBar: {
+          title: "Bottom menu",
+          body: "Switch between Home, Projects and, if you have access, Finance with a single tap.",
+        },
+        fab: {
+          title: "Quick add project",
+          body: "The + button in the middle opens project creation from any tab.",
+        },
+        more: {
+          title: "More",
+          body: "Your profile, settings, support and the User Guide live here. You can restart these tours from the User Guide.",
+        },
+      },
+      projects: {
+        search: {
+          title: "Search projects",
+          body: "Search by project name, client or the person who created it.",
+        },
+        filters: {
+          title: "Filters",
+          body: "Switch between all, ongoing and completed projects.",
+        },
+        card: {
+          title: "Project card",
+          body: "Tap a card to open the project's notes and to-dos. If you have permission, use the menu on the right to edit or complete it.",
+        },
+      },
+      projectDetail: {
+        tabs: {
+          title: "Notes and To-dos",
+          body: "Chat with your team in Notes; list tasks in To-dos and tick them off as they're done.",
+        },
+        search: {
+          title: "Search within the project",
+          body: "Quickly search this project's notes and to-dos.",
+        },
+        progress: {
+          title: "Work items and progress payments",
+          body: "Track work item progress and progress payments here.",
+        },
+      },
+      createProject: {
+        stepper: {
+          title: "Two-step project",
+          body: "Enter the basics first, then review the summary and create the project in step two.",
+        },
+        type: {
+          title: "Project type",
+          body: "Pick the project type. If the job is inspected, you can add the inspection company too.",
+        },
+        workItems: {
+          title: "Work items",
+          body: "Pick a ready-made template or tick items one by one. These items are used for progress and payment tracking.",
+        },
+      },
+      finance: {
+        summary: {
+          title: "Overview",
+          body: "Total agreed amounts, collections, remaining receivables and profit across all projects.",
+        },
+        add: {
+          title: "Add a finance record",
+          body: "Tap here to enter an agreed amount, a payment or an expense for a project.",
+        },
+        projects: {
+          title: "Finance by project",
+          body: "Projects with finance activity are listed below; tap one for details.",
+        },
+      },
+      pendingUsers: {
+        filters: {
+          title: "Filter requests",
+          body: "View pending and rejected join requests separately.",
+        },
+        approve: {
+          title: "Approving a request",
+          body: "Tap a person to see their details. To approve, you need to choose a role for them.",
+        },
+        roles: {
+          title: "Pick the right role",
+          body: "Office Manager has every permission. Office Employee cannot see finance, member approvals or role management. You can also assign a custom role.",
+        },
+      },
+      roles: {
+        defaults: {
+          title: "Built-in roles",
+          body: "Every office has two built-in roles: Office Manager (all permissions) and Office Employee (everything except finance, member approval and role management).",
+        },
+        custom: {
+          title: "Create a custom role",
+          body: "Create a role such as \"Accounting\" and select only the permissions it needs. The app shows everyone only the screens they're allowed to use.",
+        },
+        assign: {
+          title: "Changing roles",
+          body: "You can change a member's role at any time from their member details.",
+        },
+      },
+    },
   },
 } as const;
