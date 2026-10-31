@@ -14,6 +14,7 @@ import { useThemeColors } from "../../../shared/theme/ThemeProvider";
 import { resolveApiAssetUrl } from "../../../shared/utils";
 import { useAuthStore } from "../../../store/authStore";
 import { ParallaxBackground, Screen } from "../../../shared/ui";
+import { SetupChecklistCard, TourTarget, useScreenTour } from "../../guide";
 
 type IconName = ComponentProps<typeof MaterialCommunityIcons>["name"];
 
@@ -47,6 +48,7 @@ export function DashboardScreen() {
   const [companyLogoUrl, setCompanyLogoUrl] = useState<string | null>(null);
   const [companyInitials, setCompanyInitials] = useState<string | null>(null);
   const [logoLoadFailed, setLogoLoadFailed] = useState(false);
+  useScreenTour("dashboard");
 
   const loadCompanyLogo = useCallback(async () => {
     if (!companyId) {
@@ -88,26 +90,33 @@ export function DashboardScreen() {
       <View pointerEvents="none" style={styles.overlay} />
       <Screen contentContainerStyle={styles.content} scroll style={styles.screenTransparent}>
         <View style={styles.headerRow}>
-          {showCompanyLogo ? (
-            <Image
-              onError={() => setLogoLoadFailed(true)}
-              resizeMode="cover"
-              source={{ uri: companyLogoUrl }}
-              style={styles.logo}
-            />
-          ) : (
-            <View style={[styles.logo, styles.logoFallback]}>
-              <Text style={styles.logoInitials}>{fallbackInitials}</Text>
+          <TourTarget id="dashboard.logo">
+            <View collapsable={false}>
+              {showCompanyLogo ? (
+                <Image
+                  onError={() => setLogoLoadFailed(true)}
+                  resizeMode="cover"
+                  source={{ uri: companyLogoUrl }}
+                  style={styles.logo}
+                />
+              ) : (
+                <View style={[styles.logo, styles.logoFallback]}>
+                  <Text style={styles.logoInitials}>{fallbackInitials}</Text>
+                </View>
+              )}
             </View>
-          )}
+          </TourTarget>
           <View style={styles.headerSpacer} />
-          <Pressable
-            onPress={() => router.push("/(main)/dashboard/notifications")}
-            style={styles.bellBtn}
-          >
-            <MaterialCommunityIcons color={colors.white} name="bell-outline" size={22} />
-          </Pressable>
+          <TourTarget id="dashboard.bell">
+            <Pressable
+              onPress={() => router.push("/(main)/dashboard/notifications")}
+              style={styles.bellBtn}
+            >
+              <MaterialCommunityIcons color={colors.white} name="bell-outline" size={22} />
+            </Pressable>
+          </TourTarget>
         </View>
+        <SetupChecklistCard hasLogo={Boolean(companyLogoUrl)} />
         <View style={styles.sectionRow}>
           <Text style={styles.sectionTitle}>{t("dashboard.quickActions")}</Text>
         </View>
@@ -115,38 +124,39 @@ export function DashboardScreen() {
           {quickActions.map((action) => {
             const isPressed = pressedId === action.id;
             const cell = (
-              <Pressable
-                key={action.id}
-                onPress={() => router.push(action.route)}
-                onPressIn={() => setPressedId(action.id)}
-                onPressOut={() => setPressedId(null)}
-                style={({ pressed }) => [
-                  styles.quickCell,
-                  { borderColor: isPressed ? action.color : "rgba(255,255,255,0.2)" },
-                  pressed && styles.pressed,
-                ]}
-              >
-                <View
-                  style={[
-                    styles.quickIconWrap,
-                    {
-                      backgroundColor: action.color,
-                      borderColor: isPressed ? colors.white : action.color,
-                    },
+              <TourTarget id={`dashboard.action.${action.id}`} key={action.id}>
+                <Pressable
+                  onPress={() => router.push(action.route)}
+                  onPressIn={() => setPressedId(action.id)}
+                  onPressOut={() => setPressedId(null)}
+                  style={({ pressed }) => [
+                    styles.quickCell,
+                    { borderColor: isPressed ? action.color : "rgba(255,255,255,0.2)" },
+                    pressed && styles.pressed,
                   ]}
                 >
-                  <MaterialCommunityIcons color={colors.white} name={action.icon} size={24} />
-                </View>
-                <Text numberOfLines={2} style={styles.quickLabel}>
-                  {action.title}
-                </Text>
-                <MaterialCommunityIcons
-                  color={colors.white}
-                  name="arrow-right"
-                  size={14}
-                  style={styles.quickArrow}
-                />
-              </Pressable>
+                  <View
+                    style={[
+                      styles.quickIconWrap,
+                      {
+                        backgroundColor: action.color,
+                        borderColor: isPressed ? colors.white : action.color,
+                      },
+                    ]}
+                  >
+                    <MaterialCommunityIcons color={colors.white} name={action.icon} size={24} />
+                  </View>
+                  <Text numberOfLines={2} style={styles.quickLabel}>
+                    {action.title}
+                  </Text>
+                  <MaterialCommunityIcons
+                    color={colors.white}
+                    name="arrow-right"
+                    size={14}
+                    style={styles.quickArrow}
+                  />
+                </Pressable>
+              </TourTarget>
             );
             if (!action.permission) return cell;
             return (

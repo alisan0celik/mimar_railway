@@ -9,6 +9,7 @@ import { useTranslation } from "../i18n";
 import { spacing } from "../theme";
 import { useThemedStyles, type AppColors } from "../theme";
 import { useThemeColors } from "../theme/ThemeProvider";
+import { useTourTarget } from "../../features/guide/tour-targets";
 
 type TabConfig = {
   name: string;
@@ -29,6 +30,9 @@ export function DesignTabBar({ state, navigation }: BottomTabBarProps) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const barTargetRef = useTourTarget("tab.bar");
+  const createTargetRef = useTourTarget("tab.create");
+  const profileTargetRef = useTourTarget("tab.profile");
 
   const renderTab = (tab: TabConfig) => {
     const routeIndex = state.routes.findIndex((r) => r.name === tab.name);
@@ -39,6 +43,7 @@ export function DesignTabBar({ state, navigation }: BottomTabBarProps) {
       <Pressable
         key={tab.name}
         onPress={() => navigation.navigate(route.name)}
+        ref={tab.name === "profile" ? profileTargetRef : undefined}
         style={styles.tab}
       >
         <View style={[styles.tabIconWrap, isFocused && styles.tabIconWrapActive]}>
@@ -55,10 +60,14 @@ export function DesignTabBar({ state, navigation }: BottomTabBarProps) {
 
   return (
     <View style={[styles.wrap, { paddingBottom: Math.max(insets.bottom, 12) }]}>
-      <View style={styles.bar}>
+      <View ref={barTargetRef} style={styles.bar}>
         {VISIBLE_TABS.slice(0, 2).map(renderTab)}
 
-        <Pressable onPress={() => router.push("/(main)/projects/create")} style={styles.fabWrap}>
+        <Pressable
+          onPress={() => router.push("/(main)/projects/create")}
+          ref={createTargetRef}
+          style={styles.fabWrap}
+        >
           <LinearGradient
             colors={[colors.gradientStart, colors.gradientEnd]}
             end={{ x: 1, y: 1 }}

@@ -21,6 +21,7 @@ import {
   type WorkItemTemplate,
 } from "../constants/workItemTemplates";
 import { PROJECT_TYPE_KEYS } from "../constants/projectTypes";
+import { TourTarget, useScreenTour } from "../../guide";
 
 /** Kalem listesinin kaynağı: şirket favorileri ya da hazır şablonlardan biri. */
 type WorkItemSource = WorkItemTemplate | "favourites";
@@ -41,6 +42,7 @@ export function CreateProjectScreen() {
   const [template, setTemplate] = useState<WorkItemSource>("empty");
   const [workItems, setWorkItems] = useState<string[]>([]);
   const [favouriteItems, setFavouriteItems] = useState<string[]>([]);
+  useScreenTour("createProject");
 
   // Şirketin favori kalemleriyle başlanır; favori yoksa liste boş kalır ve
   // kullanıcı kendi kalemlerini kurar. Uygulama genelinde sabit bir kalem
@@ -143,18 +145,20 @@ export function CreateProjectScreen() {
         title={t("projects.createTitle")}
       />
 
-      <View style={styles.stepRow}>
-        {[1, 2].map((n) => (
-          <View key={n} style={styles.stepItem}>
-            <View style={[styles.stepDot, n <= step && styles.stepDotActive]}>
-              <Text style={[styles.stepNum, n <= step && styles.stepNumActive]}>{n}</Text>
+      <TourTarget id="createProject.stepper">
+        <View style={styles.stepRow}>
+          {[1, 2].map((n) => (
+            <View key={n} style={styles.stepItem}>
+              <View style={[styles.stepDot, n <= step && styles.stepDotActive]}>
+                <Text style={[styles.stepNum, n <= step && styles.stepNumActive]}>{n}</Text>
+              </View>
+              {n < 2 ? (
+                <View style={[styles.stepLine, n < step && styles.stepLineActive]} />
+              ) : null}
             </View>
-            {n < 2 ? (
-              <View style={[styles.stepLine, n < step && styles.stepLineActive]} />
-            ) : null}
-          </View>
-        ))}
-      </View>
+          ))}
+        </View>
+      </TourTarget>
 
       {step === 1 ? (
         <View style={styles.form}>
@@ -171,19 +175,21 @@ export function CreateProjectScreen() {
             value={customerName}
           />
           <Text style={styles.fieldLabel}>{t("projects.projectType")}</Text>
-          <View style={styles.chipRow}>
-            {PROJECT_TYPE_KEYS.map((typeKey, idx) => (
-              <Pressable
-                key={typeKey}
-                onPress={() => setTypeIndex(idx)}
-                style={[styles.chip, typeIndex === idx && styles.chipActive]}
-              >
-                <Text style={[styles.chipText, typeIndex === idx && styles.chipTextActive]}>
-                  {t(`projects.types.${typeKey}`)}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
+          <TourTarget id="createProject.type">
+            <View style={styles.chipRow}>
+              {PROJECT_TYPE_KEYS.map((typeKey, idx) => (
+                <Pressable
+                  key={typeKey}
+                  onPress={() => setTypeIndex(idx)}
+                  style={[styles.chip, typeIndex === idx && styles.chipActive]}
+                >
+                  <Text style={[styles.chipText, typeIndex === idx && styles.chipTextActive]}>
+                    {t(`projects.types.${typeKey}`)}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </TourTarget>
           <Text style={styles.fieldLabel}>{t("projects.inspection.label")}</Text>
           <View style={styles.chipRow}>
             <Pressable
@@ -212,19 +218,21 @@ export function CreateProjectScreen() {
             />
           ) : null}
           <Text style={styles.fieldLabel}>{t("projects.workItems.template")}</Text>
-          <View style={styles.chipRow}>
-            {sourceOptions.map((option) => (
-              <Pressable
-                key={option}
-                onPress={() => applyTemplate(option)}
-                style={[styles.chip, template === option && styles.chipActive]}
-              >
-                <Text style={[styles.chipText, template === option && styles.chipTextActive]}>
-                  {t(`projects.workItems.templates.${option}`)}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
+          <TourTarget id="createProject.workItems">
+            <View style={styles.chipRow}>
+              {sourceOptions.map((option) => (
+                <Pressable
+                  key={option}
+                  onPress={() => applyTemplate(option)}
+                  style={[styles.chip, template === option && styles.chipActive]}
+                >
+                  <Text style={[styles.chipText, template === option && styles.chipTextActive]}>
+                    {t(`projects.workItems.templates.${option}`)}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </TourTarget>
 
           <Text style={styles.fieldLabel}>{t("projects.workItems.label")}</Text>
           <Text style={styles.fieldHint}>{t("projects.workItems.hint")}</Text>

@@ -19,6 +19,7 @@ import {
   SearchInput,
   showAppAlert,
 } from "../../../shared/ui";
+import { TourTarget, useScreenTour } from "../../guide";
 
 type FilterKey = "all" | "active" | "completed";
 
@@ -55,6 +56,7 @@ export function ProjectsScreen() {
   // Silme projenin finans kayıtlarını da götürdüğü için sunucu finans yetkisi
   // de istiyor; menüde de aynı kural.
   const canDeleteProject = canUpdate && canUpdateFinance;
+  useScreenTour("projects");
 
   useFocusEffect(
     useCallback(() => {
@@ -132,42 +134,58 @@ export function ProjectsScreen() {
       <Screen contentContainerStyle={styles.content} scroll>
         <Text style={styles.pageTitle}>{t("projects.title")}</Text>
 
-        <SearchInput
-          containerStyle={styles.search}
-          onChangeText={setSearchValue}
-          placeholder={t("projects.searchPlaceholder")}
-          showClearButton={false}
-          value={searchValue}
-        />
+        <TourTarget id="projects.search">
+          <View collapsable={false}>
+            <SearchInput
+              containerStyle={styles.search}
+              onChangeText={setSearchValue}
+              placeholder={t("projects.searchPlaceholder")}
+              showClearButton={false}
+              value={searchValue}
+            />
+          </View>
+        </TourTarget>
 
-        <DesignEqualFilterBar
-          activeKey={activeFilter}
-          onChange={(key) => setActiveFilter(key as FilterKey)}
-          tabs={filters}
-        />
+        <TourTarget id="projects.filters">
+          <View collapsable={false}>
+            <DesignEqualFilterBar
+              activeKey={activeFilter}
+              onChange={(key) => setActiveFilter(key as FilterKey)}
+              tabs={filters}
+            />
+          </View>
+        </TourTarget>
 
         <View>
           {filteredProjects.length === 0 ? (
             <EmptyState description={t("common.noDataDesc")} title={t("common.noData")} />
           ) : (
-            filteredProjects.map((project) => (
-              <ProjectCard
-                key={project.id}
-                onMenuPress={() => setMenuProject(project)}
-                onPress={() =>
-                  router.push({
-                    pathname: "/(main)/projects/[projectId]",
-                    params: { projectId: project.id },
-                  })
-                }
-                project={project}
-                showMenu={
-                  canUpdate ||
-                  canDeleteProject ||
-                  (canCompleteProject && isActiveProject(project.status as ProjectStatus))
-                }
-              />
-            ))
+            filteredProjects.map((project, index) => {
+              const card = (
+                <ProjectCard
+                  key={project.id}
+                  onMenuPress={() => setMenuProject(project)}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/(main)/projects/[projectId]",
+                      params: { projectId: project.id },
+                    })
+                  }
+                  project={project}
+                  showMenu={
+                    canUpdate ||
+                    canDeleteProject ||
+                    (canCompleteProject && isActiveProject(project.status as ProjectStatus))
+                  }
+                />
+              );
+              if (index > 0) return card;
+              return (
+                <TourTarget id="projects.firstCard" key={project.id}>
+                  <View collapsable={false}>{card}</View>
+                </TourTarget>
+              );
+            })
           )}
         </View>
       </Screen>

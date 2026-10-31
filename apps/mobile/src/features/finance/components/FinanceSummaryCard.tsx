@@ -8,6 +8,7 @@ import { useThemedStyles, type AppColors } from "../../../shared/theme";
 import { useThemeColors } from "../../../shared/theme/ThemeProvider";
 import { DesignMetricTile } from "../../../shared/ui/DesignMetricTile";
 import { formatCurrency } from "../../../shared/utils";
+import { useTourTarget } from "../../guide";
 
 type FinanceSummaryCardProps = {
   totalAgreedAmount: number;
@@ -28,6 +29,7 @@ export function FinanceSummaryCard({
   const colors = useThemeColors();
   const { t } = useTranslation();
   const profitTone = totalProfitAmount >= 0 ? "green" : "red";
+  const addTargetRef = useTourTarget("finance.add");
 
   return (
     <View style={styles.wrap}>
@@ -58,7 +60,7 @@ export function FinanceSummaryCard({
           value={formatCurrency(totalProfitAmount)}
         />
       </View>
-      <Pressable onPress={onAddFinance} style={styles.addButton}>
+      <Pressable onPress={onAddFinance} ref={addTargetRef} style={styles.addButton}>
         <MaterialCommunityIcons color={colors.primary} name="plus-circle-outline" size={22} />
         <Text style={styles.addButtonText}>{t("finance.createFinance")}</Text>
       </Pressable>

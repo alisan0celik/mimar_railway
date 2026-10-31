@@ -13,6 +13,7 @@ import { NoPermissionState, Screen, SearchInput } from "../../../shared/ui";
 import { DesignSectionTitle } from "../../../shared/ui/DesignSectionTitle";
 import { FinanceProjectCard } from "../components/FinanceProjectCard";
 import { FinanceSummaryCard } from "../components/FinanceSummaryCard";
+import { TourTarget, useScreenTour } from "../../guide";
 
 export function FinanceScreen() {
   const styles = useThemedStyles(createStyles);
@@ -25,6 +26,7 @@ export function FinanceScreen() {
   const fetchSummaries = useFinanceStore((s) => s.fetchSummaries);
   const isLoading = useFinanceStore((s) => s.isLoading);
   const [searchValue, setSearchValue] = useState("");
+  useScreenTour("finance");
 
   useFocusEffect(
     useCallback(() => {
@@ -70,17 +72,23 @@ export function FinanceScreen() {
         value={searchValue}
       />
 
-      <FinanceSummaryCard
-        onAddFinance={() => router.push("/(main)/finance/edit")}
-        totalAgreedAmount={global.totalAgreedAmount}
-        totalProfitAmount={global.totalProfitAmount}
-        totalReceivedAmount={global.totalReceivedAmount}
-        totalRemainingAmount={global.totalRemainingAmount}
-      />
+      <TourTarget id="finance.summary">
+        <View collapsable={false}>
+          <FinanceSummaryCard
+            onAddFinance={() => router.push("/(main)/finance/edit")}
+            totalAgreedAmount={global.totalAgreedAmount}
+            totalProfitAmount={global.totalProfitAmount}
+            totalReceivedAmount={global.totalReceivedAmount}
+            totalRemainingAmount={global.totalRemainingAmount}
+          />
+        </View>
+      </TourTarget>
 
-      <View style={styles.headerRow}>
-        <DesignSectionTitle title={t("finance.projectsSection")} />
-      </View>
+      <TourTarget id="finance.projects">
+        <View style={styles.headerRow}>
+          <DesignSectionTitle title={t("finance.projectsSection")} />
+        </View>
+      </TourTarget>
 
       {isLoading ? (
         <View style={styles.loading}>

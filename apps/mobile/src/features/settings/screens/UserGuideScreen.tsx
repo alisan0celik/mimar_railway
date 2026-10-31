@@ -1,19 +1,23 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useMemo } from "react";
+import { useRouter } from "expo-router";
+import { useMemo, useState } from "react";
 import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
 
+import { resetTours } from "../../guide";
 import { USER_GUIDE_VIDEO_URL } from "../constants/support.constants";
 import { USER_GUIDE_SECTION_IDS } from "../data/faqContent";
 import { useTranslation } from "../../../shared/i18n";
 import { radius, spacing, typography } from "../../../shared/theme";
 import { useThemedStyles, type AppColors } from "../../../shared/theme";
 import { useThemeColors } from "../../../shared/theme/ThemeProvider";
-import { DesignBackHeader, Screen, showAppAlert } from "../../../shared/ui";
+import { ConfirmDialog, DesignBackHeader, Screen, showAppAlert } from "../../../shared/ui";
 
 export function UserGuideScreen() {
   const styles = useThemedStyles(createStyles);
   const colors = useThemeColors();
   const { t } = useTranslation();
+  const router = useRouter();
+  const [confirmReset, setConfirmReset] = useState(false);
 
   const sections = useMemo(
     () =>
@@ -24,6 +28,12 @@ export function UserGuideScreen() {
       })),
     [t],
   );
+
+  const handleReplay = () => {
+    setConfirmReset(false);
+    resetTours();
+    router.replace("/(main)/(tabs)/dashboard");
+  };
 
   const openVideoGuide = async () => {
     try {
@@ -47,6 +57,26 @@ export function UserGuideScreen() {
         </View>
         <MaterialCommunityIcons color={colors.textMuted} name="open-in-new" size={20} />
       </Pressable>
+
+      <Pressable accessibilityRole="button" onPress={() => setConfirmReset(true)} style={styles.replayCard}>
+        <View style={styles.replayIcon}>
+          <MaterialCommunityIcons color={colors.primary} name="restart" size={22} />
+        </View>
+        <View style={styles.videoBody}>
+          <Text style={styles.videoTitle}>{t("guide.replay.title")}</Text>
+          <Text style={styles.videoDesc}>{t("guide.replay.desc")}</Text>
+        </View>
+        <MaterialCommunityIcons color={colors.textMuted} name="chevron-right" size={20} />
+      </Pressable>
+
+      <ConfirmDialog
+        confirmLabel={t("guide.replay.confirm")}
+        message={t("guide.replay.confirmBody")}
+        onCancel={() => setConfirmReset(false)}
+        onConfirm={handleReplay}
+        title={t("guide.replay.title")}
+        visible={confirmReset}
+      />
 
       {sections.map((section) => (
         <View key={section.id} style={styles.section}>
@@ -87,6 +117,25 @@ function createStyles(colors: AppColors) {
       height: 40,
       borderRadius: 20,
       backgroundColor: colors.primary,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    replayCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.md,
+      backgroundColor: colors.card,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: spacing.lg,
+      marginBottom: spacing.md,
+    },
+    replayIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.primarySoft,
       alignItems: "center",
       justifyContent: "center",
     },

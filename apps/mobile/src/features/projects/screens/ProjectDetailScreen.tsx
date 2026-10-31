@@ -33,6 +33,7 @@ import {
 } from "../../../shared/ui";
 import { useTranslation, useLocaleCode } from "../../../shared/i18n";
 import { PERMISSIONS, useCan } from "../../../shared/permissions";
+import { TourTarget, useScreenTour } from "../../guide";
 
 type TabKey = "notes" | "todos";
 
@@ -105,6 +106,8 @@ export function ProjectDetailScreen() {
     () => projects.find((item) => item.id === projectId) ?? loadedProject,
     [projectId, projects, loadedProject],
   );
+  // Başlık ve sekmeler proje yüklenince çiziliyor; tur o zaman başlar.
+  useScreenTour("projectDetail", { enabled: Boolean(project) });
   const { t } = useTranslation();
   const locale = useLocaleCode();
   const { user } = useAuthStore();
@@ -348,36 +351,40 @@ export function ProjectDetailScreen() {
           tutarları gizli bir kalem listesinden başka bir şey kalmadı.
         */}
         {canSeeFinance ? (
-          <Pressable
-            onPress={() =>
-              router.push({
-                pathname: "/(main)/projects/[projectId]/progress",
-                params: { projectId },
-              })
-            }
-            style={styles.progressLink}
-          >
-            <MaterialCommunityIcons color={colors.primary} name="chart-timeline-variant" size={18} />
-            <Text style={styles.progressLinkText}>{t("progress.title")}</Text>
-            <MaterialCommunityIcons color={colors.textMuted} name="chevron-right" size={18} />
-          </Pressable>
+          <TourTarget id="projectDetail.progress">
+            <Pressable
+              onPress={() =>
+                router.push({
+                  pathname: "/(main)/projects/[projectId]/progress",
+                  params: { projectId },
+                })
+              }
+              style={styles.progressLink}
+            >
+              <MaterialCommunityIcons color={colors.primary} name="chart-timeline-variant" size={18} />
+              <Text style={styles.progressLinkText}>{t("progress.title")}</Text>
+              <MaterialCommunityIcons color={colors.textMuted} name="chevron-right" size={18} />
+            </Pressable>
+          </TourTarget>
         ) : null}
 
-        <View style={styles.searchWrap}>
-          <MaterialCommunityIcons color={colors.textMuted} name="magnify" size={20} style={styles.searchIcon} />
-          <TextInput
-            onChangeText={setQuery}
-            placeholder={t("projects.detail.searchPlaceholder")}
-            placeholderTextColor={colors.textMuted}
-            style={styles.searchInput}
-            value={query}
-          />
-          {query.length > 0 ? (
-            <Pressable onPress={() => setQuery("")}>
-              <MaterialCommunityIcons color={colors.textMuted} name="close-circle" size={18} />
-            </Pressable>
-          ) : null}
-        </View>
+        <TourTarget id="projectDetail.search">
+          <View style={styles.searchWrap}>
+            <MaterialCommunityIcons color={colors.textMuted} name="magnify" size={20} style={styles.searchIcon} />
+            <TextInput
+              onChangeText={setQuery}
+              placeholder={t("projects.detail.searchPlaceholder")}
+              placeholderTextColor={colors.textMuted}
+              style={styles.searchInput}
+              value={query}
+            />
+            {query.length > 0 ? (
+              <Pressable onPress={() => setQuery("")}>
+                <MaterialCommunityIcons color={colors.textMuted} name="close-circle" size={18} />
+              </Pressable>
+            ) : null}
+          </View>
+        </TourTarget>
 
         {searchResults !== null ? (
           <View style={styles.searchResults}>
@@ -406,19 +413,21 @@ export function ProjectDetailScreen() {
             )}
           </View>
         ) : (
-          <View style={styles.tabs}>
-            {tabItems.map((tab) => (
-              <Pressable
-                key={tab.key}
-                onPress={() => setActiveTab(tab.key)}
-                style={[styles.tab, activeTab === tab.key && styles.tabActive]}
-              >
-                <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
-                  {tab.label}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
+          <TourTarget id="projectDetail.tabs">
+            <View style={styles.tabs}>
+              {tabItems.map((tab) => (
+                <Pressable
+                  key={tab.key}
+                  onPress={() => setActiveTab(tab.key)}
+                  style={[styles.tab, activeTab === tab.key && styles.tabActive]}
+                >
+                  <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
+                    {tab.label}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </TourTarget>
         )}
       </View>
 

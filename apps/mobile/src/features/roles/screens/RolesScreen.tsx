@@ -20,6 +20,7 @@ import { useThemeColors } from "../../../shared/theme/ThemeProvider";
 import { AppButton, ConfirmDialog, DesignBackHeader, EmptyState, NoPermissionState, Screen, showAppAlert } from "../../../shared/ui";
 import { initials } from "../../../shared/utils/initials";
 import { roleLabel } from "../../../shared/utils/roleLabel";
+import { markChecklistDone, TourTarget, useScreenTour } from "../../guide";
 
 type RolesScreenProps = {
   pendingUserId?: string;
@@ -93,6 +94,12 @@ export function RolesScreen({ pendingUserId }: RolesScreenProps) {
     fetchRoles().finally(() => setLoading(false));
   }, [fetchRoles]);
 
+  const browsingRoles = canViewRoles && !approvalMode;
+  useScreenTour("roles", { enabled: browsingRoles && !loading });
+  useEffect(() => {
+    if (browsingRoles) markChecklistDone("roles");
+  }, [browsingRoles]);
+
   useEffect(() => {
     if (!pendingUserId) return;
     usersApi
@@ -162,50 +169,56 @@ export function RolesScreen({ pendingUserId }: RolesScreenProps) {
           title={t("roles.approveFlow.emptyTitle")}
         />
       ) : (
-        <View style={styles.list}>
-          {assignableRoles.map((role, idx) => (
-            <Pressable
-              key={role.id}
-              onPress={() => handleSelectRole(role)}
-              style={({ pressed }) => [
-                styles.row,
-                idx < assignableRoles.length - 1 && styles.rowBorder,
-                pressed && styles.pressed,
-              ]}
-            >
-              <View style={[styles.iconWrap, { backgroundColor: `${role.color || colors.primary}22` }]}>
+        <TourTarget id="roles.list">
+          <View style={styles.list}>
+            {assignableRoles.map((role, idx) => (
+              <Pressable
+                key={role.id}
+                onPress={() => handleSelectRole(role)}
+                style={({ pressed }) => [
+                  styles.row,
+                  idx < assignableRoles.length - 1 && styles.rowBorder,
+                  pressed && styles.pressed,
+                ]}
+              >
+                <View style={[styles.iconWrap, { backgroundColor: `${role.color || colors.primary}22` }]}>
+                  <MaterialCommunityIcons
+                    color={role.color || colors.primary}
+                    name={(role.icon || "shield-account-outline") as "shield-account-outline"}
+                    size={22}
+                  />
+                </View>
+                <View style={styles.body}>
+                  <Text style={styles.name}>{roleLabel(role, t)}</Text>
+                  <Text style={styles.count}>{roleSubtitle(role, t)}</Text>
+                </View>
                 <MaterialCommunityIcons
-                  color={role.color || colors.primary}
-                  name={(role.icon || "shield-account-outline") as "shield-account-outline"}
+                  color={colors.textMuted}
+                  name={approvalMode ? "check-circle-outline" : "chevron-right"}
                   size={22}
                 />
-              </View>
-              <View style={styles.body}>
-                <Text style={styles.name}>{roleLabel(role, t)}</Text>
-                <Text style={styles.count}>{roleSubtitle(role, t)}</Text>
-              </View>
-              <MaterialCommunityIcons
-                color={colors.textMuted}
-                name={approvalMode ? "check-circle-outline" : "chevron-right"}
-                size={22}
-              />
-            </Pressable>
-          ))}
-        </View>
+              </Pressable>
+            ))}
+          </View>
+        </TourTarget>
       )}
 
       {canCreateRole ? (
-        <AppButton
-          fullWidth
-          onPress={() =>
-            router.push({
-              pathname: "/(main)/roles/create",
-              params: pendingUserId ? { pendingUserId } : undefined,
-            })
-          }
-          style={styles.addBtn}
-          title={`+ ${approvalMode ? t("roles.approveFlow.createAndAssign") : t("roles.addRole")}`}
-        />
+        <TourTarget id="roles.create">
+          <View collapsable={false}>
+            <AppButton
+              fullWidth
+              onPress={() =>
+                router.push({
+                  pathname: "/(main)/roles/create",
+                  params: pendingUserId ? { pendingUserId } : undefined,
+                })
+              }
+              style={styles.addBtn}
+              title={`+ ${approvalMode ? t("roles.approveFlow.createAndAssign") : t("roles.addRole")}`}
+            />
+          </View>
+        </TourTarget>
       ) : null}
 
       <ConfirmDialog

@@ -16,6 +16,7 @@ import {
 import { companiesApi, type JoinRequestUserDTO, type UserDTO } from "../../../services/api";
 import { useAuthStore } from "../../../store/authStore";
 import { PendingUserCard } from "../components/PendingUserCard";
+import { TourTarget, useScreenTour } from "../../guide";
 
 type FilterKey = "all" | "pending" | "rejected";
 
@@ -78,6 +79,7 @@ export function PendingUsersScreen() {
     () => users.filter((user) => matchesFilter(user.approvalStatus, activeFilter)),
     [users, activeFilter],
   );
+  useScreenTour("pendingUsers");
 
   if (!canApprove) {
     return (
@@ -96,15 +98,19 @@ export function PendingUsersScreen() {
     <Screen scroll contentContainerStyle={styles.content}>
       <DesignBackHeader title={t("users.pendingTitle")} />
 
-      <DesignEqualFilterBar
-        activeKey={activeFilter}
-        onChange={(key) => setActiveFilter(key as FilterKey)}
-        tabs={[
-          { key: "all", label: t("common.all"), count: users.length },
-          { key: "pending", label: t("filters.pending"), count: pendingCount },
-          { key: "rejected", label: t("filters.rejected"), count: rejectedCount },
-        ]}
-      />
+      <TourTarget id="pendingUsers.filters">
+        <View collapsable={false}>
+          <DesignEqualFilterBar
+            activeKey={activeFilter}
+            onChange={(key) => setActiveFilter(key as FilterKey)}
+            tabs={[
+              { key: "all", label: t("common.all"), count: users.length },
+              { key: "pending", label: t("filters.pending"), count: pendingCount },
+              { key: "rejected", label: t("filters.rejected"), count: rejectedCount },
+            ]}
+          />
+        </View>
+      </TourTarget>
 
       <View>
         {loading ? (

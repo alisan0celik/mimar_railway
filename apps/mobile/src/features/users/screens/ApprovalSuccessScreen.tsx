@@ -1,4 +1,5 @@
 import { useRouter } from "expo-router";
+import { useEffect } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
@@ -7,12 +8,17 @@ import { spacing, typography } from "../../../shared/theme";
 import { useThemedStyles, type AppColors } from "../../../shared/theme";
 import { useThemeColors } from "../../../shared/theme/ThemeProvider";
 import { AppButton, Screen } from "../../../shared/ui";
+import { markChecklistDone } from "../../guide";
 
 export function ApprovalSuccessScreen() {
   const styles = useThemedStyles(createStyles);
   const colors = useThemeColors();
   const router = useRouter();
   const { t } = useTranslation();
+
+  useEffect(() => {
+    markChecklistDone("approve");
+  }, []);
 
   const handleComplete = () => {
     router.replace("/(main)/(tabs)/profile");
