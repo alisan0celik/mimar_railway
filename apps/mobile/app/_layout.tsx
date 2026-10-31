@@ -12,6 +12,7 @@ import { initSyncNotificationListener } from "../src/offline/sync/sync-listener"
 import { registerBackgroundSyncAsync } from "../src/offline/sync/background-sync";
 import { PushBootstrap } from "../src/features/notifications/PushBootstrap";
 import { initNotificationRouter } from "../src/services/notification/notification.service";
+import { GuideProvider } from "../src/features/guide";
 
 function RootShell() {
   const colors = useThemeColors();
@@ -65,6 +66,7 @@ function RootShell() {
         <AppAlertHost />
         <PushBootstrap />
         <Stack screenOptions={{ headerShown: false, contentStyle: styles.stackContent }} />
+        <GuideProvider />
       </View>
     </View>
   );

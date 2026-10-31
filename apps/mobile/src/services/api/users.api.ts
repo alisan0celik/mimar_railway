@@ -35,7 +35,7 @@ export interface PaginatedResponse<T> {
 }
 
 export const usersApi = {
-  getAll: (params?: { page?: number; limit?: number }) =>
+  getAll: (params?: { page?: number; limit?: number; status?: string }) =>
     apiClient.get<PaginatedResponse<UserDTO>>("/users", { params }),
 
   getById: (id: string) =>
@@ -61,6 +61,12 @@ export const usersApi = {
 
   updateNotificationPrefs: (prefs: any) =>
     apiClient.patch("/users/notification-preferences", { notificationPreferences: prefs }),
+
+  getOnboardingState: () =>
+    apiClient.get<unknown>("/users/me/onboarding"),
+
+  updateOnboardingState: (onboardingState: Record<string, unknown>) =>
+    apiClient.patch<unknown>("/users/me/onboarding", { onboardingState }),
 
   deleteAccount: () =>
     apiClient.delete<{ message: string }>("/users/me"),

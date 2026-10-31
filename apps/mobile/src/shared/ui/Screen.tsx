@@ -1,5 +1,7 @@
-import type { ReactNode } from "react";
+import { useMemo, useRef, type ReactNode } from "react";
 import {
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
   type ScrollViewProps,
   KeyboardAvoidingView,
   Platform,
@@ -15,6 +17,7 @@ import { componentTokens } from "../theme";
 import { useThemedStyles } from "../theme/useThemedStyles";
 import { useThemeColors } from "../theme/ThemeProvider";
 import type { AppColors } from "../theme/colors";
+import { TourScrollContext, type TourScrollHandle } from "./TourScrollContext";
 
 type ScreenProps = {
   children: ReactNode;
@@ -36,6 +39,21 @@ export function Screen({
   contentContainerStyle,
 }: ScreenProps) {
   const styles = useThemedStyles(createStyles);
+  const scrollRef = useRef<ScrollView>(null);
+  const scrollOffsetRef = useRef(0);
+  const tourScroll = useMemo<TourScrollHandle>(
+    () => ({
+      scrollBy: (dy) => {
+        const y = Math.max(0, scrollOffsetRef.current + dy);
+        scrollRef.current?.scrollTo({ y, animated: true });
+      },
+    }),
+    [],
+  );
+
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    scrollOffsetRef.current = event.nativeEvent.contentOffset.y;
+  };
 
   return (
     <SafeAreaView edges={edges} style={[styles.safeArea, style]}>
@@ -44,13 +62,16 @@ export function Screen({
         // eklenir, böylece klavyenin kapattığı içerik kaydırılarak görülebilir.
         // (Android'de manifest'teki adjustResize aynı işi yapıyor.)
         <ScrollView
+          ref={scrollRef}
           automaticallyAdjustKeyboardInsets
           contentContainerStyle={[styles.scrollContent, contentContainerStyle]}
           keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
           keyboardShouldPersistTaps={keyboardShouldPersistTaps}
+          onScroll={handleScroll}
+          scrollEventThrottle={64}
           showsVerticalScrollIndicator={showsVerticalScrollIndicator}
         >
-          {children}
+          <TourScrollContext.Provider value={tourScroll}>{children}</TourScrollContext.Provider>
         </ScrollView>
       ) : (
         <KeyboardAvoidingView
