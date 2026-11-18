@@ -660,6 +660,10 @@ export const tr = {
       appleMobileOnly: "Apple ile giriş sadece mobil cihazlarda desteklenmektedir.",
       googleMobileOnly: "Google ile giriş sadece mobil cihazlarda desteklenmektedir.",
       microsoftNotConfigured: "Microsoft ile giriş için uygulama kimliği tanımlanmalı.",
+      orSignUp: "veya şununla kayıt ol",
+      signUpWithGoogle: "Google ile kayıt ol",
+      signUpWithApple: "Apple ile kayıt ol",
+      termsRequired: "Kayıt olmak için kullanım koşullarını ve gizlilik politikasını kabul et.",
     },
     forgotPasswordForm: {
       title: "Şifremi unuttum",
@@ -1230,17 +1234,13 @@ export const tr = {
     },
     welcome: {
       ownerTitle: "{companyName} hazır, hoş geldin!",
-      ownerBody: "Ofisini kurmak için 5 kısa adım seni bekliyor: logo, ilk proje, ekip onayı, roller ve ilk finans kaydı. Önce ana sayfayı birlikte kısaca tanıyalım.",
+      ownerBody: "Ofis, proje ve hakediş üzerinden yürür. Kurulum listesindeki işleri istediğin sırayla tamamlayabilirsin.",
       memberTitle: "{companyName} ofisine hoş geldin!",
-      memberBody: "Sana yalnızca rolünün erişebildiği bölümleri kısaca tanıtalım. Turu istediğin an atlayabilirsin.",
+      memberBody: "İşin birimi proje. Yetkin olan bir ekrana ilk girdiğinde, o ekranın asıl parçasını kısaca göstereceğiz.",
       roleLabel: "Rolün: {role}",
-      start: "Turu başlat",
+      start: "Devam",
       later: "Sonra",
       defaultCompany: "Ofis",
-    },
-    newPermissions: {
-      title: "Yeni yetkiler kazandın",
-      body: "Rolün güncellendi. Artık erişebildiğin yeni bölümleri kısaca gösterelim.",
     },
     checklist: {
       title: "Kurulumu tamamla ({done}/{total})",
@@ -1261,134 +1261,32 @@ export const tr = {
       confirmBody: "Tüm tanıtım turları sıfırlanacak. Ana sayfaya döndüğünde karşılama ekranı yeniden açılacak.",
     },
     tours: {
-      dashboard: {
-        logo: {
-          title: "Ofisin burada",
-          body: "Sol üstte ofisinin logosu görünür. Logoyu ofis yöneticileri ayarlardan değiştirebilir.",
-        },
-        bell: {
-          title: "Bildirimler",
-          body: "Katılım talepleri, proje güncellemeleri ve sana atanan işler burada toplanır.",
-        },
-        newProject: {
-          title: "Yeni proje",
-          body: "Müşteri ve proje bilgilerini girerek iki adımda yeni bir proje başlat.",
-        },
-        projects: {
-          title: "Projeler",
-          body: "Ofisindeki projeleri listele, ara ve durumlarına göre filtrele.",
-        },
-        finance: {
-          title: "Finans",
-          body: "Anlaşma tutarlarını, tahsilatları, giderleri ve kârı tek ekrandan takip et.",
-        },
-        pending: {
-          title: "Onay bekleyenler",
-          body: "Ofisine katılmak isteyenler burada listelenir. Onaylarken kişiye bir rol seçersin; rol, hangi ekranları kullanabileceğini belirler.",
-        },
-        roles: {
-          title: "Roller ve yetkiler",
-          body: "Hazır Ofis Yöneticisi ve Ofis Çalışanı rollerini incele, gerekirse \"Muhasebe\" gibi özel roller oluştur.",
-        },
-        notifications: {
-          title: "Bildirim geçmişi",
-          body: "Bu kısayol da bildirimlerine götürür; okunmuş ve okunmamış tüm bildirimlerini burada bulursun.",
-        },
-        tabBar: {
-          title: "Alt menü",
-          body: "Ana Sayfa, Projeler ve yetkin varsa Finans arasında tek dokunuşla geçiş yap.",
-        },
-        fab: {
-          title: "Hızlı proje ekle",
-          body: "Ortadaki + butonu, hangi sekmede olursan ol yeni proje oluşturmayı açar.",
-        },
-        more: {
-          title: "Diğer",
-          body: "Profilin, ayarlar, destek ve Kullanım Kılavuzu burada. Bu turları Kullanım Kılavuzu'ndan yeniden başlatabilirsin.",
-        },
-      },
       projects: {
-        search: {
-          title: "Proje ara",
-          body: "Proje adına, müşteriye ya da projeyi oluşturan kişiye göre arama yap.",
-        },
-        filters: {
-          title: "Filtreler",
-          body: "Tüm, devam eden ve tamamlanan projeler arasında geçiş yap.",
-        },
         card: {
-          title: "Proje kartı",
-          body: "Karta dokunarak projenin notlarına ve yapılacaklarına geç. Yetkin varsa sağdaki menüden projeyi düzenleyebilir veya tamamlayabilirsin.",
+          title: "İşin birimi proje",
+          body: "Her kart bir iş. İçine girince notlar, yapılacaklar ve yetkin varsa hakediş orada.",
         },
       },
       projectDetail: {
         tabs: {
-          title: "Notlar ve Yapılacaklar",
-          body: "Notlar sekmesinde ekiple yazışırsın; Yapılacaklar sekmesinde işleri listeler, bittikçe işaretlersin.",
-        },
-        search: {
-          title: "Proje içinde ara",
-          body: "Bu projedeki notlar ve yapılacaklar arasında hızlıca arama yap.",
+          title: "Notlar ve işler",
+          body: "Notlar ekiple yazışma. Yapılacaklar bu projenin iş listesi.",
         },
         progress: {
-          title: "İmalat ve Hakediş",
-          body: "İmalat kalemlerinin ilerlemesini ve hakediş ödemelerini buradan takip et.",
+          title: "Kalem ilerlemesi",
+          body: "İmalat kalemlerinin ne kadarı bitti. Hakediş de bu projenin parası.",
         },
       },
       createProject: {
-        stepper: {
-          title: "İki adımda proje",
-          body: "Önce temel bilgileri gir, ikinci adımda özeti kontrol edip projeyi oluştur.",
-        },
-        type: {
-          title: "Proje türü",
-          body: "Projenin türünü seç. Denetimli bir işse denetim firmasını da ekleyebilirsin.",
-        },
         workItems: {
-          title: "İmalat kalemleri",
-          body: "Hazır şablonlardan birini seç ya da kalemleri tek tek işaretle. Bu kalemler ilerleme ve hakediş takibinde kullanılır.",
+          title: "Proje kalemlerden oluşur",
+          body: "Bir şablon seç ya da kalemleri işaretle. İlerleme ve hakediş bu listeyle yürür.",
         },
       },
       finance: {
         summary: {
-          title: "Genel özet",
-          body: "Tüm projelerin toplam anlaşma, tahsilat, kalan alacak ve kâr bilgisi burada.",
-        },
-        add: {
-          title: "Finans kaydı ekle",
-          body: "Bir projeye anlaşma tutarı, ödeme ya da gider girmek için buraya dokun.",
-        },
-        projects: {
-          title: "Proje bazında finans",
-          body: "Finans hareketi olan projeler aşağıda listelenir; ayrıntı için projeye dokun.",
-        },
-      },
-      pendingUsers: {
-        filters: {
-          title: "Talepleri filtrele",
-          body: "Bekleyen ve reddedilen katılım taleplerini ayrı ayrı görüntüle.",
-        },
-        approve: {
-          title: "Talebi onaylama",
-          body: "Bir kişiye dokununca bilgilerini görürsün. Onaylamak için ona bir rol seçmen gerekir.",
-        },
-        roles: {
-          title: "Doğru rolü seç",
-          body: "Ofis Yöneticisi tüm yetkilere sahiptir. Ofis Çalışanı finansı, üye onayını ve rol yönetimini göremez. İstersen kişiye özel bir rol de atayabilirsin.",
-        },
-      },
-      roles: {
-        defaults: {
-          title: "Hazır roller",
-          body: "Her ofiste iki hazır rol bulunur: Ofis Yöneticisi (tüm yetkiler) ve Ofis Çalışanı (finans, üye onayı ve rol yönetimi hariç).",
-        },
-        custom: {
-          title: "Özel rol oluştur",
-          body: "\"Muhasebe\" gibi bir rol oluşturup yalnızca gereken yetkileri seçebilirsin. Uygulama herkese yalnızca yetkisi olan ekranları gösterir.",
-        },
-        assign: {
-          title: "Rol değiştirme",
-          body: "Bir üyenin rolünü, üye ayrıntılarından istediğin zaman değiştirebilirsin.",
+          title: "Hakedişin özeti",
+          body: "Anlaşma, tahsilat, kalan ve kâr. Para, projelerin toplamıdır.",
         },
       },
     },

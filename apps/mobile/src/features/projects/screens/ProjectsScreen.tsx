@@ -56,7 +56,6 @@ export function ProjectsScreen() {
   // Silme projenin finans kayıtlarını da götürdüğü için sunucu finans yetkisi
   // de istiyor; menüde de aynı kural.
   const canDeleteProject = canUpdate && canUpdateFinance;
-  useScreenTour("projects");
 
   useFocusEffect(
     useCallback(() => {
@@ -83,6 +82,7 @@ export function ProjectsScreen() {
         .includes(q);
     });
   }, [activeFilter, searchValue, projects]);
+  useScreenTour("projects", { enabled: filteredProjects.length > 0 });
 
   const handleMarkCompleted = useCallback(async () => {
     if (!menuProject) return;
@@ -134,27 +134,19 @@ export function ProjectsScreen() {
       <Screen contentContainerStyle={styles.content} scroll>
         <Text style={styles.pageTitle}>{t("projects.title")}</Text>
 
-        <TourTarget id="projects.search">
-          <View collapsable={false}>
-            <SearchInput
-              containerStyle={styles.search}
-              onChangeText={setSearchValue}
-              placeholder={t("projects.searchPlaceholder")}
-              showClearButton={false}
-              value={searchValue}
-            />
-          </View>
-        </TourTarget>
+        <SearchInput
+          containerStyle={styles.search}
+          onChangeText={setSearchValue}
+          placeholder={t("projects.searchPlaceholder")}
+          showClearButton={false}
+          value={searchValue}
+        />
 
-        <TourTarget id="projects.filters">
-          <View collapsable={false}>
-            <DesignEqualFilterBar
-              activeKey={activeFilter}
-              onChange={(key) => setActiveFilter(key as FilterKey)}
-              tabs={filters}
-            />
-          </View>
-        </TourTarget>
+        <DesignEqualFilterBar
+          activeKey={activeFilter}
+          onChange={(key) => setActiveFilter(key as FilterKey)}
+          tabs={filters}
+        />
 
         <View>
           {filteredProjects.length === 0 ? (

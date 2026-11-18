@@ -8,7 +8,7 @@ import { useThemedStyles, type AppColors } from "../../../shared/theme";
 import { useThemeColors } from "../../../shared/theme/ThemeProvider";
 import { DesignMetricTile } from "../../../shared/ui/DesignMetricTile";
 import { formatCurrency } from "../../../shared/utils";
-import { useTourTarget } from "../../guide";
+import { TourTarget } from "../../guide";
 
 type FinanceSummaryCardProps = {
   totalAgreedAmount: number;
@@ -29,38 +29,41 @@ export function FinanceSummaryCard({
   const colors = useThemeColors();
   const { t } = useTranslation();
   const profitTone = totalProfitAmount >= 0 ? "green" : "red";
-  const addTargetRef = useTourTarget("finance.add");
 
   return (
     <View style={styles.wrap}>
-      <Text style={styles.sectionTitle}>{t("finance.generalSummary")}</Text>
-      <View style={styles.grid}>
-        <DesignMetricTile
-          label={t("finance.totalAgreement")}
-          style={styles.tile}
-          tone="green"
-          value={formatCurrency(totalAgreedAmount)}
-        />
-        <DesignMetricTile
-          label={t("finance.moneyReceived")}
-          style={styles.tile}
-          tone="blue"
-          value={formatCurrency(totalReceivedAmount)}
-        />
-        <DesignMetricTile
-          label={t("finance.remainingReceivable")}
-          style={styles.tile}
-          tone="red"
-          value={formatCurrency(totalRemainingAmount)}
-        />
-        <DesignMetricTile
-          label={t("finance.totalProfit")}
-          style={styles.tile}
-          tone={profitTone}
-          value={formatCurrency(totalProfitAmount)}
-        />
-      </View>
-      <Pressable onPress={onAddFinance} ref={addTargetRef} style={styles.addButton}>
+      <TourTarget id="finance.summary">
+        <View collapsable={false}>
+          <Text style={styles.sectionTitle}>{t("finance.generalSummary")}</Text>
+          <View style={styles.grid}>
+            <DesignMetricTile
+              label={t("finance.totalAgreement")}
+              style={styles.tile}
+              tone="green"
+              value={formatCurrency(totalAgreedAmount)}
+            />
+            <DesignMetricTile
+              label={t("finance.moneyReceived")}
+              style={styles.tile}
+              tone="blue"
+              value={formatCurrency(totalReceivedAmount)}
+            />
+            <DesignMetricTile
+              label={t("finance.remainingReceivable")}
+              style={styles.tile}
+              tone="red"
+              value={formatCurrency(totalRemainingAmount)}
+            />
+            <DesignMetricTile
+              label={t("finance.totalProfit")}
+              style={styles.tile}
+              tone={profitTone}
+              value={formatCurrency(totalProfitAmount)}
+            />
+          </View>
+        </View>
+      </TourTarget>
+      <Pressable onPress={onAddFinance} style={styles.addButton}>
         <MaterialCommunityIcons color={colors.primary} name="plus-circle-outline" size={22} />
         <Text style={styles.addButtonText}>{t("finance.createFinance")}</Text>
       </Pressable>

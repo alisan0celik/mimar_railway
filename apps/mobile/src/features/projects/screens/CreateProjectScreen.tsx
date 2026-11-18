@@ -145,20 +145,18 @@ export function CreateProjectScreen() {
         title={t("projects.createTitle")}
       />
 
-      <TourTarget id="createProject.stepper">
-        <View style={styles.stepRow}>
-          {[1, 2].map((n) => (
-            <View key={n} style={styles.stepItem}>
-              <View style={[styles.stepDot, n <= step && styles.stepDotActive]}>
-                <Text style={[styles.stepNum, n <= step && styles.stepNumActive]}>{n}</Text>
-              </View>
-              {n < 2 ? (
-                <View style={[styles.stepLine, n < step && styles.stepLineActive]} />
-              ) : null}
+      <View style={styles.stepRow}>
+        {[1, 2].map((n) => (
+          <View key={n} style={styles.stepItem}>
+            <View style={[styles.stepDot, n <= step && styles.stepDotActive]}>
+              <Text style={[styles.stepNum, n <= step && styles.stepNumActive]}>{n}</Text>
             </View>
-          ))}
-        </View>
-      </TourTarget>
+            {n < 2 ? (
+              <View style={[styles.stepLine, n < step && styles.stepLineActive]} />
+            ) : null}
+          </View>
+        ))}
+      </View>
 
       {step === 1 ? (
         <View style={styles.form}>
@@ -175,21 +173,19 @@ export function CreateProjectScreen() {
             value={customerName}
           />
           <Text style={styles.fieldLabel}>{t("projects.projectType")}</Text>
-          <TourTarget id="createProject.type">
-            <View style={styles.chipRow}>
-              {PROJECT_TYPE_KEYS.map((typeKey, idx) => (
-                <Pressable
-                  key={typeKey}
-                  onPress={() => setTypeIndex(idx)}
-                  style={[styles.chip, typeIndex === idx && styles.chipActive]}
-                >
-                  <Text style={[styles.chipText, typeIndex === idx && styles.chipTextActive]}>
-                    {t(`projects.types.${typeKey}`)}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-          </TourTarget>
+          <View style={styles.chipRow}>
+            {PROJECT_TYPE_KEYS.map((typeKey, idx) => (
+              <Pressable
+                key={typeKey}
+                onPress={() => setTypeIndex(idx)}
+                style={[styles.chip, typeIndex === idx && styles.chipActive]}
+              >
+                <Text style={[styles.chipText, typeIndex === idx && styles.chipTextActive]}>
+                  {t(`projects.types.${typeKey}`)}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
           <Text style={styles.fieldLabel}>{t("projects.inspection.label")}</Text>
           <View style={styles.chipRow}>
             <Pressable
@@ -217,43 +213,44 @@ export function CreateProjectScreen() {
               value={inspectionCompany}
             />
           ) : null}
-          <Text style={styles.fieldLabel}>{t("projects.workItems.template")}</Text>
           <TourTarget id="createProject.workItems">
-            <View style={styles.chipRow}>
-              {sourceOptions.map((option) => (
-                <Pressable
-                  key={option}
-                  onPress={() => applyTemplate(option)}
-                  style={[styles.chip, template === option && styles.chipActive]}
-                >
-                  <Text style={[styles.chipText, template === option && styles.chipTextActive]}>
-                    {t(`projects.workItems.templates.${option}`)}
-                  </Text>
-                </Pressable>
-              ))}
+            <View collapsable={false}>
+              <Text style={styles.fieldLabel}>{t("projects.workItems.template")}</Text>
+              <View style={styles.chipRow}>
+                {sourceOptions.map((option) => (
+                  <Pressable
+                    key={option}
+                    onPress={() => applyTemplate(option)}
+                    style={[styles.chip, template === option && styles.chipActive]}
+                  >
+                    <Text style={[styles.chipText, template === option && styles.chipTextActive]}>
+                      {t(`projects.workItems.templates.${option}`)}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+              <Text style={styles.fieldLabel}>{t("projects.workItems.label")}</Text>
+              <Text style={styles.fieldHint}>{t("projects.workItems.hint")}</Text>
+              {sourceItems.length === 0 ? (
+                <Text style={styles.fieldHint}>{t("projects.workItems.emptyTemplate")}</Text>
+              ) : (
+                <View style={styles.chipRow}>
+                  {sourceItems.map((name) => {
+                    const on = workItems.includes(name);
+                    return (
+                      <Pressable
+                        key={name}
+                        onPress={() => toggleWorkItem(name)}
+                        style={[styles.chip, on && styles.chipActive]}
+                      >
+                        <Text style={[styles.chipText, on && styles.chipTextActive]}>{name}</Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              )}
             </View>
           </TourTarget>
-
-          <Text style={styles.fieldLabel}>{t("projects.workItems.label")}</Text>
-          <Text style={styles.fieldHint}>{t("projects.workItems.hint")}</Text>
-          {sourceItems.length === 0 ? (
-            <Text style={styles.fieldHint}>{t("projects.workItems.emptyTemplate")}</Text>
-          ) : (
-            <View style={styles.chipRow}>
-              {sourceItems.map((name) => {
-                const on = workItems.includes(name);
-                return (
-                  <Pressable
-                    key={name}
-                    onPress={() => toggleWorkItem(name)}
-                    style={[styles.chip, on && styles.chipActive]}
-                  >
-                    <Text style={[styles.chipText, on && styles.chipTextActive]}>{name}</Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-          )}
         </View>
       ) : null}
 

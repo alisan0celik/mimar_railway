@@ -1,15 +1,15 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useState, useEffect } from "react";
-import { Pressable, StyleSheet, Text, View, Platform } from "react-native";
-import * as AppleAuthentication from "expo-apple-authentication";
-import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import { useState } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { useAuthStore } from "../../../store";
 import { radius, spacing, typography } from "../../../shared/theme";
 import { useThemedStyles, type AppColors } from "../../../shared/theme";
 import { useThemeColors } from "../../../shared/theme/ThemeProvider";
+import { getLoginErrorMessage } from "../utils/auth-errors";
 import { getPostAuthRoute } from "../utils/post-auth-route";
+import { signInWithSocial } from "../utils/social-sign-in";
 import { useTranslation } from "../../../shared/i18n";
 import {
   AppButton,
@@ -17,39 +17,7 @@ import {
   AuthBrandHeader,
   AuthFormCard,
   AuthScreenShell,
-  showAppAlert,
 } from "../../../shared/ui";
-
-const SUBSCRIPTION_BLOCK_CODES = new Set([
-  "COMPANY_SUBSCRIPTION_EXPIRED",
-  "COMPANY_SUBSCRIPTION_BLOCKED",
-  "COMPANY_INACTIVE",
-]);
-
-const SUBSCRIPTION_MESSAGE_KEYS: Record<string, string> = {
-  COMPANY_SUBSCRIPTION_EXPIRED: "auth.errors.subscriptionExpired",
-  COMPANY_SUBSCRIPTION_BLOCKED: "auth.errors.subscriptionBlocked",
-  COMPANY_INACTIVE: "auth.errors.companyInactive",
-};
-
-function getLoginErrorMessage(
-  error: any,
-  t: (key: string, params?: Record<string, string | number>) => string,
-) {
-  const code = error?.response?.data?.code;
-  if (code && SUBSCRIPTION_MESSAGE_KEYS[code]) {
-    return t(SUBSCRIPTION_MESSAGE_KEYS[code]);
-  }
-  if ((code && SUBSCRIPTION_BLOCK_CODES.has(code)) || error?.response?.status === 403) {
-    return t("auth.errors.subscriptionRenewRequired");
-  }
-  return error?.response?.data?.message || t("auth.errors.invalidCredentials");
-}
-
-/** Backend'den gelen hata mı (sunucu yanıtı var), yoksa SDK/ağ hatası mı? */
-function isApiError(error: any): boolean {
-  return Boolean(error?.response);
-}
 
 export function LoginScreen() {
   const styles = useThemedStyles(createStyles);
@@ -67,101 +35,12 @@ export function LoginScreen() {
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  useEffect(() => {
-    if (Platform.OS !== "web") {
-      GoogleSignin.configure({
-        webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || "",
-      });
-    }
-  }, []);
-
-  const handleAppleLogin = async () => {
-    if (Platform.OS === "web") {
-      if (typeof window !== "undefined" && window.alert) {
-        window.alert(t("auth.social.appleMobileOnly"));
-      } else {
-        showAppAlert(t("common.info"), t("auth.social.appleMobileOnly"));
-      }
-      return;
-    }
+  const handleSocialLogin = async (provider: "GOOGLE" | "APPLE") => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const isAvailable = await AppleAuthentication.isAvailableAsync();
-      if (!isAvailable) {
-        showAppAlert(t("common.info"), t("auth.social.appleMobileOnly"));
-        return;
-      }
-      const credential = await AppleAuthentication.signInAsync({
-        requestedScopes: [
-          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-          AppleAuthentication.AppleAuthenticationScope.EMAIL,
-        ],
-      });
-      if (credential.identityToken) {
-        await useAuthStore.getState().socialLogin("APPLE", credential.identityToken);
-        const user = useAuthStore.getState().user;
-        router.replace(getPostAuthRoute(user));
-      }
-    } catch (e: any) {
-      if (e?.code === "ERR_REQUEST_CANCELED") return;
-      if (isApiError(e)) {
-        showAppAlert(t("common.error"), getLoginErrorMessage(e, t));
-        return;
-      }
-      console.error(e);
-      showAppAlert(t("common.error"), e?.message || t("auth.errors.socialLoginFailed"));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGoogleLogin = async () => {
-    if (Platform.OS === "web") {
-      if (typeof window !== "undefined" && window.alert) {
-        window.alert(t("auth.social.googleMobileOnly"));
-      } else {
-        showAppAlert(t("common.info"), t("auth.social.googleMobileOnly"));
-      }
-      return;
-    }
-    try {
-      setLoading(true);
-      await GoogleSignin.hasPlayServices();
-      const userInfo: any = await GoogleSignin.signIn();
-      let idToken = userInfo?.data?.idToken || userInfo?.idToken;
-      if (!idToken && userInfo?.type !== "cancelled") {
-        // iOS'ta ilk denemede signIn bazen idToken döndürmüyor; getTokens ile telafi et
-        try {
-          const tokens: any = await GoogleSignin.getTokens();
-          idToken = tokens?.idToken || null;
-        } catch {
-          // getTokens da başarısızsa aşağıdaki uyarı gösterilecek
-        }
-      }
-      if (idToken) {
-        await useAuthStore.getState().socialLogin("GOOGLE", idToken);
-        const user = useAuthStore.getState().user;
-        router.replace(getPostAuthRoute(user));
-      } else if (userInfo?.type !== "cancelled") {
-        // idToken yok: genelde EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID boş/yanlış demektir
-        showAppAlert(
-          t("common.error"),
-          `Google idToken alınamadı. Web Client ID eksik olabilir.\nwebClientId: "${process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || "(boş)"}"`,
-        );
-      }
-    } catch (e: any) {
-      // Kullanıcı iptal ettiyse sessiz geç
-      if (e?.code === "SIGN_IN_CANCELLED" || e?.code === "-5") return;
-      if (isApiError(e)) {
-        // Backend reddetti (ör. şirket lisansı dolmuş) — anlaşılır mesaj göster
-        showAppAlert(t("common.error"), getLoginErrorMessage(e, t));
-        return;
-      }
-      console.error(e);
-      showAppAlert(
-        t("common.error"),
-        `Google giriş hatası\ncode: ${e?.code ?? "?"}\nmessage: ${e?.message ?? String(e)}`,
-      );
+      const signedIn = await signInWithSocial(provider, t);
+      if (!signedIn) return;
+      router.replace(getPostAuthRoute(useAuthStore.getState().user));
     } finally {
       setLoading(false);
     }
@@ -270,10 +149,10 @@ export function LoginScreen() {
       </View>
 
       <View style={styles.socialRow}>
-        <Pressable style={styles.socialBtn} onPress={handleGoogleLogin}>
+        <Pressable style={styles.socialBtn} onPress={() => handleSocialLogin("GOOGLE")}>
           <MaterialCommunityIcons color="#FFFFFF" name="google" size={22} />
         </Pressable>
-        <Pressable style={styles.socialBtn} onPress={handleAppleLogin}>
+        <Pressable style={styles.socialBtn} onPress={() => handleSocialLogin("APPLE")}>
           <MaterialCommunityIcons color="#FFFFFF" name="apple" size={22} />
         </Pressable>
       </View>

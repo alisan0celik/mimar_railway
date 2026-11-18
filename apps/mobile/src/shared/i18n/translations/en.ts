@@ -660,6 +660,10 @@ export const en = {
       appleMobileOnly: "Sign in with Apple is only supported on mobile devices.",
       googleMobileOnly: "Sign in with Google is only supported on mobile devices.",
       microsoftNotConfigured: "Microsoft sign-in requires an application client ID.",
+      orSignUp: "or sign up with",
+      signUpWithGoogle: "Sign up with Google",
+      signUpWithApple: "Sign up with Apple",
+      termsRequired: "Accept the terms of use and the privacy policy to sign up.",
     },
     forgotPasswordForm: {
       title: "Forgot password",
@@ -1230,17 +1234,13 @@ export const en = {
     },
     welcome: {
       ownerTitle: "{companyName} is ready, welcome!",
-      ownerBody: "5 short steps will get your office set up: logo, first project, team approval, roles and the first finance record. Let's take a quick look at the home screen first.",
+      ownerBody: "The office runs on projects and progress payments. You can finish the setup list in any order.",
       memberTitle: "Welcome to {companyName}!",
-      memberBody: "We'll briefly show you only the sections your role can access. You can skip the tour at any time.",
+      memberBody: "A project is the unit of work. The first time you open a screen you can use, we'll point at the part that matters.",
       roleLabel: "Your role: {role}",
-      start: "Start tour",
+      start: "Continue",
       later: "Later",
       defaultCompany: "the office",
-    },
-    newPermissions: {
-      title: "You have new permissions",
-      body: "Your role was updated. Let's quickly show you the sections you can now access.",
     },
     checklist: {
       title: "Finish setup ({done}/{total})",
@@ -1261,134 +1261,32 @@ export const en = {
       confirmBody: "All tours will be reset. The welcome screen opens again when you return to the home screen.",
     },
     tours: {
-      dashboard: {
-        logo: {
-          title: "Your office",
-          body: "Your office logo appears at the top left. Office managers can change it in settings.",
-        },
-        bell: {
-          title: "Notifications",
-          body: "Join requests, project updates and tasks assigned to you are collected here.",
-        },
-        newProject: {
-          title: "New project",
-          body: "Start a new project in two steps by entering the client and project details.",
-        },
-        projects: {
-          title: "Projects",
-          body: "List, search and filter your office's projects by status.",
-        },
-        finance: {
-          title: "Finance",
-          body: "Track agreed amounts, collections, expenses and profit on one screen.",
-        },
-        pending: {
-          title: "Pending approvals",
-          body: "People who want to join your office are listed here. When approving you pick a role, which decides the screens they can use.",
-        },
-        roles: {
-          title: "Roles and permissions",
-          body: "Review the built-in Office Manager and Office Employee roles and create custom roles such as \"Accounting\" if needed.",
-        },
-        notifications: {
-          title: "Notification history",
-          body: "This shortcut also opens your notifications; you'll find both read and unread ones here.",
-        },
-        tabBar: {
-          title: "Bottom menu",
-          body: "Switch between Home, Projects and, if you have access, Finance with a single tap.",
-        },
-        fab: {
-          title: "Quick add project",
-          body: "The + button in the middle opens project creation from any tab.",
-        },
-        more: {
-          title: "More",
-          body: "Your profile, settings, support and the User Guide live here. You can restart these tours from the User Guide.",
-        },
-      },
       projects: {
-        search: {
-          title: "Search projects",
-          body: "Search by project name, client or the person who created it.",
-        },
-        filters: {
-          title: "Filters",
-          body: "Switch between all, ongoing and completed projects.",
-        },
         card: {
-          title: "Project card",
-          body: "Tap a card to open the project's notes and to-dos. If you have permission, use the menu on the right to edit or complete it.",
+          title: "A project is the unit of work",
+          body: "Each card is one job. Open it for notes, to-dos, and progress payments if you have access.",
         },
       },
       projectDetail: {
         tabs: {
-          title: "Notes and To-dos",
-          body: "Chat with your team in Notes; list tasks in To-dos and tick them off as they're done.",
-        },
-        search: {
-          title: "Search within the project",
-          body: "Quickly search this project's notes and to-dos.",
+          title: "Notes and tasks",
+          body: "Notes are the conversation. To-dos are this project's task list.",
         },
         progress: {
-          title: "Work items and progress payments",
-          body: "Track work item progress and progress payments here.",
+          title: "Work-item progress",
+          body: "How much of each work item is done. Progress payments are this project's money.",
         },
       },
       createProject: {
-        stepper: {
-          title: "Two-step project",
-          body: "Enter the basics first, then review the summary and create the project in step two.",
-        },
-        type: {
-          title: "Project type",
-          body: "Pick the project type. If the job is inspected, you can add the inspection company too.",
-        },
         workItems: {
-          title: "Work items",
-          body: "Pick a ready-made template or tick items one by one. These items are used for progress and payment tracking.",
+          title: "A project is its work items",
+          body: "Pick a template or tick the items. Progress and payments follow this list.",
         },
       },
       finance: {
         summary: {
-          title: "Overview",
-          body: "Total agreed amounts, collections, remaining receivables and profit across all projects.",
-        },
-        add: {
-          title: "Add a finance record",
-          body: "Tap here to enter an agreed amount, a payment or an expense for a project.",
-        },
-        projects: {
-          title: "Finance by project",
-          body: "Projects with finance activity are listed below; tap one for details.",
-        },
-      },
-      pendingUsers: {
-        filters: {
-          title: "Filter requests",
-          body: "View pending and rejected join requests separately.",
-        },
-        approve: {
-          title: "Approving a request",
-          body: "Tap a person to see their details. To approve, you need to choose a role for them.",
-        },
-        roles: {
-          title: "Pick the right role",
-          body: "Office Manager has every permission. Office Employee cannot see finance, member approvals or role management. You can also assign a custom role.",
-        },
-      },
-      roles: {
-        defaults: {
-          title: "Built-in roles",
-          body: "Every office has two built-in roles: Office Manager (all permissions) and Office Employee (everything except finance, member approval and role management).",
-        },
-        custom: {
-          title: "Create a custom role",
-          body: "Create a role such as \"Accounting\" and select only the permissions it needs. The app shows everyone only the screens they're allowed to use.",
-        },
-        assign: {
-          title: "Changing roles",
-          body: "You can change a member's role at any time from their member details.",
+          title: "The payment summary",
+          body: "Agreed, collected, remaining and profit. The money is the sum of the projects.",
         },
       },
     },

@@ -352,24 +352,25 @@ export function ProjectDetailScreen() {
         */}
         {canSeeFinance ? (
           <TourTarget id="projectDetail.progress">
-            <Pressable
-              onPress={() =>
-                router.push({
-                  pathname: "/(main)/projects/[projectId]/progress",
-                  params: { projectId },
-                })
-              }
-              style={styles.progressLink}
-            >
-              <MaterialCommunityIcons color={colors.primary} name="chart-timeline-variant" size={18} />
-              <Text style={styles.progressLinkText}>{t("progress.title")}</Text>
-              <MaterialCommunityIcons color={colors.textMuted} name="chevron-right" size={18} />
-            </Pressable>
+            <View collapsable={false}>
+              <Pressable
+                onPress={() =>
+                  router.push({
+                    pathname: "/(main)/projects/[projectId]/progress",
+                    params: { projectId },
+                  })
+                }
+                style={styles.progressLink}
+              >
+                <MaterialCommunityIcons color={colors.primary} name="chart-timeline-variant" size={18} />
+                <Text style={styles.progressLinkText}>{t("progress.title")}</Text>
+                <MaterialCommunityIcons color={colors.textMuted} name="chevron-right" size={18} />
+              </Pressable>
+            </View>
           </TourTarget>
         ) : null}
 
-        <TourTarget id="projectDetail.search">
-          <View style={styles.searchWrap}>
+        <View style={styles.searchWrap}>
             <MaterialCommunityIcons color={colors.textMuted} name="magnify" size={20} style={styles.searchIcon} />
             <TextInput
               onChangeText={setQuery}
@@ -383,8 +384,7 @@ export function ProjectDetailScreen() {
                 <MaterialCommunityIcons color={colors.textMuted} name="close-circle" size={18} />
               </Pressable>
             ) : null}
-          </View>
-        </TourTarget>
+        </View>
 
         {searchResults !== null ? (
           <View style={styles.searchResults}>
@@ -414,7 +414,7 @@ export function ProjectDetailScreen() {
           </View>
         ) : (
           <TourTarget id="projectDetail.tabs">
-            <View style={styles.tabs}>
+            <View collapsable={false} style={styles.tabs}>
               {tabItems.map((tab) => (
                 <Pressable
                   key={tab.key}

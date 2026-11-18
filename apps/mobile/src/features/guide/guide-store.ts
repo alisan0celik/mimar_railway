@@ -10,20 +10,20 @@ import {
   pushRemoteState,
   saveLocalState,
 } from "./guide-storage";
-import { addedPermissions, resolveNewlyUnlockedSteps, resolveTourSteps } from "./tour-filter";
+import { resolveTourSteps } from "./tour-filter";
 import { TOURS } from "./tours";
-import type { ChecklistItemId, OnboardingState, ResolvedStep, TourId } from "./types";
+import type { ChecklistItemId, GuideScreenId, OnboardingState, ResolvedStep, TourId } from "./types";
 
 export type GuideQueueItem =
   | {
       kind: "tour";
-      id: TourId | "newPermissions";
+      id: TourId;
       /** Öğenin ait olduğu ekran; ekran odaktan çıkınca öğe düşürülür. */
-      screen: TourId;
+      screen: GuideScreenId;
       steps: ResolvedStep[];
       persistSeen: boolean;
     }
-  | { kind: "welcome"; id: "welcome"; screen: TourId };
+  | { kind: "welcome"; id: "welcome"; screen: GuideScreenId };
 
 type GuideState = {
   userId: string | null;
@@ -34,7 +34,7 @@ type GuideState = {
   /** Etkin turda en az bir adım gerçekten gösterildi mi. */
   activeDisplayed: boolean;
   queue: GuideQueueItem[];
-  focusedScreens: TourId[];
+  focusedScreens: GuideScreenId[];
   armedTourId: TourId | null;
 };
 
@@ -53,12 +53,6 @@ const initialState: GuideState = {
 };
 
 export const useGuideStore = create<GuideState>(() => ({ ...initialState }));
-
-const NEW_PERMISSIONS_INTRO: ResolvedStep = {
-  id: "intro",
-  titleKey: "guide.newPermissions.title",
-  bodyKey: "guide.newPermissions.body",
-};
 
 function eligibleUser(): UserDTO | null {
   const user = useAuthStore.getState().user;
@@ -159,7 +153,11 @@ function enqueue(item: GuideQueueItem) {
   useGuideStore.setState({ active: item, activeIndex: 0, activeDisplayed: false });
 }
 
-export function setScreenFocused(screen: TourId, focused: boolean): void {
+function stepSeenKey(tourId: TourId, stepId: string): string {
+  return `${tourId}.${stepId}`;
+}
+
+export function setScreenFocused(screen: GuideScreenId, focused: boolean): void {
   const state = useGuideStore.getState();
   if (focused) {
     if (!state.focusedScreens.includes(screen)) {
@@ -186,67 +184,24 @@ export function requestTour(tourId: TourId, options: RequestOptions = {}): void 
   const armed = state.armedTourId === tourId;
   if (armed) useGuideStore.setState({ armedTourId: null });
   const force = options.force || armed;
-
-  const seenVersion = state.data.seenTours[tourId] ?? 0;
-  if (!force && seenVersion >= TOURS[tourId].version) return;
   if (isPending(tourId)) return;
 
-  const steps = resolveTourSteps(tourId, guideUser(user));
+  const version = TOURS[tourId].version;
+  const resolved = resolveTourSteps(tourId, guideUser(user));
+  const steps = force
+    ? resolved
+    : resolved.filter((step) => (state.data.seenTours[stepSeenKey(tourId, step.id)] ?? 0) < version);
   if (steps.length === 0) return;
 
   enqueue({ kind: "tour", id: tourId, screen: tourId, steps, persistSeen: true });
 }
 
-/**
- * Rol değişince yeni açılan özellikleri tanıtır. İlk çalıştırmada yalnızca
- * mevcut izinleri kaydeder; izin kaldırıldığında hiçbir şey göstermez.
- */
-function checkNewPermissions(user: UserDTO) {
-  const { data } = useGuideStore.getState();
-  const known = data.knownPermissions;
-  const current = user.permissions ?? [];
-
-  if (known.length === 0) {
-    if (current.length > 0) updateData((d) => ({ ...d, knownPermissions: [...current] }));
-    return;
-  }
-
-  const added = addedPermissions(known, current);
-  const removed = addedPermissions(current, known);
-  if (added.length === 0 && removed.length === 0) return;
-
-  updateData((d) => ({ ...d, knownPermissions: [...current] }));
-  if (added.length === 0) return;
-
-  const steps = resolveNewlyUnlockedSteps(known, guideUser(user));
-  if (steps.length === 0 || isPending("newPermissions")) return;
-  enqueue({
-    kind: "tour",
-    id: "newPermissions",
-    screen: "dashboard",
-    steps: [NEW_PERMISSIONS_INTRO, ...steps],
-    persistSeen: false,
-  });
-}
-
-/** Ana sayfa odaklandığında: karşılama, yeni yetkiler ve ana sayfa turu. */
-export function requestDashboardOnboarding(): void {
+/** Ana sayfa ilk kez açıldığında yalnızca karşılama. Ekran turu başlatmaz. */
+export function requestWelcome(): void {
   const state = useGuideStore.getState();
-  if (!state.hydrated) return;
-  const user = eligibleUser();
-  if (!user) return;
-
-  if (!state.data.welcomeSeen) {
-    const current = user.permissions ?? [];
-    if (current.join(",") !== state.data.knownPermissions.join(",")) {
-      updateData((d) => ({ ...d, knownPermissions: [...current] }));
-    }
-    if (!isPending("welcome")) enqueue({ kind: "welcome", id: "welcome", screen: "dashboard" });
-    return;
-  }
-
-  checkNewPermissions(user);
-  requestTour("dashboard");
+  if (!state.hydrated || state.data.welcomeSeen) return;
+  if (!eligibleUser() || isPending("welcome")) return;
+  enqueue({ kind: "welcome", id: "welcome", screen: "dashboard" });
 }
 
 /** Kurulum listesinden açılan ekranda tur, daha önce görülmüş olsa da başlar. */
@@ -276,10 +231,14 @@ export function finishActiveTour(): void {
   const { active, activeDisplayed, queue } = useGuideStore.getState();
   if (!active) return;
   if (active.kind === "tour" && active.persistSeen && activeDisplayed) {
-    const tourId = active.id as TourId;
+    const tourId = active.id;
+    const version = TOURS[tourId].version;
+    const seenSteps = Object.fromEntries(
+      active.steps.map((step) => [stepSeenKey(tourId, step.id), version]),
+    );
     updateData((d) => ({
       ...d,
-      seenTours: { ...d.seenTours, [tourId]: TOURS[tourId].version },
+      seenTours: { ...d.seenTours, ...seenSteps },
     }));
   }
   activateNext(queue);
@@ -288,15 +247,10 @@ export function finishActiveTour(): void {
 export function acceptWelcome(): void {
   updateData((d) => ({ ...d, welcomeSeen: true }));
   activateNext(useGuideStore.getState().queue);
-  requestTour("dashboard", { force: true });
 }
 
 export function postponeWelcome(): void {
-  updateData((d) => ({
-    ...d,
-    welcomeSeen: true,
-    seenTours: { ...d.seenTours, dashboard: TOURS.dashboard.version },
-  }));
+  updateData((d) => ({ ...d, welcomeSeen: true }));
   activateNext(useGuideStore.getState().queue);
 }
 

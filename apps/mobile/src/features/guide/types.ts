@@ -15,14 +15,10 @@ export type TourStep = {
   audience?: TourAudience;
 };
 
-export type TourId =
-  | "dashboard"
-  | "projects"
-  | "projectDetail"
-  | "createProject"
-  | "finance"
-  | "pendingUsers"
-  | "roles";
+export type TourId = "projects" | "projectDetail" | "createProject" | "finance";
+
+/** Karşılama ana sayfada açılır; ana sayfanın kendi turu yoktur. */
+export type GuideScreenId = TourId | "dashboard";
 
 export type Tour = {
   id: TourId;

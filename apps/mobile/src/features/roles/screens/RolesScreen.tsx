@@ -20,7 +20,7 @@ import { useThemeColors } from "../../../shared/theme/ThemeProvider";
 import { AppButton, ConfirmDialog, DesignBackHeader, EmptyState, NoPermissionState, Screen, showAppAlert } from "../../../shared/ui";
 import { initials } from "../../../shared/utils/initials";
 import { roleLabel } from "../../../shared/utils/roleLabel";
-import { markChecklistDone, TourTarget, useScreenTour } from "../../guide";
+import { markChecklistDone } from "../../guide";
 
 type RolesScreenProps = {
   pendingUserId?: string;
@@ -95,7 +95,6 @@ export function RolesScreen({ pendingUserId }: RolesScreenProps) {
   }, [fetchRoles]);
 
   const browsingRoles = canViewRoles && !approvalMode;
-  useScreenTour("roles", { enabled: browsingRoles && !loading });
   useEffect(() => {
     if (browsingRoles) markChecklistDone("roles");
   }, [browsingRoles]);
@@ -169,8 +168,7 @@ export function RolesScreen({ pendingUserId }: RolesScreenProps) {
           title={t("roles.approveFlow.emptyTitle")}
         />
       ) : (
-        <TourTarget id="roles.list">
-          <View style={styles.list}>
+        <View style={styles.list}>
             {assignableRoles.map((role, idx) => (
               <Pressable
                 key={role.id}
@@ -200,13 +198,10 @@ export function RolesScreen({ pendingUserId }: RolesScreenProps) {
               </Pressable>
             ))}
           </View>
-        </TourTarget>
       )}
 
       {canCreateRole ? (
-        <TourTarget id="roles.create">
-          <View collapsable={false}>
-            <AppButton
+        <AppButton
               fullWidth
               onPress={() =>
                 router.push({
@@ -217,8 +212,6 @@ export function RolesScreen({ pendingUserId }: RolesScreenProps) {
               style={styles.addBtn}
               title={`+ ${approvalMode ? t("roles.approveFlow.createAndAssign") : t("roles.addRole")}`}
             />
-          </View>
-        </TourTarget>
       ) : null}
 
       <ConfirmDialog

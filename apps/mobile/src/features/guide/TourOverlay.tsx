@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Modal, Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Modal, Platform, Pressable, StatusBar, StyleSheet, Text, View, type LayoutChangeEvent } from "react-native";
+import { initialWindowMetrics, useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path, Rect } from "react-native-svg";
 
 import { useTranslation } from "../../shared/i18n";
@@ -17,10 +17,11 @@ import {
 } from "./guide-store";
 import { getTourTarget, measureNode, type TargetRect } from "./tour-targets";
 
-const SPOTLIGHT_PADDING = 6;
-const SPOTLIGHT_RADIUS = 14;
-const CARD_GAP = 12;
+const SPOTLIGHT_PADDING = 12;
+const SPOTLIGHT_RADIUS = 18;
+const CARD_GAP = 16;
 const CARD_MAX_WIDTH = 380;
+const CARD_ESTIMATE = 168;
 /** Alt sekme çubuğu ve kartın sığması için hedefin altında bırakılan pay. */
 const BOTTOM_RESERVE = 96;
 const SCROLL_SETTLE_MS = 380;
@@ -48,6 +49,42 @@ function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/**
+ * Edge-to-edge Android'de ekrandaki öğenin `measureInWindow` Y değeri,
+ * `statusBarTranslucent` Modal'ın çizim orijininden durum çubuğu kadar küçüktür.
+ * iOS ve web aynı pencerede ölçülür; kaydırma gerekmez.
+ */
+function androidModalTopOffset(): number {
+  if (Platform.OS !== "android") return 0;
+  return initialWindowMetrics?.insets.top ?? StatusBar.currentHeight ?? 0;
+}
+
+/** Hedefin pencere konumunu, tam ekran Modal'ın yerel koordinatına çevirir. */
+function toModalRect(measured: TargetRect, layout: Layout): TargetRect {
+  const topInset = androidModalTopOffset();
+  const originIsStatusBar = topInset > 0 && Math.abs(layout.y - topInset) <= 1;
+  const y = originIsStatusBar ? measured.y : measured.y - layout.y + (layout.y === 0 ? topInset : 0);
+  return {
+    x: measured.x - layout.x,
+    y,
+    width: measured.width,
+    height: measured.height,
+  };
+}
+
+/** Kartı deliğin üstüne bindirmeden, daha geniş boşluğa yerleştirir. */
+function cardTop(layoutHeight: number, rect: TargetRect, cardHeight: number): number {
+  const height = cardHeight > 0 ? cardHeight : CARD_ESTIMATE;
+  const holeTop = rect.y - SPOTLIGHT_PADDING;
+  const holeBottom = rect.y + rect.height + SPOTLIGHT_PADDING;
+  const belowTop = holeBottom + CARD_GAP;
+  const aboveTop = holeTop - CARD_GAP - height;
+  const spaceBelow = layoutHeight - belowTop;
+  const spaceAbove = holeTop - CARD_GAP;
+  if (spaceBelow >= spaceAbove) return Math.max(spacing.md, belowTop);
+  return Math.max(spacing.md, aboveTop);
+}
+
 export function TourOverlay() {
   const active = useGuideStore((s) => s.active);
   const index = useGuideStore((s) => s.activeIndex);
@@ -63,6 +100,7 @@ function TourStepOverlay({ tour, index }: { tour: TourItem; index: number }) {
   const [layout, setLayout] = useState<Layout | null>(null);
   const [rect, setRect] = useState<TargetRect | null>(null);
   const [readyIndex, setReadyIndex] = useState<number | null>(null);
+  const [cardHeight, setCardHeight] = useState(0);
   const rootRef = useRef<View>(null);
   const previousIndexRef = useRef(index);
 
@@ -119,12 +157,7 @@ function TourStepOverlay({ tour, index }: { tour: TourItem; index: number }) {
         }
       }
 
-      show({
-        x: measured.x - layout.x,
-        y: measured.y - layout.y,
-        width: measured.width,
-        height: measured.height,
-      });
+      show(toModalRect(measured, layout));
     };
 
     void resolveStep();
@@ -134,31 +167,28 @@ function TourStepOverlay({ tour, index }: { tour: TourItem; index: number }) {
   }, [index, layout, step, insets.top, insets.bottom]);
 
   const handleLayout = (event: LayoutChangeEvent) => {
-    const { width, height } = event.nativeEvent.layout;
+    const { width: layoutWidth, height: layoutHeight } = event.nativeEvent.layout;
     const node = rootRef.current;
     if (!node) return;
-    node.measureInWindow((x, y) => {
-      setLayout({ x: x || 0, y: y || 0, width, height });
+    node.measureInWindow((x, y, measuredWidth, measuredHeight) => {
+      setLayout({
+        x: x || 0,
+        y: y || 0,
+        width: measuredWidth > 0 ? measuredWidth : layoutWidth,
+        height: measuredHeight > 0 ? measuredHeight : layoutHeight,
+      });
     });
   };
 
   const ready = readyIndex === index && layout !== null;
   const isLast = index >= total - 1;
   const cardWidth = layout ? Math.min(layout.width - spacing.lg * 2, CARD_MAX_WIDTH) : CARD_MAX_WIDTH;
-
-  let cardPosition: { top?: number; bottom?: number } = {};
-  if (layout && rect) {
-    const targetCenter = rect.y + rect.height / 2;
-    if (targetCenter < layout.height / 2) {
-      cardPosition = { top: rect.y + rect.height + SPOTLIGHT_PADDING + CARD_GAP };
-    } else {
-      cardPosition = { bottom: layout.height - rect.y + SPOTLIGHT_PADDING + CARD_GAP };
-    }
-  }
+  const anchoredTop = layout && rect ? cardTop(layout.height, rect, cardHeight) : undefined;
 
   return (
     <Modal
       animationType="fade"
+      navigationBarTranslucent
       onRequestClose={finishActiveTour}
       statusBarTranslucent
       transparent
@@ -191,17 +221,25 @@ function TourStepOverlay({ tour, index }: { tour: TourItem; index: number }) {
           <View
             style={[
               styles.cardSlot,
-              rect
-                ? cardPosition
+              anchoredTop !== undefined
+                ? { top: anchoredTop }
                 : [styles.cardCentered, { paddingTop: insets.top, paddingBottom: insets.bottom }],
             ]}
             pointerEvents="box-none"
           >
-            <View accessibilityViewIsModal style={[styles.card, { width: cardWidth }]}>
+            <View
+              accessibilityViewIsModal
+              onLayout={(event) => setCardHeight(event.nativeEvent.layout.height)}
+              style={[styles.card, { width: cardWidth }]}
+            >
               <View style={styles.cardHeader}>
-                <Text style={styles.counter}>
-                  {t("guide.controls.counter", { current: index + 1, total })}
-                </Text>
+                {total > 1 ? (
+                  <Text style={styles.counter}>
+                    {t("guide.controls.counter", { current: index + 1, total })}
+                  </Text>
+                ) : (
+                  <View />
+                )}
                 <Pressable accessibilityRole="button" hitSlop={8} onPress={finishActiveTour}>
                   <Text style={styles.skip}>{t("guide.controls.skip")}</Text>
                 </Pressable>

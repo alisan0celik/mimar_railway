@@ -13,7 +13,7 @@ import { NoPermissionState, Screen, SearchInput } from "../../../shared/ui";
 import { DesignSectionTitle } from "../../../shared/ui/DesignSectionTitle";
 import { FinanceProjectCard } from "../components/FinanceProjectCard";
 import { FinanceSummaryCard } from "../components/FinanceSummaryCard";
-import { TourTarget, useScreenTour } from "../../guide";
+import { useScreenTour } from "../../guide";
 
 export function FinanceScreen() {
   const styles = useThemedStyles(createStyles);
@@ -72,23 +72,17 @@ export function FinanceScreen() {
         value={searchValue}
       />
 
-      <TourTarget id="finance.summary">
-        <View collapsable={false}>
-          <FinanceSummaryCard
-            onAddFinance={() => router.push("/(main)/finance/edit")}
-            totalAgreedAmount={global.totalAgreedAmount}
-            totalProfitAmount={global.totalProfitAmount}
-            totalReceivedAmount={global.totalReceivedAmount}
-            totalRemainingAmount={global.totalRemainingAmount}
-          />
-        </View>
-      </TourTarget>
+      <FinanceSummaryCard
+        onAddFinance={() => router.push("/(main)/finance/edit")}
+        totalAgreedAmount={global.totalAgreedAmount}
+        totalProfitAmount={global.totalProfitAmount}
+        totalReceivedAmount={global.totalReceivedAmount}
+        totalRemainingAmount={global.totalRemainingAmount}
+      />
 
-      <TourTarget id="finance.projects">
-        <View style={styles.headerRow}>
-          <DesignSectionTitle title={t("finance.projectsSection")} />
-        </View>
-      </TourTarget>
+      <View style={styles.headerRow}>
+        <DesignSectionTitle title={t("finance.projectsSection")} />
+      </View>
 
       {isLoading ? (
         <View style={styles.loading}>

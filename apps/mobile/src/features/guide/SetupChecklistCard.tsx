@@ -19,7 +19,6 @@ import { useAuthStore } from "../../store/authStore";
 import { useFinanceStore } from "../../store/financeStore";
 import { useProjectStore } from "../../store/projectStore";
 import { armTour, dismissChecklist, useGuideStore } from "./guide-store";
-import { isCompanyOwner } from "./tour-filter";
 import { SETUP_CHECKLIST } from "./tours";
 import type { ChecklistItem, ChecklistItemId } from "./types";
 
@@ -41,7 +40,7 @@ const EMPTY_PROGRESS: DerivedProgress = {
 };
 
 /**
- * Yalnızca şirket sahibine gösterilen kurulum listesi. Maddeler mümkün olduğunca
+ * İzni olan kurulum maddelerini gösterir. Maddeler mümkün olduğunca
  * cihazdaki önbellekten türetilir; çevrimdışında sessizce eldeki veriyle kalır.
  */
 export function SetupChecklistCard({ hasLogo }: SetupChecklistCardProps) {
@@ -57,15 +56,14 @@ export function SetupChecklistCard({ hasLogo }: SetupChecklistCardProps) {
   const financeSummaries = useFinanceStore((s) => s.summaries);
   const [derived, setDerived] = useState<DerivedProgress>(EMPTY_PROGRESS);
 
-  const isOwner = isCompanyOwner(user);
   const companyId = user?.companyId ?? null;
   const permissions = user?.permissions ?? [];
-  const visible = hydrated && isOwner && !dismissed && Boolean(companyId);
-
   const items = useMemo(
     () => SETUP_CHECKLIST.filter((item) => permissions.includes(item.requires)),
     [permissions],
   );
+  const visible = hydrated && !dismissed && Boolean(companyId) && items.length > 0;
+  const tracksApprovals = permissions.includes("user.approve");
 
   useFocusEffect(
     useCallback(() => {
@@ -84,7 +82,7 @@ export function SetupChecklistCard({ hasLogo }: SetupChecklistCardProps) {
           hasFinance: cachedFinance?.projects?.some(hasFinanceActivity) ?? false,
         }));
 
-        if (checklistDone.approve) return;
+        if (checklistDone.approve || !tracksApprovals) return;
         try {
           // Tek kayıtlık sayfa; sadece toplam sayı için.
           const page = await fetchWithReadCache(`guide:approved-members:${companyId}`, async () =>
@@ -102,7 +100,7 @@ export function SetupChecklistCard({ hasLogo }: SetupChecklistCardProps) {
       return () => {
         cancelled = true;
       };
-    }, [visible, companyId, checklistDone.approve]),
+    }, [visible, companyId, checklistDone.approve, tracksApprovals]),
   );
 
   if (!visible || items.length === 0) return null;

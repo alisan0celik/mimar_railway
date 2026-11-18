@@ -8,6 +8,7 @@ import { radius, spacing, typography } from "../../../shared/theme";
 import { useThemedStyles, type AppColors } from "../../../shared/theme";
 import { useThemeColors } from "../../../shared/theme/ThemeProvider";
 import { getPostAuthRoute } from "../utils/post-auth-route";
+import { signInWithSocial, type SocialProvider } from "../utils/social-sign-in";
 import { authApi } from "../../../services/api/auth.api";
 import { useTranslation } from "../../../shared/i18n";
 import {
@@ -32,6 +33,7 @@ export function RegisterScreen() {
   const [password, setPassword] = useState("");
   const [passwordRepeat, setPasswordRepeat] = useState("");
   const [agreed, setAgreed] = useState(false);
+  const [termsError, setTermsError] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordRepeat, setShowPasswordRepeat] = useState(false);
@@ -59,6 +61,22 @@ export function RegisterScreen() {
   const isPasswordValid = hasMinLength && hasUpperCase && hasLowerCase && hasNumber && hasSymbol;
 
   const isValid = isFullNameValid && isEmailValid && isPasswordValid && passwordsMatch && agreed;
+
+  const handleSocialSignUp = async (provider: SocialProvider) => {
+    if (!agreed) {
+      setTermsError(true);
+      return;
+    }
+    setLoading(true);
+    setApiError(undefined);
+    try {
+      const signedIn = await signInWithSocial(provider, t);
+      if (!signedIn) return;
+      router.replace(getPostAuthRoute(useAuthStore.getState().user));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const onFullNameBlur = () => {
     if (fullName.trim().length > 0 && fullName.trim().length <= 2) {
@@ -248,11 +266,23 @@ export function RegisterScreen() {
           />
         </View>
 
-        <Pressable onPress={() => setAgreed((v) => !v)} style={styles.checkboxRow}>
+        <Pressable
+          onPress={() => {
+            setAgreed((v) => !v);
+            setTermsError(false);
+          }}
+          style={styles.checkboxRow}
+        >
           <MaterialCommunityIcons
             name={agreed ? "checkbox-marked" : "checkbox-blank-outline"}
             size={22}
-            color={agreed ? colors.primaryLight : "rgba(255,255,255,0.45)"}
+            color={
+              termsError && !agreed
+                ? colors.danger
+                : agreed
+                  ? colors.primaryLight
+                  : "rgba(255,255,255,0.45)"
+            }
           />
           <Text style={styles.checkboxText}>
             {t("auth.termsAgree.prefix")}
@@ -266,6 +296,9 @@ export function RegisterScreen() {
             {t("auth.termsAgree.suffix")}
           </Text>
         </Pressable>
+        {termsError && !agreed ? (
+          <Text style={styles.termsError}>{t("auth.social.termsRequired")}</Text>
+        ) : null}
 
         <AppButton
           disabled={!isValid}
@@ -302,6 +335,41 @@ export function RegisterScreen() {
           style={styles.submitButton}
           title={t("auth.register")}
         />
+
+        <View style={styles.dividerRow}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>{t("auth.social.orSignUp")}</Text>
+          <View style={styles.dividerLine} />
+        </View>
+
+        <View style={styles.socialStack}>
+          <Pressable
+            accessibilityRole="button"
+            disabled={loading}
+            onPress={() => handleSocialSignUp("GOOGLE")}
+            style={({ pressed }) => [
+              styles.socialBtn,
+              pressed && styles.socialBtnPressed,
+              loading && styles.socialBtnBusy,
+            ]}
+          >
+            <MaterialCommunityIcons color="#FFFFFF" name="google" size={20} />
+            <Text style={styles.socialLabel}>{t("auth.social.signUpWithGoogle")}</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            disabled={loading}
+            onPress={() => handleSocialSignUp("APPLE")}
+            style={({ pressed }) => [
+              styles.socialBtn,
+              pressed && styles.socialBtnPressed,
+              loading && styles.socialBtnBusy,
+            ]}
+          >
+            <MaterialCommunityIcons color="#FFFFFF" name="apple" size={22} />
+            <Text style={styles.socialLabel}>{t("auth.social.signUpWithApple")}</Text>
+          </Pressable>
+        </View>
       </AuthFormCard>
 
       <View style={styles.footer}>
@@ -381,6 +449,53 @@ function createStyles(colors: AppColors) {
     },
     submitButton: {
       marginTop: spacing.sm,
+    },
+    termsError: {
+      ...typography.caption,
+      color: colors.danger,
+      marginTop: spacing.xs,
+    },
+    dividerRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.md,
+      marginTop: spacing.lg,
+    },
+    dividerLine: {
+      flex: 1,
+      height: 1,
+      backgroundColor: "rgba(255,255,255,0.15)",
+    },
+    dividerText: {
+      ...typography.caption,
+      color: "rgba(255,255,255,0.45)",
+    },
+    socialStack: {
+      gap: spacing.sm,
+      marginTop: spacing.md,
+    },
+    socialBtn: {
+      minHeight: 48,
+      borderRadius: radius.lg,
+      backgroundColor: "rgba(255,255,255,0.06)",
+      borderWidth: 1,
+      borderColor: "rgba(255,255,255,0.16)",
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: spacing.sm,
+      paddingHorizontal: spacing.md,
+    },
+    socialBtnPressed: {
+      backgroundColor: "rgba(255,255,255,0.12)",
+    },
+    socialBtnBusy: {
+      opacity: 0.6,
+    },
+    socialLabel: {
+      ...typography.body,
+      color: "#FFFFFF",
+      fontWeight: "700",
     },
     footer: {
       marginTop: spacing.lg,
