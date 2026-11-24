@@ -173,6 +173,14 @@ export type ProjectDTO = {
   startDate: string | null;
   endDate: string | null;
   budget: number | null;
+  /** Kamu ihalesi bilgileri (belediye modu); eski sunucular göndermez. */
+  tenderNumber?: string | null;
+  contractDate?: string | null;
+  siteDeliveryDate?: string | null;
+  workDurationDays?: number | null;
+  extensionDays?: number | null;
+  provisionalAcceptanceDate?: string | null;
+  finalAcceptanceDate?: string | null;
   companyId: string;
   createdById: string;
   sections: ProjectSectionDTO[];
@@ -199,6 +207,14 @@ export type CreateProjectDTO = {
   startDate?: string;
   endDate?: string;
   budget?: number;
+  /** Kamu ihalesi bilgileri; `null` alanı temizler, gönderilmeyen alan değişmez. */
+  tenderNumber?: string | null;
+  contractDate?: string | null;
+  siteDeliveryDate?: string | null;
+  workDurationDays?: number | null;
+  extensionDays?: number | null;
+  provisionalAcceptanceDate?: string | null;
+  finalAcceptanceDate?: string | null;
   /** Açılışta oluşturulacak imalat kalemleri; boş bırakılırsa şirket şablonu. */
   workItems?: string[];
 };

@@ -103,6 +103,20 @@ export const municipality: Record<Language, TranslationTree> = {
         },
       },
     },
+    support: {
+      guide: {
+        sections: {
+          progress: {
+            steps:
+              "Proje detayının üstündeki İmalat ve Hakediş bağlantısına girin.|Sözleşmeyi imalat kalemlerine bölün ve her kaleme sözleşmedeki bedelini yazın.|Sık kullandığınız kalemleri yıldızlayın; sonraki projeleriniz o kalemlerle açılır.|Hakediş Ödeme'ye basın; tutar alanı kalemin kalan bedeliyle dolu gelir. Kısmi hakediş için tutarı değiştirip Öde'ye basın.|Her hakediş kalemin kalan bedelinden düşer; bir kaleme bedelinden fazla ödeme yapılamaz.|İş artışı, fiyat farkı gibi kalemlere bağlı olmayan tutarları İş Artışı ve Diğer Kalemler bölümüne ekleyin; sözleşme toplamına girer.|Ödenen hakediş finansa yükleniciye ödeme olarak kendiliğinden işlenir.|Bir kalemi silerseniz o kalemden kesilmiş hakedişler ve bunların finans kayıtları da silinir.|Bu ekranı yalnızca finans yetkisi olanlar görür.",
+          },
+          finance: {
+            steps:
+              "Finans sekmesinden proje bazlı özetleri inceleyin: sözleşme bedeli, ödenen ve kalan ödeme.|İmalat ve Hakediş ekranında bir kaleme bedel girdiğinizde proje finansa kendiliğinden eklenir; Finans Oluştur gerekmez.|Yetkiniz varsa yükleniciye ödeme ve diğer gider kaydı ekleyin.|Proje detayından işlem geçmişine ulaşın.",
+          },
+        },
+      },
+    },
     guide: {
       welcome: {
         ownerBody:
@@ -208,6 +222,20 @@ export const municipality: Record<Language, TranslationTree> = {
         remove: {
           label: "Remove from Department",
           description: "Can remove approved members from the department",
+        },
+      },
+    },
+    support: {
+      guide: {
+        sections: {
+          progress: {
+            steps:
+              "Open the Work Items and Billing link at the top of the project detail.|Split the contract into work items and give each one its contract value.|Star the ones you use often; later projects open with them.|Tap Record Payment; the amount comes filled with what is left of the item. Change it for a partial bill, then tap Pay.|Each payment comes off what is left of the item; an item can't be paid beyond its value.|Put variations and price escalation under Variations and Other Items; they count towards the contract total.|Paid progress payments are recorded in finance as payments to the contractor.|Deleting an item also deletes the progress payments billed from it and their finance entries.|Only people with finance rights can see this screen.",
+          },
+          finance: {
+            steps:
+              "Review project summaries in the Finance tab: contract value, paid and left to pay.|A project appears in Finance on its own once you give one of its items a value under Work Items and Billing; no need to Create Finance.|Record payments to the contractor and other expenses if permitted.|Open transaction history from project detail.",
+          },
         },
       },
     },

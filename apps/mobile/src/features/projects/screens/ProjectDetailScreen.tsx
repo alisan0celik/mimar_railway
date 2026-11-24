@@ -34,6 +34,9 @@ import {
 import { useTranslation, useLocaleCode } from "../../../shared/i18n";
 import { PERMISSIONS, useCan } from "../../../shared/permissions";
 import { TourTarget, useScreenTour } from "../../guide";
+import { useIsMunicipality } from "../../../store/sectorStore";
+import { DeadlineBadge } from "../components/DeadlineBadge";
+import { deadlineStatus } from "../utils/contractDeadline";
 
 type TabKey = "notes" | "todos";
 
@@ -77,6 +80,7 @@ export function ProjectDetailScreen() {
   const colors = useThemeColors();
   const router = useRouter();
   const canSeeFinance = useCan(PERMISSIONS.FINANCE_VIEW);
+  const isMunicipality = useIsMunicipality();
   const params = useLocalSearchParams<{ projectId?: string; tab?: string }>();
   const projectId = params.projectId ?? "";
   const initialTab: TabKey =
@@ -368,6 +372,24 @@ export function ProjectDetailScreen() {
               </Pressable>
             </View>
           </TourTarget>
+        ) : null}
+
+        {/* Belediye modunda işin ihale bilgileri ve kalan süresi. */}
+        {isMunicipality ? (
+          <Pressable
+            onPress={() =>
+              router.push({
+                pathname: "/(main)/projects/[projectId]/tender",
+                params: { projectId },
+              })
+            }
+            style={styles.progressLink}
+          >
+            <MaterialCommunityIcons color={colors.primary} name="file-sign" size={18} />
+            <Text style={styles.progressLinkText}>{t("projects.tender.title")}</Text>
+            <DeadlineBadge status={deadlineStatus(project)} />
+            <MaterialCommunityIcons color={colors.textMuted} name="chevron-right" size={18} />
+          </Pressable>
         ) : null}
 
         <View style={styles.searchWrap}>

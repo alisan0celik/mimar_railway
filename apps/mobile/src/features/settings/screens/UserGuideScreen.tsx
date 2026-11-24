@@ -5,7 +5,8 @@ import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { resetTours } from "../../guide";
 import { USER_GUIDE_VIDEO_URL } from "../constants/support.constants";
-import { USER_GUIDE_SECTION_IDS } from "../data/faqContent";
+import { MUNICIPALITY_ONLY_GUIDE_SECTIONS, USER_GUIDE_SECTION_IDS } from "../data/faqContent";
+import { useIsMunicipality } from "../../../store/sectorStore";
 import { useTranslation } from "../../../shared/i18n";
 import { radius, spacing, typography } from "../../../shared/theme";
 import { useThemedStyles, type AppColors } from "../../../shared/theme";
@@ -19,14 +20,18 @@ export function UserGuideScreen() {
   const router = useRouter();
   const [confirmReset, setConfirmReset] = useState(false);
 
+  const isMunicipality = useIsMunicipality();
+
   const sections = useMemo(
     () =>
-      USER_GUIDE_SECTION_IDS.map((id) => ({
+      USER_GUIDE_SECTION_IDS.filter(
+        (id) => isMunicipality || !MUNICIPALITY_ONLY_GUIDE_SECTIONS.includes(id),
+      ).map((id) => ({
         id,
         title: t(`support.guide.sections.${id}.title`),
         steps: t(`support.guide.sections.${id}.steps`).split("|"),
       })),
-    [t],
+    [t, isMunicipality],
   );
 
   const handleReplay = () => {
