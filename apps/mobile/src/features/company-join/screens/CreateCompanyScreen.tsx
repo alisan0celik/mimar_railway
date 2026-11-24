@@ -14,7 +14,7 @@ import { useThemeColors } from "../../../shared/theme/ThemeProvider";
 import { AppButton, AppInput, Screen, ScreenHeader, showAppAlert } from "../../../shared/ui";
 import { useAuthStore } from "../../../store/authStore";
 
-const BUSINESS_TYPES: BusinessType[] = ["architecture", "contractor", "both"];
+const BUSINESS_TYPES: BusinessType[] = ["architecture", "contractor", "both", "municipality"];
 
 export function CreateCompanyScreen() {
   const styles = useThemedStyles(createStyles);

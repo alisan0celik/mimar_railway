@@ -782,10 +782,11 @@ export const tr = {
       architecture: "Mimarlık Ofisi",
       contractor: "Müteahhit / Yapım",
       both: "Her İkisi",
+      municipality: "Belediye / Kamu Kurumu",
     },
     createForm: {
       businessType: "İş Kolu",
-      businessTypeHint: "Yeni projelerde önerilecek imalat kalemlerini belirler.",
+      businessTypeHint: "Yeni projelerde önerilecek imalat kalemlerini ve uygulamadaki terimleri belirler.",
       logo: "Şirket Logosu",
       logoHint: "PNG veya JPG (Maks 5MB)",
       name: "Şirket Adı",

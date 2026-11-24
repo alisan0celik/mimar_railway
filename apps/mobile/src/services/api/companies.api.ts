@@ -54,7 +54,7 @@ export interface UpdateCompanySubscriptionInput {
   blockedReason?: string | null;
 }
 
-export type BusinessType = "architecture" | "contractor" | "both";
+export type BusinessType = "architecture" | "contractor" | "both" | "municipality";
 
 export interface CreateCompanyInput {
   name: string;

@@ -22,6 +22,7 @@ import {
 import { FinanceItemsCard } from "../components/FinanceItemsCard";
 import { TransactionCard } from "../components/TransactionCard";
 import { syncFinanceSummaries } from "../utils/syncFinanceSummaries";
+import { useIsMunicipality } from "../../../store/sectorStore";
 
 type FinanceDetailScreenProps = {
   projectId: string;
@@ -31,6 +32,7 @@ export function FinanceDetailScreen({ projectId }: FinanceDetailScreenProps) {
   const styles = useThemedStyles(createStyles);
   const colors = useThemeColors();
   const { t } = useTranslation();
+  const isMunicipality = useIsMunicipality();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const canViewFinance = useCan(PERMISSIONS.FINANCE_VIEW);
@@ -202,11 +204,14 @@ export function FinanceDetailScreen({ projectId }: FinanceDetailScreenProps) {
             value={formatCurrency(finance.remainingAmount)}
             valueStyle={styles.valueDanger}
           />
-          <MetricRow
-            label={t("finance.profit")}
-            value={formatCurrency(finance.profitAmount)}
-            valueStyle={finance.profitAmount >= 0 ? styles.valuePositive : styles.valueDanger}
-          />
+          {/* Belediye ödeyen taraf; kâr satırı anlamsız. */}
+          {isMunicipality ? null : (
+            <MetricRow
+              label={t("finance.profit")}
+              value={formatCurrency(finance.profitAmount)}
+              valueStyle={finance.profitAmount >= 0 ? styles.valuePositive : styles.valueDanger}
+            />
+          )}
         </View>
 
         {finance.overpaymentAmount > 0 ? (

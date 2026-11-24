@@ -782,10 +782,11 @@ export const en = {
       architecture: "Architecture Office",
       contractor: "Contractor",
       both: "Both",
+      municipality: "Municipality / Public Body",
     },
     createForm: {
       businessType: "Line of Work",
-      businessTypeHint: "Sets which work items are suggested for new projects.",
+      businessTypeHint: "Sets which work items are suggested for new projects and the terms the app uses.",
       logo: "Company Logo",
       logoHint: "PNG or JPG (Max 5MB)",
       name: "Company Name",

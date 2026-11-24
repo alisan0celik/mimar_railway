@@ -7,6 +7,7 @@ import { radius, spacing, typography } from "../../../shared/theme";
 import { useThemedStyles, type AppColors } from "../../../shared/theme";
 import { useThemeColors } from "../../../shared/theme/ThemeProvider";
 import { formatCurrency } from "../../../shared/utils";
+import { useIsMunicipality } from "../../../store/sectorStore";
 
 type FinanceItemsCardProps = {
   /** Yalnızca bedeli girilmiş kalemler (`isPricedItem`). */
@@ -26,6 +27,7 @@ export function FinanceItemsCard({ items, onEdit }: FinanceItemsCardProps) {
   const styles = useThemedStyles(createStyles);
   const colors = useThemeColors();
   const { t } = useTranslation();
+  const isMunicipality = useIsMunicipality();
 
   return (
     <View style={styles.wrapper}>
@@ -42,7 +44,8 @@ export function FinanceItemsCard({ items, onEdit }: FinanceItemsCardProps) {
           const isExtra = item.kind === "extra";
           const payable = isExtra && item.costAmount > 0;
           const value = payable ? item.costAmount : item.amount;
-          const showCost = !isExtra && item.costAmount > 0;
+          // Belediyenin taşeronu yok; yüklenicinin maliyeti belediyeyi ilgilendirmiyor.
+          const showCost = !isMunicipality && !isExtra && item.costAmount > 0;
 
           return (
             <View

@@ -7,6 +7,7 @@ import { radius, spacing, typography } from "../../../shared/theme";
 import { useThemedStyles, type AppColors } from "../../../shared/theme";
 import { useThemeColors } from "../../../shared/theme/ThemeProvider";
 import { formatCurrency } from "../../../shared/utils";
+import { useIsMunicipality } from "../../../store/sectorStore";
 
 type FinanceProjectCardProps = {
   finance: FinanceSummaryDTO;
@@ -27,6 +28,7 @@ export function FinanceProjectCard({ finance, onPress }: FinanceProjectCardProps
   const styles = useThemedStyles(createStyles);
   const colors = useThemeColors();
   const { t } = useTranslation();
+  const isMunicipality = useIsMunicipality();
 
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [styles.card, pressed && styles.pressed]}>
@@ -65,14 +67,17 @@ export function FinanceProjectCard({ finance, onPress }: FinanceProjectCardProps
         {finance.hasFinanceSetup ? (
           <Text style={styles.total}>{formatCurrency(finance.agreedAmount)}</Text>
         ) : null}
-        <Text
-          style={[
-            styles.profit,
-            finance.profitAmount >= 0 ? styles.profitPositive : styles.profitNegative,
-          ]}
-        >
-          {t("finance.profit")}: {formatCurrency(finance.profitAmount)}
-        </Text>
+        {/* Belediye ödeyen taraf; kâr satırı anlamsız. */}
+        {isMunicipality ? null : (
+          <Text
+            style={[
+              styles.profit,
+              finance.profitAmount >= 0 ? styles.profitPositive : styles.profitNegative,
+            ]}
+          >
+            {t("finance.profit")}: {formatCurrency(finance.profitAmount)}
+          </Text>
+        )}
         <MaterialCommunityIcons color={colors.textMuted} name="chevron-right" size={22} />
       </View>
     </Pressable>

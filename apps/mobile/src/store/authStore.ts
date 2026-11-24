@@ -16,6 +16,7 @@ import { clearOfflineDatabase } from "../offline/db/database";
 import { clearSyncMetadata } from "../offline/sync/sync-metadata";
 import { hydrateNotificationPrefs } from "./notification-prefs";
 import { tKey } from "../shared/i18n";
+import { sectorOf, useSectorStore } from "./sectorStore";
 import type { UserDTO } from "@mimar/shared";
 
 /** Anahtarlık o an okunamazsa kısa aralıklarla yeniden denenir. */
@@ -205,3 +206,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   clearError: () => set({ error: null }),
 }));
+
+// Kullanıcı değişince (giriş, çıkış, başka şirkete katılma) uygulamanın
+// sektörü de değişsin; belediye modu terimleri buna göre seçiliyor.
+useAuthStore.subscribe((state) => {
+  const sector = sectorOf(state.user?.companyBusinessType);
+  if (useSectorStore.getState().sector !== sector) {
+    useSectorStore.getState().setSector(sector);
+  }
+});

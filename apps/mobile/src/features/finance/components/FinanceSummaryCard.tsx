@@ -8,6 +8,7 @@ import { useThemedStyles, type AppColors } from "../../../shared/theme";
 import { useThemeColors } from "../../../shared/theme/ThemeProvider";
 import { DesignMetricTile } from "../../../shared/ui/DesignMetricTile";
 import { formatCurrency } from "../../../shared/utils";
+import { useIsMunicipality } from "../../../store/sectorStore";
 import { TourTarget } from "../../guide";
 
 type FinanceSummaryCardProps = {
@@ -28,6 +29,7 @@ export function FinanceSummaryCard({
   const styles = useThemedStyles(createStyles);
   const colors = useThemeColors();
   const { t } = useTranslation();
+  const isMunicipality = useIsMunicipality();
   const profitTone = totalProfitAmount >= 0 ? "green" : "red";
 
   return (
@@ -54,12 +56,15 @@ export function FinanceSummaryCard({
               tone="red"
               value={formatCurrency(totalRemainingAmount)}
             />
-            <DesignMetricTile
-              label={t("finance.totalProfit")}
-              style={styles.tile}
-              tone={profitTone}
-              value={formatCurrency(totalProfitAmount)}
-            />
+            {/* Belediye ödeyen taraf; ödenenle gider farkı kâr anlamına gelmiyor. */}
+            {isMunicipality ? null : (
+              <DesignMetricTile
+                label={t("finance.totalProfit")}
+                style={styles.tile}
+                tone={profitTone}
+                value={formatCurrency(totalProfitAmount)}
+              />
+            )}
           </View>
         </View>
       </TourTarget>

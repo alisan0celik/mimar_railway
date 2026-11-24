@@ -18,6 +18,7 @@ import { useThemeColors } from "../../../shared/theme/ThemeProvider";
 import { ConfirmDialog, DesignBackHeader, Screen, showAppAlert } from "../../../shared/ui";
 import { formatCurrency } from "../../../shared/utils";
 import { normaliseName } from "../../../shared/utils/normaliseName";
+import { useIsMunicipality } from "../../../store/sectorStore";
 
 /** Kullanıcının girdiği tutar metnini sayıya çevirir; boşsa 0. */
 function parseAmount(text: string): number {
@@ -44,6 +45,9 @@ export function ProgressPaymentScreen({ projectId }: { projectId: string }) {
   const canEditItems = useCan(PERMISSIONS.PROJECT_UPDATE);
   const canSeeFinance = useCan(PERMISSIONS.FINANCE_VIEW);
   const canBill = useCan(PERMISSIONS.FINANCE_UPDATE);
+  // Belediye, yükleniciye hakediş ödeyen işveren; taşeronu ve kârı yok.
+  // Taşeron alanları, düğmeleri ve kâr satırları bu modda gösterilmiyor.
+  const showSubcontractor = !useIsMunicipality();
 
   const [sections, setSections] = useState<ProjectSectionDTO[]>([]);
   const [summary, setSummary] = useState<ProgressSummaryDTO | null>(null);
@@ -438,7 +442,7 @@ export function ProgressPaymentScreen({ projectId }: { projectId: string }) {
                 {formatCurrency(summary.outstandingAmount)}
               </Text>
             </View>
-            {summary.costTotal > 0 ? (
+            {showSubcontractor && summary.costTotal > 0 ? (
               <>
                 <View style={styles.summaryCell}>
                   <Text style={styles.cellLabel}>{t("progress.costPaid")}</Text>
@@ -529,7 +533,7 @@ export function ProgressPaymentScreen({ projectId }: { projectId: string }) {
                   ) : (
                     <Text style={styles.itemMeta}>{t("progress.noValueHint")}</Text>
                   )}
-                  {cost > 0 ? (
+                  {showSubcontractor && cost > 0 ? (
                     <>
                       <Text style={styles.itemMeta}>
                         {t("progress.costMeta", {
@@ -564,17 +568,20 @@ export function ProgressPaymentScreen({ projectId }: { projectId: string }) {
                         value={draftAmount}
                       />
                     </View>
-                    <View style={styles.editField}>
-                      <Text style={styles.fieldLabel}>{t("progress.costLabel")}</Text>
-                      <TextInput
-                        keyboardType="numeric"
-                        onChangeText={setDraftCost}
-                        placeholder="0"
-                        placeholderTextColor={colors.textMuted}
-                        style={styles.input}
-                        value={draftCost}
-                      />
-                    </View>
+                    {/* Gizliyken de kayıtlı taşeron bedeli korunuyor: taslak ondan doluyor. */}
+                    {showSubcontractor ? (
+                      <View style={styles.editField}>
+                        <Text style={styles.fieldLabel}>{t("progress.costLabel")}</Text>
+                        <TextInput
+                          keyboardType="numeric"
+                          onChangeText={setDraftCost}
+                          placeholder="0"
+                          placeholderTextColor={colors.textMuted}
+                          style={styles.input}
+                          value={draftCost}
+                        />
+                      </View>
+                    ) : null}
                   </View>
 
                   <View style={styles.editActions}>
@@ -623,7 +630,7 @@ export function ProgressPaymentScreen({ projectId }: { projectId: string }) {
                       </Text>
                     </Pressable>
                   ) : null}
-                  {canBill && remainingOf(section, "outgoing") > 0 ? (
+                  {showSubcontractor && canBill && remainingOf(section, "outgoing") > 0 ? (
                     <Pressable
                       disabled={busy}
                       onPress={() => startPaying(section, "outgoing")}
@@ -768,34 +775,38 @@ export function ProgressPaymentScreen({ projectId }: { projectId: string }) {
                 value={newExtraName}
               />
 
-              <View style={styles.directionRow}>
-                <Pressable
-                  onPress={() => setNewExtraIsPayable(false)}
-                  style={[styles.directionChip, !newExtraIsPayable && styles.directionChipActive]}
-                >
-                  <Text
-                    style={[
-                      styles.directionChipText,
-                      !newExtraIsPayable && styles.directionChipTextActive,
-                    ]}
+              {/* Belediyede diğer kalemler yükleniciye ödenecek tutarlar (iş artışı,
+                  fiyat farkı); borç seçeneği taşeron tarafına ait. */}
+              {showSubcontractor ? (
+                <View style={styles.directionRow}>
+                  <Pressable
+                    onPress={() => setNewExtraIsPayable(false)}
+                    style={[styles.directionChip, !newExtraIsPayable && styles.directionChipActive]}
                   >
-                    {t("progress.extraReceivable")}
-                  </Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => setNewExtraIsPayable(true)}
-                  style={[styles.directionChip, newExtraIsPayable && styles.directionChipActive]}
-                >
-                  <Text
-                    style={[
-                      styles.directionChipText,
-                      newExtraIsPayable && styles.directionChipTextActive,
-                    ]}
+                    <Text
+                      style={[
+                        styles.directionChipText,
+                        !newExtraIsPayable && styles.directionChipTextActive,
+                      ]}
+                    >
+                      {t("progress.extraReceivable")}
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => setNewExtraIsPayable(true)}
+                    style={[styles.directionChip, newExtraIsPayable && styles.directionChipActive]}
                   >
-                    {t("progress.extraPayable")}
-                  </Text>
-                </Pressable>
-              </View>
+                    <Text
+                      style={[
+                        styles.directionChipText,
+                        newExtraIsPayable && styles.directionChipTextActive,
+                      ]}
+                    >
+                      {t("progress.extraPayable")}
+                    </Text>
+                  </Pressable>
+                </View>
+              ) : null}
 
               <Text style={styles.fieldLabel}>{t("progress.amountLabel")}</Text>
               <TextInput

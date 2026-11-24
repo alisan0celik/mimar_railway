@@ -34,5 +34,8 @@ export function getTemplateItems(template: WorkItemTemplate): string[] {
 
 /** Şirketin iş koluna göre öntanımlı şablon. */
 export function defaultTemplateFor(businessType: string | null | undefined): WorkItemTemplate {
-  return businessType === "contractor" ? "construction" : "architecture";
+  // Belediyenin projeleri yüklenicinin yaptığı yapım işleri.
+  return businessType === "contractor" || businessType === "municipality"
+    ? "construction"
+    : "architecture";
 }
