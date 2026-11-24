@@ -1273,20 +1273,20 @@ export const en = {
           body: "Notes are the conversation. To-dos are this project's task list.",
         },
         progress: {
-          title: "Work-item progress",
-          body: "How much of each work item is done. Progress payments are this project's money.",
+          title: "Work items and billing",
+          body: "Enter each item's value and bill it in any amount; what is left is tracked for you.",
         },
       },
       createProject: {
         workItems: {
           title: "A project is its work items",
-          body: "Pick a template or tick the items. Progress and payments follow this list.",
+          body: "Pick a template or tick the items one by one. Progress payments are billed against these items.",
         },
       },
       finance: {
         summary: {
-          title: "The payment summary",
-          body: "Agreed, collected, remaining and profit. The money is the sum of the projects.",
+          title: "Finance summary",
+          body: "Agreed amount, collected, left to collect and profit, across all your projects.",
         },
       },
     },
