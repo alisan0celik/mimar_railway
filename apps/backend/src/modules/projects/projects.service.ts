@@ -20,6 +20,7 @@ import {
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { tenderData } from './tender-fields';
+import { projectDir, removeDir } from './field-report.storage';
 
 type NotificationRecipient = {
   id: string;
@@ -279,6 +280,12 @@ export class ProjectsService {
       this.prisma.financeRecord.deleteMany({ where: { projectId: id, companyId } }),
       this.prisma.project.delete({ where: { id } }),
     ]);
+
+    // Saha raporları projeyle birlikte veritabanından silindi; fotoğrafları
+    // diskte sahipsiz kalmasın. Dosya silinemezse proje yine silinmiş sayılır.
+    await removeDir(projectDir(companyId, id)).catch((error) =>
+      this.logger.warn(`Field report files of project ${id} could not be removed: ${error}`),
+    );
 
     return project;
   }

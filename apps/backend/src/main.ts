@@ -15,8 +15,11 @@ async function bootstrap() {
   // bir adres olduğu için /api önekinin dışında tutulur.
   app.setGlobalPrefix("api", { exclude: ["reset-password", "brand/logo.png"] });
   app.useWebSocketAdapter(new IoAdapter(app));
-  app.useStaticAssets(process.env.UPLOAD_DIR || join(process.cwd(), "uploads"), {
-    prefix: "/api/uploads/",
+  // Yalnızca şirket logoları herkese açık sunulur. uploads'un geri kalanı
+  // (ör. saha raporu fotoğrafları) yetki kontrolünden geçen uçlardan verilir;
+  // klasörün tamamı açık olsaydı adresi bilen herkes fotoğrafları görebilirdi.
+  app.useStaticAssets(join(process.env.UPLOAD_DIR || join(process.cwd(), "uploads"), "companies"), {
+    prefix: "/api/uploads/companies/",
   });
 
   const corsOrigins = process.env.CORS_ORIGINS

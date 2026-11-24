@@ -62,6 +62,7 @@ model User {
   projectNotes            ProjectNote[]          @relation("NoteAuthor")
   projectMessages         ProjectMessage[]       @relation("MessageAuthor")
   uploadedFiles           ProjectFile[]          @relation("FileUploader")
+  fieldReports            FieldReport[]          @relation("FieldReportAuthor")
   projectTeam             ProjectTeam[]
   financeRecords          FinanceRecord[]
   calendarEvents          CalendarEvent[]
@@ -79,7 +80,7 @@ model User {
 }
 
 model Company {
-  id                    String            @id @default(cuid())
+  id                    String                 @id @default(cuid())
   name                  String
   description           String?
   city                  String?
@@ -87,17 +88,17 @@ model Company {
   phone                 String?
   logoUrl               String?
   logoInitials          String?
-  status                CompanyStatus     @default(active)
+  status                CompanyStatus          @default(active)
   /// "architecture" | "contractor" | "both" — proje açılırken önerilecek
   /// imalat kalemi şablonunu belirler.
-  businessType          String            @default("architecture")
-  subscriptionStatus    String            @default("active")
-  subscriptionStartedAt DateTime          @default(now())
+  businessType          String                 @default("architecture")
+  subscriptionStatus    String                 @default("active")
+  subscriptionStartedAt DateTime               @default(now())
   subscriptionEndsAt    DateTime?
   blockedReason         String?
   lastActivityAt        DateTime?
   ownerId               String
-  owner                 User              @relation("CompanyOwner", fields: [ownerId], references: [id])
+  owner                 User                   @relation("CompanyOwner", fields: [ownerId], references: [id])
   members               User[]
   roles                 Role[]
   projects              Project[]
@@ -106,8 +107,9 @@ model Company {
   progressPayments      ProgressPayment[]
   workItems             CompanyWorkItem[]
   favouriteTasks        CompanyFavouriteTask[]
-  createdAt             DateTime          @default(now())
-  updatedAt             DateTime          @updatedAt
+  fieldReports          FieldReport[]
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
   supportTickets        SupportTicket[]
 
   @@index([ownerId])
@@ -164,21 +166,21 @@ model RolePermission {
 }
 
 model Project {
-  id                String            @id @default(cuid())
-  name              String
-  customerName      String?
-  projectType       String?
-  location          String?
-  description       String?
-  hasInspection     Boolean           @default(false)
-  inspectionCompany String?
-  status            String            @default("active") // "planning", "active", "waiting", "completed"
-  priority          String            @default("medium") // "low", "medium", "high", "urgent"
-  imageUrl          String?
-  sectionProgress   Float             @default(0)
-  startDate         DateTime?
-  endDate           DateTime?
-  budget            Float?
+  id                        String            @id @default(cuid())
+  name                      String
+  customerName              String?
+  projectType               String?
+  location                  String?
+  description               String?
+  hasInspection             Boolean           @default(false)
+  inspectionCompany         String?
+  status                    String            @default("active") // "planning", "active", "waiting", "completed"
+  priority                  String            @default("medium") // "low", "medium", "high", "urgent"
+  imageUrl                  String?
+  sectionProgress           Float             @default(0)
+  startDate                 DateTime?
+  endDate                   DateTime?
+  budget                    Float?
   /// Kamu ihalesi bilgileri; belediye modunda doldurulur. İhale kayıt
   /// numarası (İKN), ör. "2026/123456".
   tenderNumber              String?
@@ -191,20 +193,21 @@ model Project {
   extensionDays             Int?
   provisionalAcceptanceDate DateTime?
   finalAcceptanceDate       DateTime?
-  companyId         String
-  company           Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  createdById       String
-  createdBy         User              @relation("ProjectCreator", fields: [createdById], references: [id])
-  team              ProjectTeam[]
-  tasks             Task[]
-  sections          Section[]
-  notes             ProjectNote[]
-  messages          ProjectMessage[]
-  files             ProjectFile[]
-  financeRecords    FinanceRecord[]
-  progressPayments  ProgressPayment[]
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
+  companyId                 String
+  company                   Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdById               String
+  createdBy                 User              @relation("ProjectCreator", fields: [createdById], references: [id])
+  team                      ProjectTeam[]
+  tasks                     Task[]
+  sections                  Section[]
+  notes                     ProjectNote[]
+  messages                  ProjectMessage[]
+  files                     ProjectFile[]
+  fieldReports              FieldReport[]
+  financeRecords            FinanceRecord[]
+  progressPayments          ProgressPayment[]
+  createdAt                 DateTime          @default(now())
+  updatedAt                 DateTime          @updatedAt
 
   @@index([companyId])
   @@index([status])
@@ -248,28 +251,28 @@ model Task {
 }
 
 model Section {
-  id        String   @id @default(cuid())
-  name      String
-  order     Int      @default(0)
-  status    String   @default("not-started") // "not-started", "in-progress", "review", "approved"
-  content   String?
+  id               String            @id @default(cuid())
+  name             String
+  order            Int               @default(0)
+  status           String            @default("not-started") // "not-started", "in-progress", "review", "approved"
+  content          String?
   /// Satır türü: "work" imalat kalemi, "extra" imalata bağlı olmayan
   /// alacak/borç (iş artışı, fiyat farkı, avans, ceza...). Ekstralar
   /// baştan tamamen hak edilmiş sayılır ve ilerleme yüzdesine katılmaz.
-  kind      String   @default("work")
+  kind             String            @default("work")
   /// İşverene satış bedeli (TL). Ekstralarda alacak tutarı.
-  amount    Float    @default(0)
+  amount           Float             @default(0)
   /// Kalemin taşerona maliyeti (TL). İkisi arasındaki fark kalemin kârı.
-  costAmount Float   @default(0)
+  costAmount       Float             @default(0)
   /// Kalemin tamamlanma yüzdesi (0-100). Hakediş bu iki alandan hesaplanır.
-  progress  Float    @default(0)
-  updatedBy String?
-  projectId String
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  tasks     Task[]
+  progress         Float             @default(0)
+  updatedBy        String?
+  projectId        String
+  project          Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks            Task[]
   progressPayments ProgressPayment[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
 
   @@index([projectId])
 }
@@ -324,23 +327,23 @@ model DeviceToken {
 }
 
 model CalendarEvent {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   companyId   String
-  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  company     Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
   title       String
   projectName String
   time        String
-  type        String   @default("meeting") // "deadline", "meeting", "other"
+  type        String    @default("meeting") // "deadline", "meeting", "other"
   date        DateTime
   /// Etkinliğin gerçek başlangıç/bitiş anı. `date` + serbest metin `time`
   /// ikilisi cihaz takvimine yazmaya yetmiyordu (bitiş saati yoktu).
   /// Eski istemciler `date`/`time` okumaya devam ettiği için o alanlar korundu.
   startsAt    DateTime?
   endsAt      DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@index([userId])
   @@index([companyId])
@@ -547,4 +550,48 @@ model CompanyFavouriteTask {
 
   @@unique([companyId, title])
   @@index([companyId])
+}
+
+/// Sahada tutulan denetim/ziyaret raporu: not, konum ve fotoğraflar.
+/// Saha personeli internet yokken de rapor yazabildiği için uygulama
+/// raporu kendi ürettiği `clientId` ile gönderir; aynı rapor yeniden
+/// gönderilirse ikinci kayıt oluşmaz.
+model FieldReport {
+  id         String             @id @default(cuid())
+  clientId   String
+  title      String?
+  note       String
+  latitude   Float?
+  longitude  Float?
+  /// Raporun sahada yazıldığı an (cihaz saati); gönderim sonradan olabilir.
+  observedAt DateTime
+  projectId  String
+  project    Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  companyId  String
+  company    Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  authorId   String
+  author     User               @relation("FieldReportAuthor", fields: [authorId], references: [id])
+  photos     FieldReportPhoto[]
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+
+  @@unique([companyId, clientId])
+  @@index([projectId])
+}
+
+/// Saha raporunun fotoğrafı. Dosya herkese açık klasörde değil; yalnızca
+/// şirketin yetkili kullanıcılarına uygulama üzerinden sunulur.
+model FieldReportPhoto {
+  id            String      @id @default(cuid())
+  /// Uygulamanın verdiği kimlik; yeniden gönderilen fotoğraf çift eklenmez.
+  clientPhotoId String
+  reportId      String
+  report        FieldReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  fileName      String
+  mimeType      String
+  size          Int
+  createdAt     DateTime    @default(now())
+
+  @@unique([reportId, clientPhotoId])
+  @@index([reportId])
 }
