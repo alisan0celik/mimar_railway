@@ -35,8 +35,7 @@ import { useTranslation, useLocaleCode } from "../../../shared/i18n";
 import { PERMISSIONS, useCan } from "../../../shared/permissions";
 import { TourTarget, useScreenTour } from "../../guide";
 import { useIsMunicipality } from "../../../store/sectorStore";
-import { DeadlineBadge } from "../components/DeadlineBadge";
-import { deadlineStatus } from "../utils/contractDeadline";
+import { MunicipalityLinks } from "../components/MunicipalityLinks";
 import { usePendingFieldReports } from "../../../offline/field-reports/pending-field-reports";
 
 type TabKey = "notes" | "todos";
@@ -376,44 +375,23 @@ export function ProjectDetailScreen() {
           </TourTarget>
         ) : null}
 
-        {/* Belediye modunda işin ihale bilgileri ve kalan süresi. */}
+        {/* Belediye modunda ihale süresi, saha raporları ve işin yeri. */}
         {isMunicipality ? (
-          <Pressable
-            onPress={() =>
+          <MunicipalityLinks
+            onOpen={(link) =>
               router.push({
-                pathname: "/(main)/projects/[projectId]/tender",
+                pathname:
+                  link === "tender"
+                    ? "/(main)/projects/[projectId]/tender"
+                    : link === "field-reports"
+                      ? "/(main)/projects/[projectId]/field-reports"
+                      : "/(main)/projects/[projectId]/location",
                 params: { projectId },
               })
             }
-            style={styles.progressLink}
-          >
-            <MaterialCommunityIcons color={colors.primary} name="file-sign" size={18} />
-            <Text style={styles.progressLinkText}>{t("projects.tender.title")}</Text>
-            <DeadlineBadge status={deadlineStatus(project)} />
-            <MaterialCommunityIcons color={colors.textMuted} name="chevron-right" size={18} />
-          </Pressable>
-        ) : null}
-
-        {isMunicipality ? (
-          <Pressable
-            onPress={() =>
-              router.push({
-                pathname: "/(main)/projects/[projectId]/field-reports",
-                params: { projectId },
-              })
-            }
-            style={styles.progressLink}
-          >
-            <MaterialCommunityIcons color={colors.primary} name="camera-marker-outline" size={18} />
-            <Text style={styles.progressLinkText}>{t("fieldReports.title")}</Text>
-            {pendingReports.length > 0 ? (
-              <View style={styles.pendingBadge}>
-                <MaterialCommunityIcons color={colors.warning} name="cloud-upload-outline" size={13} />
-                <Text style={styles.pendingBadgeText}>{pendingReports.length}</Text>
-              </View>
-            ) : null}
-            <MaterialCommunityIcons color={colors.textMuted} name="chevron-right" size={18} />
-          </Pressable>
+            pendingReports={pendingReports.length}
+            project={project}
+          />
         ) : null}
 
         <View style={styles.searchWrap}>
@@ -714,16 +692,6 @@ function createStyles(colors: AppColors) {
     fontWeight: "600",
     flex: 1,
   },
-  pendingBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 3,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    borderRadius: radius.full,
-    backgroundColor: colors.warningSoft,
-  },
-  pendingBadgeText: { ...typography.caption, color: colors.warning, fontWeight: "700" },
   searchWrap: {
     flexDirection: "row",
     alignItems: "center",

@@ -21,6 +21,25 @@ export async function saveProjects(projects: ProjectDTO[], companyId: string): P
   });
 }
 
+/**
+ * Düzenlenen tek projeyi önbellekte günceller. Liste her açılışta önce
+ * önbellekten çizildiği için, bu yapılmazsa yeni kaydedilen bilgi (ör. konum)
+ * sunucu yanıtı gelene kadar bir an eski haliyle görünürdü.
+ */
+export async function cacheProject(project: ProjectDTO, companyId: string): Promise<void> {
+  const db = await getDatabase();
+  if (!db) return;
+
+  await db.runAsync(
+    `INSERT OR REPLACE INTO cached_projects (id, company_id, payload, updated_at)
+     VALUES (?, ?, ?, ?)`,
+    project.id,
+    companyId,
+    JSON.stringify(project),
+    project.updatedAt,
+  );
+}
+
 export async function getCachedProjects(companyId: string): Promise<ProjectDTO[]> {
   const db = await getDatabase();
   if (!db) return [];

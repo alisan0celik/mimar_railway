@@ -30,6 +30,7 @@ type AppInputProps = {
   leftIcon?: ReactNode;
   rightIcon?: ReactNode;
   editable?: boolean;
+  maxLength?: number;
   autoCapitalize?: "none" | "sentences" | "words" | "characters";
   autoCorrect?: boolean;
   onBlur?: () => void;
@@ -51,6 +52,7 @@ export function AppInput({
   leftIcon,
   rightIcon,
   editable = true,
+  maxLength,
   autoCapitalize = "sentences",
   autoCorrect = false,
   onBlur,
@@ -91,6 +93,7 @@ export function AppInput({
           autoCorrect={autoCorrect}
           editable={editable}
           keyboardType={keyboardType}
+          maxLength={maxLength}
           multiline={multiline}
           onBlur={handleBlur}
           onChangeText={onChangeText}

@@ -181,6 +181,12 @@ export type ProjectDTO = {
   extensionDays?: number | null;
   provisionalAcceptanceDate?: string | null;
   finalAcceptanceDate?: string | null;
+  /** İşin haritadaki yeri ve tapu bilgileri; eski sunucular göndermez. */
+  latitude?: number | null;
+  longitude?: number | null;
+  neighbourhood?: string | null;
+  cadastralBlock?: string | null;
+  cadastralParcel?: string | null;
   companyId: string;
   createdById: string;
   sections: ProjectSectionDTO[];
@@ -215,6 +221,12 @@ export type CreateProjectDTO = {
   extensionDays?: number | null;
   provisionalAcceptanceDate?: string | null;
   finalAcceptanceDate?: string | null;
+  /** Enlem ve boylam birlikte gönderilmeli; ikisi birden `null` noktayı siler. */
+  latitude?: number | null;
+  longitude?: number | null;
+  neighbourhood?: string | null;
+  cadastralBlock?: string | null;
+  cadastralParcel?: string | null;
   /** Açılışta oluşturulacak imalat kalemleri; boş bırakılırsa şirket şablonu. */
   workItems?: string[];
 };

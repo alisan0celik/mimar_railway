@@ -24,7 +24,8 @@ import { useAuthStore } from "../../../store/authStore";
 import { useProjectStore } from "../../../store/projectStore";
 import { PhotoViewer } from "../components/PhotoViewer";
 import { ReportPhoto, type ReportPhotoSource } from "../components/ReportPhoto";
-import { formatCoordinates, formatReportTime, mapsUrl } from "../utils/format";
+import { formatCoordinates, mapsUrl } from "../../../shared/location";
+import { formatReportTime } from "../utils/format";
 
 type ConfirmState =
   | { kind: "discard"; clientId: string }

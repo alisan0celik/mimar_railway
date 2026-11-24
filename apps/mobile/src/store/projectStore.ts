@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { tKey } from "../shared/i18n";
 import { type ProjectDTO, type CreateProjectDTO, type UpdateProjectDTO, projectApi } from "../services/api/project.api";
+import { cacheProject } from "../offline/cache/project-cache";
 import { fetchProjectsWithCache } from "../offline/sync/sync-engine";
 import { refreshFinance } from "./financeStore";
 
@@ -56,6 +57,7 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
         projects: state.projects.map((p) => (p.id === id ? updatedProject : p)),
         loading: false,
       }));
+      void cacheProject(updatedProject, updatedProject.companyId).catch(() => undefined);
       void refreshFinance({ silent: true });
       return updatedProject;
     } catch (err: any) {

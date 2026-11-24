@@ -153,6 +153,22 @@ EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=
 
 > Fiziksel cihazda test ediyorsanız `localhost` yerine bilgisayarınızın yerel IP adresini kullanın (ör. `http://192.168.1.10:3000/api`).
 
+**Harita (belediye modu).** iOS'ta Apple Haritalar anahtarsız çalışır. Android'deki
+Google Haritalar için `EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_KEY` derleme sırasında
+verilmelidir; anahtar depoya girmesin diye `eas.json`'a değil EAS ortam
+değişkenlerine eklenir (`preview` ve `production` ortamları):
+
+```bash
+eas env:create --name EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_KEY --value <ANAHTAR> \
+  --environment preview --environment production --visibility sensitive
+```
+
+Aynı değişken `android/app/build.gradle` ile manifeste geçer ve uygulamaya
+haritanın açılabileceğini söyler. Anahtarsız derlenen Android uygulamasında
+harita yerine konum listesi gösterilir. Anahtar Google Cloud'da yalnızca
+"Maps SDK for Android" ile, `com.mimar.app` paketi ve Play uygulama imzalama ile
+EAS yükleme anahtarlarının SHA-1 parmak izleriyle sınırlanmalıdır.
+
 ## Çalıştırma
 
 Proje kök dizininden:

@@ -1,18 +1,21 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
-import * as Location from "expo-location";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { enqueueFieldReport } from "../../../offline/field-reports/pending-field-reports";
 import { useTranslation } from "../../../shared/i18n";
+import {
+  formatCoordinates,
+  getCurrentPosition,
+  type CurrentPosition,
+} from "../../../shared/location";
 import { radius, spacing, typography } from "../../../shared/theme";
 import { useThemedStyles, type AppColors } from "../../../shared/theme";
 import { useThemeColors } from "../../../shared/theme/ThemeProvider";
 import { AppButton, AppInput, DesignBackHeader, Screen, showAppAlert } from "../../../shared/ui";
 import { useProjectStore } from "../../../store/projectStore";
-import { formatCoordinates } from "../utils/format";
 
 /** Sunucunun bir rapora kabul ettiği en fazla fotoğraf. */
 const MAX_PHOTOS = 10;
@@ -21,10 +24,9 @@ const MAX_PHOTOS = 10;
  * ham fotoğraf dakikalarca sürerdi. Bu kalite denetim için yeterince net.
  */
 const PHOTO_QUALITY = 0.6;
-const LOCATION_TIMEOUT_MS = 15_000;
 
 type Photo = { uri: string; mimeType: string };
-type Position = { latitude: number; longitude: number; accuracy: number | null };
+type Position = CurrentPosition;
 
 function toPhotos(assets: ImagePicker.ImagePickerAsset[]): Photo[] {
   return assets.map((asset) => ({ uri: asset.uri, mimeType: asset.mimeType ?? "image/jpeg" }));
@@ -89,31 +91,12 @@ export function NewFieldReportScreen() {
   };
 
   const addLocation = async () => {
-    const permission = await Location.requestForegroundPermissionsAsync();
-    if (!permission.granted) {
-      showAppAlert(t("common.info"), t("fieldReports.locationDenied"));
-      return;
-    }
-
     setLocating(true);
-    try {
-      // Kapalı alanda uydu bulunamazsa istek uzun süre asılı kalabiliyor.
-      const current = await Promise.race([
-        Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }),
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error("timeout")), LOCATION_TIMEOUT_MS),
-        ),
-      ]);
-      setPosition({
-        latitude: current.coords.latitude,
-        longitude: current.coords.longitude,
-        accuracy: current.coords.accuracy ?? null,
-      });
-    } catch {
-      showAppAlert(t("common.error"), t("fieldReports.locationFailed"));
-    } finally {
-      setLocating(false);
-    }
+    const result = await getCurrentPosition();
+    setLocating(false);
+    if (result.status === "ok") setPosition(result.position);
+    else if (result.status === "denied") showAppAlert(t("common.info"), t("fieldReports.locationDenied"));
+    else showAppAlert(t("common.error"), t("fieldReports.locationFailed"));
   };
 
   const handleSave = async () => {

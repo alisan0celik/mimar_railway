@@ -96,6 +96,11 @@ android {
         versionName "1.0.1"
 
         buildConfigField "String", "REACT_NATIVE_RELEASE_LEVEL", "\"${findProperty('reactNativeReleaseLevel') ?: 'stable'}\""
+
+        // Google Maps key for react-native-maps, read from the build environment
+        // so it never lands in the repository. The same variable tells the app
+        // whether the map can open on Android; without it a list is shown.
+        manifestPlaceholders["googleMapsApiKey"] = System.getenv("EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_KEY") ?: ""
     }
     signingConfigs {
         debug {
