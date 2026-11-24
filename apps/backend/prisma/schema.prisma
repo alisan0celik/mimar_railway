@@ -179,6 +179,18 @@ model Project {
   startDate         DateTime?
   endDate           DateTime?
   budget            Float?
+  /// Kamu ihalesi bilgileri; belediye modunda doldurulur. İhale kayıt
+  /// numarası (İKN), ör. "2026/123456".
+  tenderNumber              String?
+  contractDate              DateTime?
+  /// Yer teslim tarihi: işin süresi bu günden itibaren işler.
+  siteDeliveryDate          DateTime?
+  /// Sözleşmedeki iş süresi, takvim günü.
+  workDurationDays          Int?
+  /// Verilen süre uzatımlarının toplamı, takvim günü.
+  extensionDays             Int?
+  provisionalAcceptanceDate DateTime?
+  finalAcceptanceDate       DateTime?
   companyId         String
   company           Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
   createdById       String

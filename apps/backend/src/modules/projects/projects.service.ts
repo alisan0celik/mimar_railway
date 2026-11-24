@@ -19,6 +19,7 @@ import {
 } from '../notifications/notification-templates';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
+import { tenderData } from './tender-fields';
 
 type NotificationRecipient = {
   id: string;
@@ -116,6 +117,7 @@ export class ProjectsService {
         startDate: dto.startDate ? new Date(dto.startDate) : null,
         endDate: dto.endDate ? new Date(dto.endDate) : null,
         budget: dto.budget,
+        ...tenderData(dto),
         companyId,
         createdById: userId,
         sections: {
@@ -253,6 +255,7 @@ export class ProjectsService {
         startDate: dto.startDate ? new Date(dto.startDate) : undefined,
         endDate: dto.endDate ? new Date(dto.endDate) : undefined,
         budget: dto.budget,
+        ...tenderData(dto),
       },
       include: {
         sections: true,

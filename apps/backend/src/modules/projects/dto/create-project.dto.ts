@@ -1,4 +1,4 @@
-import { ArrayMaxSize, IsArray, IsNotEmpty, IsOptional, IsString, IsNumber, IsDateString, IsIn } from 'class-validator';
+import { ArrayMaxSize, IsArray, IsNotEmpty, IsOptional, IsString, IsNumber, IsDateString, IsIn, IsInt, Max, MaxLength, Min } from 'class-validator';
 
 export class CreateProjectDto {
   @IsNotEmpty()
@@ -51,6 +51,45 @@ export class CreateProjectDto {
   @IsOptional()
   @IsNumber()
   budget?: number;
+
+  // --- Kamu ihalesi (belediye modu) ---
+
+  /** İhale kayıt numarası (İKN), ör. "2026/123456". Boş metin alanı temizler. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(40)
+  tenderNumber?: string | null;
+
+  @IsOptional()
+  @IsDateString()
+  contractDate?: string | null;
+
+  /** Yer teslim tarihi: işin süresi bu günden itibaren işler. */
+  @IsOptional()
+  @IsDateString()
+  siteDeliveryDate?: string | null;
+
+  /** Sözleşmedeki iş süresi, takvim günü. */
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(36500)
+  workDurationDays?: number | null;
+
+  /** Verilen süre uzatımlarının toplamı, takvim günü. */
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(36500)
+  extensionDays?: number | null;
+
+  @IsOptional()
+  @IsDateString()
+  provisionalAcceptanceDate?: string | null;
+
+  @IsOptional()
+  @IsDateString()
+  finalAcceptanceDate?: string | null;
 
   /**
    * Proje açılırken oluşturulacak imalat kalemlerinin adları.

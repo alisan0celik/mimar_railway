@@ -95,6 +95,28 @@ describe("ProjectsService tasks", () => {
       const { data } = prisma.project.update.mock.calls[0][0];
       expect(data.name).toBeUndefined();
     });
+
+    it("saves the tender fields and leaves the unsent ones alone", async () => {
+      await service.update("c1", "p1", {
+        tenderNumber: "2026/123456",
+        siteDeliveryDate: "2026-03-14",
+        extensionDays: 45,
+      });
+
+      const { data } = prisma.project.update.mock.calls[0][0];
+      expect(data.tenderNumber).toBe("2026/123456");
+      expect(data.siteDeliveryDate).toEqual(new Date("2026-03-14"));
+      expect(data.extensionDays).toBe(45);
+      expect(data.contractDate).toBeUndefined();
+      expect(data.finalAcceptanceDate).toBeUndefined();
+    });
+
+    it("clears a tender date sent as null", async () => {
+      await service.update("c1", "p1", { provisionalAcceptanceDate: null });
+
+      const { data } = prisma.project.update.mock.calls[0][0];
+      expect(data.provisionalAcceptanceDate).toBeNull();
+    });
   });
 
   describe("create with favourite tasks", () => {

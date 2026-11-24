@@ -25,6 +25,11 @@ describe("work item templates", () => {
     expect(defaultTemplateFor("contractor")).toBe("construction");
   });
 
+  it("opens a municipality's projects with construction items", () => {
+    // Belediyenin projeleri yüklenicinin yaptığı yapım işleri.
+    expect(defaultTemplateFor("municipality")).toBe("construction");
+  });
+
   it("falls back to architecture for offices, mixed firms and unknown values", () => {
     expect(defaultTemplateFor("architecture")).toBe("architecture");
     expect(defaultTemplateFor("both")).toBe("architecture");

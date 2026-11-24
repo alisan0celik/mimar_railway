@@ -1,4 +1,5 @@
 import { IsIn, IsString, IsOptional } from "class-validator";
+import { BUSINESS_TYPES } from "../../projects/work-item-templates";
 
 export class UpdateCompanyDto {
   @IsOptional()
@@ -21,8 +22,8 @@ export class UpdateCompanyDto {
   @IsString()
   phone?: string;
 
-  /** Mimarlık ofisi mi, müteahhit mi — varsayılan imalat şablonunu belirler. */
+  /** Mimarlık ofisi, müteahhit ya da belediye — şablonu ve terimleri belirler. */
   @IsOptional()
-  @IsIn(["architecture", "contractor", "both"])
+  @IsIn([...BUSINESS_TYPES])
   businessType?: string;
 }

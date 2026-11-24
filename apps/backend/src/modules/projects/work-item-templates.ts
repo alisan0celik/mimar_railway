@@ -7,7 +7,11 @@
  * göre doğru liste önerilir; kullanıcı proje açarken değiştirebilir.
  */
 
-export const BUSINESS_TYPES = ["architecture", "contractor", "both"] as const;
+/**
+ * Şirketin iş kolu. "municipality" belediye ve kamu kurumları içindir:
+ * uygulama terimlerini işveren bakışına çevirir, projeye ihale bilgileri ekler.
+ */
+export const BUSINESS_TYPES = ["architecture", "contractor", "both", "municipality"] as const;
 export type BusinessType = (typeof BUSINESS_TYPES)[number];
 
 export const WORK_ITEM_TEMPLATES = ["architecture", "construction", "empty"] as const;
@@ -38,9 +42,15 @@ export function getTemplateItems(template: WorkItemTemplate): string[] {
   return [...ARCHITECTURE_ITEMS];
 }
 
-/** Şirketin iş koluna göre öntanımlı şablon. "both" mimarlıkla başlar. */
+/**
+ * Şirketin iş koluna göre öntanımlı şablon. "both" mimarlıkla başlar;
+ * belediyenin projeleri yüklenicinin yaptığı yapım işleri olduğu için
+ * inşaat kalemleriyle açılır.
+ */
 export function defaultTemplateFor(businessType: string | null | undefined): WorkItemTemplate {
-  return businessType === "contractor" ? "construction" : "architecture";
+  return businessType === "contractor" || businessType === "municipality"
+    ? "construction"
+    : "architecture";
 }
 
 export function isWorkItemTemplate(value: unknown): value is WorkItemTemplate {

@@ -489,6 +489,8 @@ export class AuthService {
       title: user.title,
       companyId: user.companyId,
       companyName: user.company?.name || null,
+      // Uygulama belediye modunu ve terimleri buna göre seçiyor.
+      companyBusinessType: user.company?.businessType ?? null,
       isPlatformAdmin: isPlatformAdminEmail(user.email),
       companySubscription: user.company ? {
         status: user.company.subscriptionStatus ?? null,

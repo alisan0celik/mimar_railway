@@ -449,6 +449,7 @@ export class UsersService {
       title: user.title,
       companyId: user.companyId,
       companyName: user.company?.name || null,
+      companyBusinessType: user.company?.businessType ?? null,
       roles: user.roles?.map((ur: any) => ({
         id: ur.role.id,
         name: ur.role.name,

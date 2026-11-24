@@ -11,6 +11,8 @@ export interface UserDTO {
   title: string | null;
   companyId: string | null;
   companyName: string | null;
+  /** "architecture" | "contractor" | "both" | "municipality"; eski sunucular göndermez. */
+  companyBusinessType?: string | null;
   isPlatformAdmin?: boolean;
   companySubscription?: {
     status: string | null;
