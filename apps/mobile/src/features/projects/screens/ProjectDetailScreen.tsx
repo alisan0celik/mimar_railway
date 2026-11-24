@@ -37,6 +37,7 @@ import { TourTarget, useScreenTour } from "../../guide";
 import { useIsMunicipality } from "../../../store/sectorStore";
 import { DeadlineBadge } from "../components/DeadlineBadge";
 import { deadlineStatus } from "../utils/contractDeadline";
+import { usePendingFieldReports } from "../../../offline/field-reports/pending-field-reports";
 
 type TabKey = "notes" | "todos";
 
@@ -83,6 +84,7 @@ export function ProjectDetailScreen() {
   const isMunicipality = useIsMunicipality();
   const params = useLocalSearchParams<{ projectId?: string; tab?: string }>();
   const projectId = params.projectId ?? "";
+  const pendingReports = usePendingFieldReports(projectId);
   const initialTab: TabKey =
     params.tab === "todos" ? "todos" : "notes";
   const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
@@ -392,6 +394,28 @@ export function ProjectDetailScreen() {
           </Pressable>
         ) : null}
 
+        {isMunicipality ? (
+          <Pressable
+            onPress={() =>
+              router.push({
+                pathname: "/(main)/projects/[projectId]/field-reports",
+                params: { projectId },
+              })
+            }
+            style={styles.progressLink}
+          >
+            <MaterialCommunityIcons color={colors.primary} name="camera-marker-outline" size={18} />
+            <Text style={styles.progressLinkText}>{t("fieldReports.title")}</Text>
+            {pendingReports.length > 0 ? (
+              <View style={styles.pendingBadge}>
+                <MaterialCommunityIcons color={colors.warning} name="cloud-upload-outline" size={13} />
+                <Text style={styles.pendingBadgeText}>{pendingReports.length}</Text>
+              </View>
+            ) : null}
+            <MaterialCommunityIcons color={colors.textMuted} name="chevron-right" size={18} />
+          </Pressable>
+        ) : null}
+
         <View style={styles.searchWrap}>
             <MaterialCommunityIcons color={colors.textMuted} name="magnify" size={20} style={styles.searchIcon} />
             <TextInput
@@ -690,6 +714,16 @@ function createStyles(colors: AppColors) {
     fontWeight: "600",
     flex: 1,
   },
+  pendingBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: radius.full,
+    backgroundColor: colors.warningSoft,
+  },
+  pendingBadgeText: { ...typography.caption, color: colors.warning, fontWeight: "700" },
   searchWrap: {
     flexDirection: "row",
     alignItems: "center",

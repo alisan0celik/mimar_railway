@@ -450,15 +450,21 @@ async function initNetworkMonitorSideEffects() {
   const { initNetworkMonitor } = await import("../network/network-monitor");
   await initNetworkMonitor();
 
+  // Saha raporları fotoğraf taşıdığı için sync/push'a değil, kendi kuyruğuna
+  // yazılıyor; bağlantı gelince o da gönderilir.
+  const { flushPendingFieldReports } = await import("../field-reports/pending-field-reports");
+
   subscribeNetwork((online) => {
     if (online) {
       void runSync();
+      void flushPendingFieldReports();
     }
   });
 
   const user = useAuthStore.getState().user;
   if (user?.companyId && isOnline()) {
     void runSync();
+    void flushPendingFieldReports();
   }
 }
 

@@ -63,6 +63,22 @@ CREATE TABLE IF NOT EXISTS cached_reads (
   updated_at TEXT NOT NULL
 );
 
+-- Sahada yazılıp henüz gönderilemeyen saha raporları. Fotoğraflar uygulamanın
+-- kalıcı klasörüne kopyalanır; burada yalnızca adresleri tutulur. Çıkışta
+-- silinmez (sahada çekilen fotoğraflar kaybolmasın), ama yalnızca yazan
+-- kullanıcı oturum açtığında gönderilir.
+CREATE TABLE IF NOT EXISTS pending_field_reports (
+  client_id TEXT PRIMARY KEY NOT NULL,
+  user_id TEXT NOT NULL,
+  project_id TEXT NOT NULL,
+  payload TEXT NOT NULL,
+  photos TEXT NOT NULL,
+  server_id TEXT,
+  status TEXT NOT NULL DEFAULT 'pending',
+  last_error TEXT,
+  created_at TEXT NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS idx_cached_tasks_project ON cached_tasks(project_id);
 CREATE INDEX IF NOT EXISTS idx_cached_notes_project ON cached_notes(project_id);
 CREATE INDEX IF NOT EXISTS idx_cached_messages_project ON cached_messages(project_id);

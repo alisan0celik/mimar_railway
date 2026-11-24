@@ -59,8 +59,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Proje notlarına görsel eklemek için galeri erişimi gereklidir.",
-          "cameraPermission": "Proje notlarına fotoğraf çekmek için kamera erişimi gereklidir."
+          "photosPermission": "Proje notlarına ve saha raporlarına görsel eklemek için galeri erişimi gereklidir.",
+          "cameraPermission": "Proje notlarına ve saha raporlarına fotoğraf çekmek için kamera erişimi gereklidir."
         }
       ],
       [
@@ -76,6 +76,14 @@
         {
           "calendarPermission": "Proje takvimindeki etkinlikleri telefonunuzun takvimine yazmak için kullanılır. Bu özellik isteğe bağlıdır ve uygulama içinden kapatılabilir.",
           "remindersPermission": "Takvim özelliğinin çalışabilmesi için gereklidir. Planyol hatırlatıcılarınızı okumaz veya değiştirmez."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Saha raporuna raporun yazıldığı yerin konumunu eklemek için kullanılır. Konum yalnızca siz eklediğinizde alınır.",
+          "isIosBackgroundLocationEnabled": false,
+          "isAndroidBackgroundLocationEnabled": false
         }
       ]
     ],
