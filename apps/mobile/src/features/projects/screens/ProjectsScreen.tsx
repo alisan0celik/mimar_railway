@@ -1,7 +1,6 @@
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
 import { useMemo, useState, useCallback } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import { ProjectActionMenu } from "../components/ProjectActionMenu";
 import { ProjectCard } from "../components/ProjectCard";
@@ -10,10 +9,8 @@ import { useTranslation } from "../../../shared/i18n";
 import { PERMISSIONS, useCan } from "../../../shared/permissions";
 import { type ProjectStatus } from "../../../shared/types/project.types";
 import { useProjectStore } from "../../../store/projectStore";
-import { useIsMunicipality } from "../../../store/sectorStore";
-import { radius, spacing, typography } from "../../../shared/theme";
+import { spacing, typography } from "../../../shared/theme";
 import { useThemedStyles, type AppColors } from "../../../shared/theme";
-import { useThemeColors } from "../../../shared/theme/ThemeProvider";
 import {
   ConfirmDialog,
   DesignEqualFilterBar,
@@ -41,10 +38,8 @@ function isActiveProject(status: ProjectStatus): boolean {
 
 export function ProjectsScreen() {
   const styles = useThemedStyles(createStyles);
-  const colors = useThemeColors();
   const { t } = useTranslation();
   const router = useRouter();
-  const isMunicipality = useIsMunicipality();
   const [searchValue, setSearchValue] = useState("");
   const [activeFilter, setActiveFilter] = useState<FilterKey>("all");
   const [menuProject, setMenuProject] = useState<ProjectDTO | null>(null);
@@ -137,20 +132,7 @@ export function ProjectsScreen() {
   return (
     <>
       <Screen contentContainerStyle={styles.content} scroll>
-        <View style={styles.titleRow}>
-          <Text style={styles.pageTitle}>{t("projects.title")}</Text>
-          {/* Belediye modunda işlerin haritası. */}
-          {isMunicipality ? (
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => router.push("/(main)/projects/map")}
-              style={({ pressed }) => [styles.mapButton, pressed && styles.mapButtonPressed]}
-            >
-              <MaterialCommunityIcons color={colors.primary} name="map-marker-radius-outline" size={18} />
-              <Text style={styles.mapButtonText}>{t("projects.map.open")}</Text>
-            </Pressable>
-          ) : null}
-        </View>
+        <Text style={styles.pageTitle}>{t("projects.title")}</Text>
 
         <SearchInput
           containerStyle={styles.search}
@@ -233,33 +215,13 @@ export function ProjectsScreen() {
 function createStyles(colors: AppColors) {
   return StyleSheet.create({
     content: { paddingBottom: 100 },
-    titleRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      gap: spacing.sm,
-      marginBottom: spacing.lg,
-    },
     pageTitle: {
       fontSize: 28,
       lineHeight: 34,
       color: colors.text,
       fontWeight: "700",
-      flexShrink: 1,
+      marginBottom: spacing.lg,
     },
-    mapButton: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 6,
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
-      borderRadius: radius.full,
-      backgroundColor: colors.primarySoft,
-      borderWidth: 1,
-      borderColor: `${colors.primary}33`,
-    },
-    mapButtonPressed: { opacity: 0.7 },
-    mapButtonText: { ...typography.bodySmall, color: colors.text, fontWeight: "600" },
     search: {
       borderRadius: 14,
       marginBottom: spacing.md,

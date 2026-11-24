@@ -375,7 +375,7 @@ export function ProjectDetailScreen() {
           </TourTarget>
         ) : null}
 
-        {/* Belediye modunda ihale süresi, saha raporları ve işin yeri. */}
+        {/* Belediye modunda ihale süresi ve saha raporları. */}
         {isMunicipality ? (
           <MunicipalityLinks
             onOpen={(link) =>
@@ -383,9 +383,7 @@ export function ProjectDetailScreen() {
                 pathname:
                   link === "tender"
                     ? "/(main)/projects/[projectId]/tender"
-                    : link === "field-reports"
-                      ? "/(main)/projects/[projectId]/field-reports"
-                      : "/(main)/projects/[projectId]/location",
+                    : "/(main)/projects/[projectId]/field-reports",
                 params: { projectId },
               })
             }

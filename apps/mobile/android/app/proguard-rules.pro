@@ -29,10 +29,4 @@
 # Google Sign-In reads credentials through Play services' reflective APIs.
 -keep class com.google.android.gms.auth.** { *; }
 
-# react-native-maps ships no R8 rules of its own. Nothing in it is known to
-# break, but a renamed class would only fail on the map screen at runtime and
-# R8 has not been tried with it on a device yet, so the package is kept whole.
--keep class com.rnmaps.** { *; }
--dontwarn com.rnmaps.**
-
 # Add any project specific keep options here:

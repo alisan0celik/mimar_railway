@@ -8,9 +8,8 @@ import { radius, spacing, typography } from "../../../shared/theme";
 import { useThemedStyles, type AppColors } from "../../../shared/theme";
 import { useThemeColors } from "../../../shared/theme/ThemeProvider";
 import { deadlineStatus, type DeadlineStatus } from "../utils/contractDeadline";
-import { projectPoint } from "../utils/projectMap";
 
-export type MunicipalityLink = "tender" | "field-reports" | "location";
+export type MunicipalityLink = "tender" | "field-reports";
 
 type Tone = "success" | "warning" | "danger" | "info" | "muted";
 type Status = { text: string; tone: Tone };
@@ -36,9 +35,9 @@ function tenderStatus(status: DeadlineStatus, t: Translate): Status {
 }
 
 /**
- * Belediye modunda proje detayının üstündeki üç kutu: ihale, saha raporları ve
- * konum. Her biri kısa bir durum gösteriyor. Ayrı satırlar başlık ile notlar
- * arasında ekranın yarısını kaplıyordu; yan yana tek satıra sığıyorlar.
+ * Belediye modunda proje detayının üstündeki kutular: ihale ve saha raporları.
+ * Her biri kısa bir durum gösteriyor. Alt alta satırlar başlık ile notlar
+ * arasındaki yeri daraltıyordu; yan yana tek satıra sığıyorlar.
  */
 export function MunicipalityLinks({
   project,
@@ -76,14 +75,6 @@ export function MunicipalityLinks({
         pendingReports > 0
           ? { text: t("projects.links.pendingReports", { count: pendingReports }), tone: "warning" }
           : undefined,
-    },
-    {
-      link: "location",
-      icon: "map-marker-radius-outline",
-      label: t("projects.links.location"),
-      status: projectPoint(project)
-        ? { text: t("projects.links.onMap"), tone: "success" }
-        : { text: t("projects.links.notOnMap"), tone: "muted" },
     },
   ];
 
