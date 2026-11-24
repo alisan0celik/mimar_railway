@@ -130,6 +130,29 @@ export const municipality: Record<Language, TranslationTree> = {
           logo: "Kurum logonuzu yükleyin",
         },
       },
+      tours: {
+        projects: {
+          card: {
+            body: "Her kart bir iş. Açtığınızda notları, yapılacakları, ihale bilgilerini, saha raporlarını ve yetkiniz varsa hakedişi orada bulursunuz.",
+          },
+        },
+        projectDetail: {
+          progress: {
+            body: "Kalem bedellerini girin, hakedişi istediğiniz tutarda ödeyin; kalan bedel kendiliğinden takip edilir.",
+          },
+        },
+        createProject: {
+          workItems: {
+            body: "Bir şablon seçin ya da kalemleri tek tek işaretleyin. Hakedişler bu kalemler üzerinden ödenir.",
+          },
+        },
+        finance: {
+          summary: {
+            // Belediye modunda kâr gizli; tahsilat ve alacak ödeyen taraf için ters.
+            body: "Sözleşme bedeli, ödenen ve kalan ödeme; bütün projelerinizin toplamı.",
+          },
+        },
+      },
     },
   },
   en: {
@@ -250,6 +273,28 @@ export const municipality: Record<Language, TranslationTree> = {
         subtitle: "A few short steps left to get your department ready.",
         items: {
           logo: "Upload your institution logo",
+        },
+      },
+      tours: {
+        projects: {
+          card: {
+            body: "Each card is one job. Open it for notes, to-dos, tender details, site reports, and progress payments if you have access.",
+          },
+        },
+        projectDetail: {
+          progress: {
+            body: "Enter each item's value and pay progress payments in any amount; what is left is tracked for you.",
+          },
+        },
+        createProject: {
+          workItems: {
+            body: "Pick a template or tick the items one by one. Progress payments are paid against these items.",
+          },
+        },
+        finance: {
+          summary: {
+            body: "Contract value, paid and left to pay, across all your projects.",
+          },
         },
       },
     },

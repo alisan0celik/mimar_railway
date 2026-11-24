@@ -25,6 +25,9 @@ const CARD_ESTIMATE = 168;
 /** Alt sekme çubuğu ve kartın sığması için hedefin altında bırakılan pay. */
 const BOTTOM_RESERVE = 96;
 const SCROLL_SETTLE_MS = 380;
+const SCROLL_POLL_MS = 120;
+/** Kaydırma bundan uzun sürerse (ör. hedef içeriğin sonunda, daha fazla kayamıyor) son ölçüm kullanılır. */
+const SCROLL_SETTLE_MAX_MS = 1500;
 
 type TourItem = Extract<GuideQueueItem, { kind: "tour" }>;
 
@@ -47,6 +50,35 @@ function roundedHolePath(width: number, height: number, hole: TargetRect): strin
 
 function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function samePlace(a: TargetRect, b: TargetRect): boolean {
+  return Math.abs(a.x - b.x) < 1 && Math.abs(a.y - b.y) < 1;
+}
+
+/**
+ * Kaydırma bitip hedef yerine oturana kadar ölçer: hedef eski yerinden
+ * oynamış ve art arda iki ölçümde aynı yerdeyse kaydırma bitmiştir. Sabit bir
+ * bekleme, kaydırma ondan uzun sürerse vurguyu hedefin eski yerine çiziyordu
+ * (web önizlemesinde İhale ekranının süre uzatımı adımında görüldü; yavaş bir
+ * telefonda da olabilir). Hedef hiç kayamıyorsa süre dolunca yerinde gösterilir.
+ */
+async function measureAfterScroll(
+  node: View,
+  before: TargetRect,
+  isCancelled: () => boolean,
+): Promise<TargetRect | null> {
+  const deadline = Date.now() + SCROLL_SETTLE_MAX_MS;
+  await wait(SCROLL_SETTLE_MS);
+  let previous = await measureNode(node);
+  while (previous && !isCancelled() && Date.now() < deadline) {
+    await wait(SCROLL_POLL_MS);
+    const current = await measureNode(node);
+    if (!current) return null;
+    if (!samePlace(current, before) && samePlace(current, previous)) return current;
+    previous = current;
+  }
+  return previous;
 }
 
 /**
@@ -148,9 +180,8 @@ function TourStepOverlay({ tour, index }: { tour: TourItem; index: number }) {
       const outOfView = measured.y < visibleTop || measured.y + measured.height > visibleBottom;
       if (outOfView && registered.scroll) {
         registered.scroll.scrollBy(measured.y - layout.y - layout.height * 0.3);
-        await wait(SCROLL_SETTLE_MS);
+        measured = await measureAfterScroll(registered.node, measured, () => cancelled);
         if (cancelled) return;
-        measured = await measureNode(registered.node);
         if (!measured) {
           skip();
           return;

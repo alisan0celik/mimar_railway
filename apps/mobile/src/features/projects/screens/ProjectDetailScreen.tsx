@@ -377,19 +377,23 @@ export function ProjectDetailScreen() {
 
         {/* Belediye modunda ihale süresi ve saha raporları. */}
         {isMunicipality ? (
-          <MunicipalityLinks
-            onOpen={(link) =>
-              router.push({
-                pathname:
-                  link === "tender"
-                    ? "/(main)/projects/[projectId]/tender"
-                    : "/(main)/projects/[projectId]/field-reports",
-                params: { projectId },
-              })
-            }
-            pendingReports={pendingReports.length}
-            project={project}
-          />
+          <TourTarget id="projectDetail.links">
+            <View collapsable={false}>
+              <MunicipalityLinks
+                onOpen={(link) =>
+                  router.push({
+                    pathname:
+                      link === "tender"
+                        ? "/(main)/projects/[projectId]/tender"
+                        : "/(main)/projects/[projectId]/field-reports",
+                    params: { projectId },
+                  })
+                }
+                pendingReports={pendingReports.length}
+                project={project}
+              />
+            </View>
+          </TourTarget>
         ) : null}
 
         <View style={styles.searchWrap}>

@@ -2,6 +2,7 @@ import type { UserDTO } from "@mimar/shared";
 import { create } from "zustand";
 
 import { useAuthStore } from "../../store/authStore";
+import { sectorOf } from "../../store/sectorStore";
 import {
   emptyOnboardingState,
   fetchRemoteState,
@@ -61,7 +62,11 @@ function eligibleUser(): UserDTO | null {
 }
 
 function guideUser(user: UserDTO) {
-  return { permissions: user.permissions ?? [], roles: user.roles ?? [] };
+  return {
+    permissions: user.permissions ?? [],
+    roles: user.roles ?? [],
+    sector: sectorOf(user.companyBusinessType),
+  };
 }
 
 let pushTimer: ReturnType<typeof setTimeout> | null = null;

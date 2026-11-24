@@ -22,6 +22,7 @@ import { useThemeColors } from "../../../shared/theme/ThemeProvider";
 import { ConfirmDialog, DesignBackHeader, Screen, showAppAlert } from "../../../shared/ui";
 import { useAuthStore } from "../../../store/authStore";
 import { useProjectStore } from "../../../store/projectStore";
+import { TourTarget, useScreenTour } from "../../guide";
 import { PhotoViewer } from "../components/PhotoViewer";
 import { ReportPhoto, type ReportPhotoSource } from "../components/ReportPhoto";
 import { formatCoordinates, mapsUrl } from "../../../shared/location";
@@ -53,6 +54,8 @@ export function FieldReportsScreen() {
   const [token, setToken] = useState<string | null>(null);
   const [viewer, setViewer] = useState<{ photos: ReportPhotoSource[]; index: number } | null>(null);
   const [confirm, setConfirm] = useState<ConfirmState>(null);
+
+  useScreenTour("fieldReports");
 
   /** Kuyruktan gelen yenilemeler sessiz: bağlantı yokken her seferinde uyarı açılmasın. */
   const load = useCallback(async (silent = false) => {
@@ -220,18 +223,22 @@ export function FieldReportsScreen() {
         ) : null}
       </Screen>
 
-      <Pressable
-        accessibilityLabel={t("fieldReports.add")}
-        onPress={() =>
-          router.push({
-            pathname: "/(main)/projects/[projectId]/field-reports/new",
-            params: { projectId },
-          })
-        }
-        style={styles.fab}
-      >
-        <MaterialCommunityIcons color={colors.white} name="plus" size={26} />
-      </Pressable>
+      {/* Sarmalayıcı View eklenmedi: düğme mutlak konumlu, ref doğrudan ona bağlanıyor. */}
+      <TourTarget id="fieldReports.add">
+        <Pressable
+          accessibilityLabel={t("fieldReports.add")}
+          collapsable={false}
+          onPress={() =>
+            router.push({
+              pathname: "/(main)/projects/[projectId]/field-reports/new",
+              params: { projectId },
+            })
+          }
+          style={styles.fab}
+        >
+          <MaterialCommunityIcons color={colors.white} name="plus" size={26} />
+        </Pressable>
+      </TourTarget>
 
       <PhotoViewer
         onClose={() => setViewer(null)}

@@ -1036,7 +1036,7 @@ export const tr = {
         },
         fieldReports: {
           title: "Saha Raporları",
-          steps: "Proje detayının üstündeki Raporlar kutusuna dokunun ve Rapor Yaz'a basın.|Gözlemlerinizi yazın; isterseniz kısa bir başlık ekleyin.|Fotoğraf çekin ya da galeriden seçin; bir rapora en fazla 10 fotoğraf eklenir.|Konumu Ekle ile raporun yazıldığı yeri kaydedin; konum yalnızca siz eklediğinizde alınır.|İnternet yoksa rapor telefonda bekler ve bağlantı gelince kendiliğinden gönderilir.|Fotoğraflar yalnızca biriminizin yetkili kullanıcılarına görünür.|Raporu yazan kişi ya da proje düzenleme yetkisi olanlar raporu silebilir.",
+          steps: "Proje detayının üstündeki Raporlar kutusuna dokunun ve sağ alttaki + düğmesine basın.|Gözlemlerinizi yazın; isterseniz kısa bir başlık ekleyin.|Fotoğraf çekin ya da galeriden seçin; bir rapora en fazla 10 fotoğraf eklenir.|Konumu Ekle ile raporun yazıldığı yeri kaydedin; konum yalnızca siz eklediğinizde alınır.|İnternet yoksa rapor telefonda bekler ve bağlantı gelince kendiliğinden gönderilir.|Fotoğraflar yalnızca biriminizin yetkili kullanıcılarına görünür.|Raporu yazan kişi ya da proje düzenleme yetkisi olanlar raporu silebilir.",
         },
         tender: {
           title: "İhale Bilgileri",
@@ -1373,6 +1373,10 @@ export const tr = {
           title: "İmalat ve hakediş",
           body: "Kalem bedellerini girin, hakedişi istediğiniz tutarda kesin; kalan bedel kendiliğinden takip edilir.",
         },
+        links: {
+          title: "İhale ve saha raporları",
+          body: "İhale kutusu iş bitimine kalan süreyi gösterir; dokununca ihale ve sözleşme bilgileri açılır. Raporlar kutusundan sahadan fotoğraflı rapor yazın.",
+        },
       },
       createProject: {
         workItems: {
@@ -1384,6 +1388,22 @@ export const tr = {
         summary: {
           title: "Finans özeti",
           body: "Anlaşma tutarı, tahsilat, kalan alacak ve kâr; bütün projelerinizin toplamı.",
+        },
+      },
+      tender: {
+        deadline: {
+          title: "İş bitim tarihi",
+          body: "Yer teslim tarihi, iş süresi ve süre uzatımından kendiliğinden hesaplanır. Bitimine 30 gün kalan işler sarı, süresi geçenler kırmızı görünür; geçici kabul tarihi girilince takip durur.",
+        },
+        extension: {
+          title: "Süre uzatımı",
+          body: "Her yeni süre uzatımında buradaki toplam gün sayısını artırın; iş bitim tarihi kendiliğinden ileri kayar.",
+        },
+      },
+      fieldReports: {
+        add: {
+          title: "Saha raporu yazın",
+          body: "Sahada gördüklerinizi not, fotoğraf ve konumla kaydedin. İnternet yoksa rapor telefonda bekler, bağlantı gelince kendiliğinden gönderilir.",
         },
       },
     },

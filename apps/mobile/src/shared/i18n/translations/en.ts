@@ -1036,7 +1036,7 @@ export const en = {
         },
         fieldReports: {
           title: "Site Reports",
-          steps: "Tap the Reports box at the top of the project detail, then tap Write Report.|Write your observations; add a short title if you like.|Take photos or choose them from the gallery; a report holds up to 10 photos.|Use Add Location to record where the report was written; the location is only taken when you add it.|Without internet, the report waits on the phone and is sent automatically once you are online.|Photos are only visible to authorised users in your department.|The author or anyone who can edit the project can delete a report.",
+          steps: "Tap the Reports box at the top of the project detail, then tap the + button at the bottom right.|Write your observations; add a short title if you like.|Take photos or choose them from the gallery; a report holds up to 10 photos.|Use Add Location to record where the report was written; the location is only taken when you add it.|Without internet, the report waits on the phone and is sent automatically once you are online.|Photos are only visible to authorised users in your department.|The author or anyone who can edit the project can delete a report.",
         },
         tender: {
           title: "Tender Details",
@@ -1373,6 +1373,10 @@ export const en = {
           title: "Work items and billing",
           body: "Enter each item's value and bill it in any amount; what is left is tracked for you.",
         },
+        links: {
+          title: "Tender and site reports",
+          body: "The Tender box shows the time left until the completion deadline; tap it for the tender and contract details. Use the Reports box to write site reports with photos.",
+        },
       },
       createProject: {
         workItems: {
@@ -1384,6 +1388,22 @@ export const en = {
         summary: {
           title: "Finance summary",
           body: "Agreed amount, collected, left to collect and profit, across all your projects.",
+        },
+      },
+      tender: {
+        deadline: {
+          title: "Completion deadline",
+          body: "Worked out from the site handover date, the duration and any time extensions. Jobs within 30 days of it show in yellow, overdue ones in red; tracking stops once the provisional acceptance date is entered.",
+        },
+        extension: {
+          title: "Time extensions",
+          body: "Each time an extension is granted, raise the total days here; the completion deadline moves on by itself.",
+        },
+      },
+      fieldReports: {
+        add: {
+          title: "Write a site report",
+          body: "Record what you see on site with a note, photos and the location. Without internet, the report waits on the phone and is sent once you are online.",
         },
       },
     },

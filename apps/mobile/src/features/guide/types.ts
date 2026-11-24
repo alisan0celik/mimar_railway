@@ -1,6 +1,7 @@
 import type { Href } from "expo-router";
 
 import type { PermissionCode } from "../../shared/permissions";
+import type { Sector } from "../../store/sectorStore";
 
 export type TourAudience = "owner" | "member" | "all";
 
@@ -13,9 +14,17 @@ export type TourStep = {
   /** Birden fazla izin verilirse hepsi gerekir. */
   requires?: PermissionCode | PermissionCode[];
   audience?: TourAudience;
+  /** Verilirse adım yalnızca bu sektördeki şirketlerde gösterilir. */
+  sector?: Sector;
 };
 
-export type TourId = "projects" | "projectDetail" | "createProject" | "finance";
+export type TourId =
+  | "projects"
+  | "projectDetail"
+  | "createProject"
+  | "finance"
+  | "tender"
+  | "fieldReports";
 
 /** Karşılama ana sayfada açılır; ana sayfanın kendi turu yoktur. */
 export type GuideScreenId = TourId | "dashboard";
@@ -26,6 +35,7 @@ export type Tour = {
   version: number;
   requires?: PermissionCode | PermissionCode[];
   audience?: TourAudience;
+  sector?: Sector;
   steps: TourStep[];
 };
 
@@ -56,4 +66,5 @@ export type ChecklistItem = {
 export type GuideUser = {
   permissions: readonly string[];
   roles: ReadonlyArray<{ code: string }>;
+  sector: Sector;
 };

@@ -5,6 +5,10 @@ import type { ChecklistItem, Tour, TourId } from "./types";
  * Turlar role değil izin koduna bağlı: rol adları şirketten şirkete değişiyor,
  * izin kodları sabit. Bir adımın izni yoksa o kullanıcı için adım atlanır.
  * Her tur en fazla iki adımdır ve yalnızca o ekranın çekirdek nesnesini gösterir.
+ * Tek istisna proje detayı: belediyede ihale ve rapor kutuları üçüncü adım olur.
+ *
+ * Görülen adımlar tek tek saklandığı için mevcut bir tura yeni adım eklemek
+ * sürüm artırmayı gerektirmez; turu bitirmiş kullanıcıya yalnız yeni adım açılır.
  */
 export const TOURS: Record<TourId, Tour> = {
   projects: {
@@ -38,6 +42,13 @@ export const TOURS: Record<TourId, Tour> = {
         bodyKey: "guide.tours.projectDetail.progress.body",
         requires: PERMISSIONS.FINANCE_VIEW,
       },
+      {
+        id: "links",
+        target: "projectDetail.links",
+        titleKey: "guide.tours.projectDetail.links.title",
+        bodyKey: "guide.tours.projectDetail.links.body",
+        sector: "municipality",
+      },
     ],
   },
   createProject: {
@@ -63,6 +74,42 @@ export const TOURS: Record<TourId, Tour> = {
         target: "finance.summary",
         titleKey: "guide.tours.finance.summary.title",
         bodyKey: "guide.tours.finance.summary.body",
+      },
+    ],
+  },
+  tender: {
+    id: "tender",
+    version: 1,
+    requires: PERMISSIONS.PROJECT_VIEW,
+    sector: "municipality",
+    steps: [
+      {
+        id: "deadline",
+        target: "tender.deadline",
+        titleKey: "guide.tours.tender.deadline.title",
+        bodyKey: "guide.tours.tender.deadline.body",
+      },
+      {
+        id: "extension",
+        target: "tender.extension",
+        titleKey: "guide.tours.tender.extension.title",
+        bodyKey: "guide.tours.tender.extension.body",
+        // Alanı yalnız proje düzenleme yetkisi olan değiştirebiliyor.
+        requires: PERMISSIONS.PROJECT_UPDATE,
+      },
+    ],
+  },
+  fieldReports: {
+    id: "fieldReports",
+    version: 1,
+    requires: PERMISSIONS.PROJECT_VIEW,
+    sector: "municipality",
+    steps: [
+      {
+        id: "add",
+        target: "fieldReports.add",
+        titleKey: "guide.tours.fieldReports.add.title",
+        bodyKey: "guide.tours.fieldReports.add.body",
       },
     ],
   },

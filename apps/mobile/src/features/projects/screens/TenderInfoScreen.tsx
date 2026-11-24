@@ -19,6 +19,7 @@ import {
   showAppAlert,
 } from "../../../shared/ui";
 import { useProjectStore } from "../../../store/projectStore";
+import { TourTarget, useScreenTour } from "../../guide";
 import { DeadlineBadge } from "../components/DeadlineBadge";
 import {
   calendarDate,
@@ -119,6 +120,9 @@ export function TenderInfoScreen() {
     return { deadline: contractDeadline(dates), status: deadlineStatus(dates) };
   }, [form, durationDays, extensionDays]);
 
+  // Tur, hedefleri çizilince (proje yüklenince) başlar.
+  useScreenTour("tender", { enabled: Boolean(project && form) });
+
   if (!project || !form || !preview) {
     return (
       <Screen>
@@ -192,18 +196,20 @@ export function TenderInfoScreen() {
     <Screen contentContainerStyle={styles.content} scroll>
       <DesignBackHeader subtitle={project.name} title={t("projects.tender.title")} />
 
-      <View style={styles.deadlineCard}>
-        <Text style={styles.deadlineLabel}>{t("projects.tender.deadline")}</Text>
-        {preview.deadline ? (
-          <>
-            <Text style={styles.deadlineValue}>{formatCalendarDate(preview.deadline, t)}</Text>
-            <DeadlineBadge status={preview.status} />
-            <Text style={styles.hint}>{t("projects.tender.deadlineHint")}</Text>
-          </>
-        ) : (
-          <Text style={styles.hint}>{t("projects.tender.deadlineUnknown")}</Text>
-        )}
-      </View>
+      <TourTarget id="tender.deadline">
+        <View collapsable={false} style={styles.deadlineCard}>
+          <Text style={styles.deadlineLabel}>{t("projects.tender.deadline")}</Text>
+          {preview.deadline ? (
+            <>
+              <Text style={styles.deadlineValue}>{formatCalendarDate(preview.deadline, t)}</Text>
+              <DeadlineBadge status={preview.status} />
+              <Text style={styles.hint}>{t("projects.tender.deadlineHint")}</Text>
+            </>
+          ) : (
+            <Text style={styles.hint}>{t("projects.tender.deadlineUnknown")}</Text>
+          )}
+        </View>
+      </TourTarget>
 
       {!canEdit ? <Text style={styles.readOnly}>{t("projects.tender.readOnly")}</Text> : null}
 
@@ -229,16 +235,20 @@ export function TenderInfoScreen() {
         placeholder="0"
         value={form.workDurationDays}
       />
-      <AppInput
-        editable={canEdit}
-        error={extensionDays === undefined ? t("projects.tender.invalidDays") : undefined}
-        helperText={t("projects.tender.extensionHint")}
-        keyboardType="number-pad"
-        label={t("projects.tender.extensionDays")}
-        onChangeText={(value) => update({ extensionDays: value })}
-        placeholder="0"
-        value={form.extensionDays}
-      />
+      <TourTarget id="tender.extension">
+        <View collapsable={false}>
+          <AppInput
+            editable={canEdit}
+            error={extensionDays === undefined ? t("projects.tender.invalidDays") : undefined}
+            helperText={t("projects.tender.extensionHint")}
+            keyboardType="number-pad"
+            label={t("projects.tender.extensionDays")}
+            onChangeText={(value) => update({ extensionDays: value })}
+            placeholder="0"
+            value={form.extensionDays}
+          />
+        </View>
+      </TourTarget>
 
       <Text style={styles.sectionTitle}>{t("projects.tender.sectionAcceptance")}</Text>
       {renderDateField("provisionalAcceptanceDate")}

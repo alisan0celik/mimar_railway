@@ -1,3 +1,4 @@
+import type { Sector } from "../../store/sectorStore";
 import { TOURS } from "./tours";
 import type { GuideUser, ResolvedStep, Tour, TourAudience, TourId, TourStep } from "./types";
 
@@ -18,24 +19,29 @@ function matchesAudience(audience: TourAudience | undefined, isOwner: boolean): 
   return audience === "owner" ? isOwner : !isOwner;
 }
 
-function stepVisible(
-  tour: Tour,
-  step: TourStep,
-  permissions: readonly string[],
-  isOwner: boolean,
-): boolean {
+function matchesSector(required: Sector | undefined, sector: Sector): boolean {
+  return !required || required === sector;
+}
+
+function stepVisible(tour: Tour, step: TourStep, user: GuideUser, isOwner: boolean): boolean {
   return (
-    hasAll(permissions, tour.requires) &&
+    hasAll(user.permissions, tour.requires) &&
     matchesAudience(tour.audience, isOwner) &&
-    hasAll(permissions, step.requires) &&
-    matchesAudience(step.audience, isOwner)
+    matchesSector(tour.sector, user.sector) &&
+    hasAll(user.permissions, step.requires) &&
+    matchesAudience(step.audience, isOwner) &&
+    matchesSector(step.sector, user.sector)
   );
 }
 
-/** Kullanıcının izinlerine ve sahipliğine göre gösterilecek adımlar. */
+/**
+ * Kullanıcının izinlerine, sahipliğine ve şirketin sektörüne göre gösterilecek
+ * adımlar. Sektöre özgü adım burada süzülüyor: yalnızca hedefi çizilmediği için
+ * atlansaydı sayaç onu da sayar, tur "2/3"te biterdi.
+ */
 export function resolveTourSteps(tourId: TourId, user: GuideUser): ResolvedStep[] {
   const tour = TOURS[tourId];
   const isOwner = isCompanyOwner(user);
-  return tour.steps.filter((step) => stepVisible(tour, step, user.permissions, isOwner));
+  return tour.steps.filter((step) => stepVisible(tour, step, user, isOwner));
 }
 
