@@ -20,6 +20,7 @@ import {
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { tenderData } from './tender-fields';
+import { locationData } from './project-location';
 import { projectDir, removeDir } from './field-report.storage';
 
 type NotificationRecipient = {
@@ -119,6 +120,7 @@ export class ProjectsService {
         endDate: dto.endDate ? new Date(dto.endDate) : null,
         budget: dto.budget,
         ...tenderData(dto),
+        ...locationData(dto),
         companyId,
         createdById: userId,
         sections: {
@@ -257,6 +259,7 @@ export class ProjectsService {
         endDate: dto.endDate ? new Date(dto.endDate) : undefined,
         budget: dto.budget,
         ...tenderData(dto),
+        ...locationData(dto),
       },
       include: {
         sections: true,

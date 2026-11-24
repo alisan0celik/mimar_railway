@@ -17,7 +17,8 @@ export type TenderFieldsInput = {
   finalAcceptanceDate?: string | null;
 };
 
-function optionalText(value: string | null | undefined): string | null | undefined {
+/** Gönderilmeyen alan `undefined` kalır; boş metin ya da `null` alanı temizler. */
+export function optionalText(value: string | null | undefined): string | null | undefined {
   if (value === undefined) return undefined;
   const trimmed = value?.trim();
   return trimmed ? trimmed : null;

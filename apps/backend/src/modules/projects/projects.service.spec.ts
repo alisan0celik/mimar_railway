@@ -111,6 +111,27 @@ describe("ProjectsService tasks", () => {
       expect(data.finalAcceptanceDate).toBeUndefined();
     });
 
+    it("saves the project's point and parcel with the other fields", async () => {
+      await service.update("c1", "p1", {
+        latitude: 38.4237,
+        longitude: 27.1428,
+        cadastralBlock: "1234",
+      });
+
+      const { data } = prisma.project.update.mock.calls[0][0];
+      expect(data.latitude).toBe(38.4237);
+      expect(data.longitude).toBe(27.1428);
+      expect(data.cadastralBlock).toBe("1234");
+      expect(data.neighbourhood).toBeUndefined();
+    });
+
+    it("refuses a point sent without its longitude", async () => {
+      await expect(service.update("c1", "p1", { latitude: 38.4 })).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
+      expect(prisma.project.update).not.toHaveBeenCalled();
+    });
+
     it("clears a tender date sent as null", async () => {
       await service.update("c1", "p1", { provisionalAcceptanceDate: null });
 

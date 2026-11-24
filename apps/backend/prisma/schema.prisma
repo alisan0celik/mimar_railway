@@ -193,6 +193,13 @@ model Project {
   extensionDays             Int?
   provisionalAcceptanceDate DateTime?
   finalAcceptanceDate       DateTime?
+  /// Haritadaki nokta. Enlem ve boylam birlikte girilir ya da ikisi de boş kalır.
+  latitude                  Float?
+  longitude                 Float?
+  /// İmar bilgisi: mahalle, ada ve parsel numarası ("1234", "12/3" gibi metin).
+  neighbourhood             String?
+  cadastralBlock            String?
+  cadastralParcel           String?
   companyId                 String
   company                   Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
   createdById               String

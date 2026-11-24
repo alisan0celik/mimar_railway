@@ -91,6 +91,39 @@ export class CreateProjectDto {
   @IsDateString()
   finalAcceptanceDate?: string | null;
 
+  // --- Konum ve imar bilgisi ---
+
+  /** Enlem; boylamla birlikte gönderilmeli. `null` ikisini birlikte temizler. */
+  @IsOptional()
+  @IsNumber()
+  @Min(-90)
+  @Max(90)
+  latitude?: number | null;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(-180)
+  @Max(180)
+  longitude?: number | null;
+
+  /** Mahalle. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  neighbourhood?: string | null;
+
+  /** Ada numarası. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  cadastralBlock?: string | null;
+
+  /** Parsel numarası. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  cadastralParcel?: string | null;
+
   /**
    * Proje açılırken oluşturulacak imalat kalemlerinin adları.
    * Gönderilmezse şirketin iş koluna göre varsayılan şablon kullanılır.
